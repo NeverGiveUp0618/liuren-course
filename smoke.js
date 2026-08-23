@@ -26,6 +26,7 @@ window.Element.prototype.scrollIntoView = function () { scrolls.push('into'); };
 const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\s*/, ''));
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
+run('data/data-ref.js');
 run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
@@ -137,6 +138,85 @@ async function typeSearch(kw) {
 }
 
 (async () => {
+  console.log('\n== 吸顶盘（六壬方盘不能照搬四柱那样吸顶，吸的是四课＋三传）==');
+  // ⚠️ 回到访问过的课走的是 history.go 折叠（popstate 异步），必须等一拍再断言
+  $$('#courseList .li[data-id]')[0].onclick();
+  await sleep(30);
+  const sp = $('#stickyPan');
+  ok(!!sp, '有四课的课出现吸顶条');
+  ok(sp.querySelectorAll('.spc').length === 4, '吸顶条列出四课');
+  ok(sp.querySelectorAll('.spc')[3].classList.contains('day'), '第一课（日干那格）高亮');
+  ok(sp.querySelectorAll('.sp-sc .z').length === 3, '吸顶条列出三传');
+  ok(sp.querySelector('.spc .up').textContent === '子', '吸顶条第四课上神＝子（与盘一致）');
+  {
+    const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
+    const m = css.match(/\.stickypan\{[^}]*\}/);
+    ok(!!m && /position:\s*sticky/.test(m[0]), '吸顶靠纯 CSS sticky');
+    ok(!/new\s+IntersectionObserver/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')),
+     '没有真的调用 IntersectionObserver 做显隐（套壳 iframe 里时灵时不灵）');
+  }
+  sp.onclick();
+  ok($('#tocMask').classList.contains('on'), '点吸顶条弹出全盘');
+  ok($('#tocMask .pan') && $('#tocMask .pan').querySelectorAll('.gong').length === 12, '弹出的是完整十二宫方盘');
+  $('#tocMask').classList.remove('on');
+  
+  console.log('\n== 课内目录 ==');
+  ok($('#fabToc').classList.contains('on'), '课文屏显示目录按钮');
+  $('#fabToc').onclick();
+  const tocs = $$('#tocList .toci');
+  const L01 = C.find(x => x.id === 'L01');
+  ok(tocs.length === L01.heads.length && tocs.length > 4, `目录项数＝本课 h2 数（${tocs.length}）`);
+  ok(tocs[0].textContent === L01.heads[0].t, '目录第一项与课文第一节同名');
+  scrolls = [];
+  tocs[2].onclick();
+  ok(scrolls.includes('into'), '点目录项滚到那一节');
+  ok(!$('#tocMask').classList.contains('on'), '跳转后目录自动收起');
+  
+  console.log('\n== 速查 ==');
+  $$('.mi[data-go="ref"]')[0].onclick();
+  const R = window.DATA_REF;
+  ok(R.length > 100, `抽出了 ${R.length} 张表`);
+  ok(R.every(r => r.name && r.html.includes('<table') || r.html.includes('pan')), '每张表都有表名与渲染结果');
+  ok($$('#refList .refi').length === R.length, '默认列出全部');
+  ok($$('#refList .refg').length > 20, '按课分组');
+  $('#rq').value = '寄宫';
+  $('#rq').dispatchEvent(new window.Event('input'));
+  await sleep(220);
+  const rs = $$('#refList .refi');
+  ok(rs.length > 0 && rs.length < R.length, '搜索能过滤');
+  rs[0].querySelector('.refh').onclick();
+  ok(rs[0].classList.contains('open'), '点表名展开表格');
+  ok(rs[0].querySelector('.refb table') || rs[0].querySelector('.refb .pan'), '展开后有真表格');
+  {
+    const jump = rs[0].querySelector('.refj');
+    jump.onclick(new window.Event('click'));
+    ok($('#s-lesson').classList.contains('active'), '可从速查跳到对应课');
+  }
+  
+  console.log('\n== 起课引擎穷举（12月将 × 12占时 × 10日干 ＝ 1440 组）==');
+  {
+    let bad = 0, checked = 0;
+    const GD = {甲:'丑',戊:'丑',庚:'丑',乙:'子',己:'子',丙:'亥',丁:'亥',辛:'午',壬:'巳',癸:'巳'};
+    const GN = {甲:'未',戊:'未',庚:'未',乙:'申',己:'申',丙:'酉',丁:'酉',辛:'寅',壬:'卯',癸:'卯'};
+    for (const yj of Z) for (const zs of Z) for (const gan of '甲乙丙丁戊己庚辛壬癸') {
+      checked++;
+      const t = tp(yj, zs);
+      // 天盘：必须是十二支的整体平移，且月将确实落在占时位上
+      const offs = new Set(Z.map(d => (Z.indexOf(t[d]) - Z.indexOf(d) + 12) % 12));
+      if (offs.size !== 1 || t[zs] !== yj) { bad++; continue; }
+      // 天将：贵人落点正确、十二位不重不漏、顺逆与地盘位相符
+      const r = tj(gan, zs, t);
+      const want = '卯辰巳午未申'.includes(zs) ? GD[gan] : GN[gan];
+      const names = Object.values(r.out);
+      if (r.gr !== want) { bad++; continue; }
+      if (names.length !== 12 || new Set(names).size !== 12) { bad++; continue; }
+      if (r.shun !== '亥子丑寅卯辰'.includes(r.dp)) { bad++; continue; }
+      if (t[r.dp] !== r.gr) { bad++; continue; }
+    }
+    ok(checked === 1440, `跑遍 ${checked} 种组合`);
+    ok(bad === 0, `全部合法（天盘整体平移＋月将落占时位；贵人落点、十二将不重不漏、顺逆相符）`);
+  }
+
   console.log('\n== 搜索 ==');
   $('#btnSearch').onclick();
   await typeSearch('月将');

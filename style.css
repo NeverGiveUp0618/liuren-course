@@ -179,3 +179,51 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .btn:disabled{opacity:.35;cursor:default}
 .btn:focus-visible{outline:2px solid var(--blue)}
 @media(min-width:700px){body{font-size:16.5px}.doc h1{font-size:25px}.doc h2{font-size:20px}}
+
+/* ── 课内目录 ── */
+.fab{position:fixed;right:14px;bottom:calc(18px + var(--safe-b));z-index:45;display:none;
+  width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper);
+  color:var(--ink2);font-size:15px;font-family:var(--f-disp);cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.fab.on{display:block}
+.fab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.tocmask{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);display:none}
+.tocmask.on{display:block}
+.tocbox{position:absolute;right:0;bottom:0;left:0;max-height:72vh;overflow:auto;
+  background:var(--ground);border-top:1px solid var(--line);border-radius:10px 10px 0 0;
+  padding:14px 16px calc(20px + var(--safe-b))}
+.toch{font-family:var(--f-disp);font-size:15px;font-weight:600;margin-bottom:10px;color:var(--ink)}
+.toci{all:unset;cursor:pointer;display:block;width:100%;padding:9px 10px;border-radius:4px;
+  font-size:14.5px;color:var(--ink2);border-left:2px solid var(--line)}
+.toci:hover,.toci:focus-visible{background:var(--surface);color:var(--ink);border-left-color:var(--gold)}
+/* ── 速查 ── */
+.refg{margin:22px 0 6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;color:var(--gold)}
+.refi{background:var(--paper);border:1px solid var(--line);border-radius:4px;margin-bottom:8px;overflow:hidden}
+.refh{all:unset;cursor:pointer;display:flex;align-items:baseline;gap:8px;width:100%;padding:11px 13px}
+.refh:focus-visible{outline:2px solid var(--blue)}
+.refh b{font-size:14.5px;font-weight:600;flex:1;min-width:0}
+.refh span{font-size:11.5px;color:var(--ink3);white-space:nowrap;font-family:var(--f-mono)}
+.refb{display:none;padding:0 13px 12px}
+.refi.open .refb{display:block}
+.refi.open .refh b{color:var(--gold)}
+.refb .tw{margin:6px 0 0}
+.refj{all:unset;cursor:pointer;font-size:12.5px;color:var(--blue);margin-top:8px;display:inline-block}
+.refj:focus-visible{outline:2px solid var(--blue)}
+/* ── 吸顶盘：四课＋三传压成一条（六壬方盘 330px 见方，照搬八字四柱那样吸顶会吃掉半屏） ── */
+.stickypan{position:sticky;top:49px;z-index:30;margin:0 -14px 16px;padding:7px 14px;
+  background:var(--ground);border-bottom:1px solid var(--line);cursor:pointer;
+  display:flex;align-items:center;gap:12px;overflow-x:auto;white-space:nowrap}
+.stickypan em{font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;
+  color:var(--gold);margin-right:5px}
+.sp-ke{display:flex;align-items:center;gap:5px}
+.spc{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;
+  padding:1px 5px;border-radius:3px;background:var(--surface)}
+.spc.day{background:var(--gold-s)}
+.spc i{font-style:normal;font-size:9px;color:var(--gold);line-height:1.1}
+.spc .up{font-family:var(--f-disp);font-size:15px;font-weight:600}
+.spc s{text-decoration:none;font-size:10px;color:var(--ink3);line-height:1.1}
+.sp-sc{display:flex;align-items:center;gap:3px}
+.sp-sc .z{font-family:var(--f-disp);font-size:15px;font-weight:600}
+.sp-sc b{color:var(--ink3);font-weight:400;font-size:11px}
+.sp-more{margin-left:auto;font-size:11px;color:var(--blue);flex-shrink:0}
+@media(max-width:420px){.stickypan{gap:8px}.spc{padding:1px 3px}}

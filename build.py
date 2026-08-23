@@ -69,7 +69,7 @@ def parse_plan(md):
     return plan
 
 
-def build_lessons():
+def build_lessons(collect_md=None):
     out = []
     for fn in sorted(os.listdir(SRC)):
         if not fn.endswith('.md') or fn.startswith('00-'):
@@ -84,6 +84,8 @@ def build_lessons():
         title = re.search(r'^# (.+)$', md, re.M).group(1).strip()
         # 「第2课 · 地盘与天盘：月将加时」→ 短标题
         short = title.split('·', 1)[-1].strip()
+        if collect_md is not None:
+            collect_md.append((int(m.group(1)), short, md))
         out.append({
             'id': 'L' + m.group(1),
             'num': int(m.group(1)),
@@ -97,10 +99,90 @@ def build_lessons():
     return out
 
 
+def _refname(t):
+    """表名要短到能在一行里扫过去：去掉「一、」这类序号，冒号后的解释也去掉。
+    ⚠️ 只有冒号前还剩得下东西才切——「例：2007年…」切完只剩「例」，那还不如留全句。"""
+    if not t:
+        return ''
+    t = re.sub(r'^[一二三四五六七八九十〇\d]+\s*[、.．]\s*', '', t.strip())
+    head = re.split(r'[：:]', t)[0].strip()
+    if len(head) >= 3:
+        t = head
+    t = re.sub(r'[（(][^）)]*[）)]', '', t).strip('　 ·—-')
+    return t if 2 <= len(t) <= 20 else ''
+
+
+def build_ref(lessons_md):
+    """把各课正文里的表抽出来做「速查」。
+
+    ⭐ 表本身还是长在课文里（内容源只有一处），这里只是**换一种检索方式**——
+       学完之后真要用时，翻的就是这些表，不该每次都靠搜索在万字长文里捞。
+    ⚠️ 表名不另写一份：取表格上方最近的小标题／加粗短语，改了课文这里跟着变。
+    """
+    out = []
+    for num, title, md in lessons_md:
+        lines = md.split('\n')
+        h2 = h3 = ''
+        i = 0
+        while i < len(lines):
+            ln = lines[i]
+            m = re.match(r'^##\s+(.*)$', ln)
+            if m and not ln.startswith('###'):
+                h2 = re.sub(r'[⭐⚠️💡\s]+', '', m.group(1)).strip()
+                h3 = ''
+            m = re.match(r'^###\s+(.*)$', ln)
+            if m:
+                h3 = re.sub(r'[⭐⚠️💡\s]+', '', m.group(1)).strip()
+            if ln.startswith('|'):
+                start = i
+                while i < len(lines) and lines[i].startswith('|'):
+                    i += 1
+                block = lines[start:i]
+                if len(block) < 3:          # 至少 表头+分隔+一行
+                    continue
+                # 表名：紧邻上一行若是短说明（**xxx** 或以：结尾）就用它，否则用小标题
+                lead = ''
+                for j in range(start - 1, max(-1, start - 3), -1):
+                    t = lines[j].strip()
+                    if not t:
+                        continue
+                    if len(t) <= 40 and not t.startswith(('|', '>', '-', '#')):
+                        lead = re.sub(r'[*`（(].*', '', t).strip('：: ')
+                    break
+                # ⭐ 盘类的表按结构特征直接命名——同一节里三张盘若都取上方那句引导语，
+                #    会出现三个同名条目（第 1 课就是「先看一眼完整的课」×3）。
+                head = block[0]
+                if '地盘' in head and head.count('|') >= 13:
+                    name = '天地盘'
+                elif '第四课' in head and '第一课' in head:
+                    name = '四课'
+                elif any(x.startswith('| **初传**') or x.startswith('| 初传') for x in block):
+                    name = '三传'
+                else:
+                    name = _refname(lead) or _refname(h3) or _refname(h2) or ('第%d课的表' % num)
+                out.append({
+                    'num': num, 'lesson': title, 'sec': h3 or h2, 'name': name or h2,
+                    'html': mdlite.md2html('\n'.join(block)),
+                    'text': mdlite.strip_md('\n'.join(block)),
+                })
+                continue
+            i += 1
+    # 同一课里重名的表（例一/例二/自测答案各有一张盘）加个序号，列表里才分得清
+    seen = {}
+    for r in out:
+        seen.setdefault((r['num'], r['name']), []).append(r)
+    for (num, name), group in seen.items():
+        if len(group) > 1:
+            for k, r in enumerate(group, 1):
+                r['name'] = '%s %s' % (name, '①②③④⑤⑥⑦⑧⑨'[k - 1])
+    return out
+
+
 def main():
     if not os.path.isdir(SRC):
         sys.exit('找不到内容源目录：%s' % SRC)
-    lessons = build_lessons()
+    lessons_md = []
+    lessons = build_lessons(lessons_md)
     outline_md = read(os.path.join(SRC, '00-总目录与学习路线.md'))
     outline = mdlite.md2html(outline_md)
 
@@ -140,12 +222,17 @@ def main():
             'list': [{'id': l['id'], 'num': l['num'], 'short': l['short'],
                       'line': l['line']} for l in lessons]}
 
+    ref = build_ref(lessons_md)
+    counts['ref'] = len(ref)
+    meta['counts'] = counts
     s1 = write_js('data-course.js', 'DATA_COURSE', lessons)
     s2 = write_js('data-meta.js', 'DATA_META', meta)
-    print('  课 %d / 计划 %d　式盘 %d　出处 %d'
-          % (counts['lesson'], counts['planned'], counts['pan'], counts['cite']))
+    s3 = write_js('data-ref.js', 'DATA_REF', ref)
+    print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
+          % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
     print('  data-meta.js   %7.1f KB' % (s2 / 1024))
+    print('  data-ref.js    %7.1f KB（速查：%d 张表）' % (s3 / 1024, len(ref)))
     print('\n✓ 自检通过')
 
 

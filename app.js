@@ -29,6 +29,19 @@ function needCourse() {
   });
   return _loading;
 }
+var _refLoading = null;
+function needRef() {
+  if (window.DATA_REF) return Promise.resolve(window.DATA_REF);
+  if (_refLoading) return _refLoading;
+  _refLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-ref.js?v=' + VER;      // ⚠️ 同 data-course.js，按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_REF); };
+    el.onerror = function () { _refLoading = null; rej(new Error('速查表加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _refLoading;
+}
 function lessonById(id) {
   var a = window.DATA_COURSE || [];
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
@@ -42,7 +55,7 @@ function lessonById(id) {
    popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学习路线',
-               lab: '起盘台', search: '搜索' };
+               lab: '起盘台', search: '搜索', ref: '速查' };
 var ROOTS = { home: 1 };
 var pendingFind = null;
 
@@ -52,6 +65,8 @@ function _apply(scr, id) {
   var el = $('#s-' + scr);
   if (el) el.classList.add('active');
   $('#btnBack').classList.toggle('on', !ROOTS[scr]);
+  $('#fabToc').classList.toggle('on', scr === 'lesson');
+  $('#tocMask').classList.remove('on');
   $('#ttl').textContent = TITLES[scr] || '六壬课程';
   RENDER[scr] && RENDER[scr](id);
   if (scr !== 'search') save(K.last, { scr: scr, id: id });
@@ -130,6 +145,7 @@ RENDER.home = function () {
   $('#hPlan').textContent = c.planned || 0;
   $('#hPan').textContent = c.pan || 0;
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
+  var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var read = load(K.read, {}), done = 0;
   (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
   var total = (M.list || []).length || 1;
@@ -194,6 +210,8 @@ function paintLesson(id) {
   $('#ttl').textContent = '第' + l.num + '课';
   body.innerHTML = l.html;
   bindDoc(body);
+  buildStickyPan(body);
+  buildToc(l);
   var list = M.list || [], k = -1;
   list.forEach(function (x, i) { if (x.id === id) k = i; });
   $('#prevL').disabled = k <= 0;
@@ -239,6 +257,70 @@ function labUpdate() {
   bindPan($('#labPan'));
 }
 
+/* ── 吸顶盘 ───────────────────────────────────────────
+   八字四柱压成一条钉在顶栏下就行，六壬方盘 330px 见方，照搬会吃掉半屏。
+   所以吸顶的是**四课＋三传**——讲解里指代的几乎都是这些（发用／支上神／日上神／中传），
+   天地盘反而查得少；要看全盘点一下这条就弹出来。
+   ⚠️ 纯 CSS position:sticky，**绝不加"滚过才显示"的开关**：IntersectionObserver
+      在套壳 iframe 里时灵时不灵，scroll 事件在 iframe 内编程滚动压根不触发，而 sticky 一直是好的。 */
+function buildStickyPan(body) {
+  var old = $('#stickyPan'); if (old) old.remove();
+  var ke = body.querySelector('.sike'), sc = body.querySelector('.sanchuan'),
+      pan = body.querySelector('.pan');
+  if (!ke && !sc) return;
+  var box = document.createElement('div');
+  box.id = 'stickyPan';
+  box.className = 'stickypan';
+  var h = '';
+  if (ke) {
+    var cells = [].slice.call(ke.querySelectorAll('.ke')).map(function (k) {
+      var t = k.querySelector('.tj'), u = k.querySelector('.up'), d = k.querySelector('.dn');
+      return '<i>' + (t ? t.textContent : '') + '</i>' +
+        (u ? u.outerHTML : '') + '<s>' + (d ? d.textContent : '') + '</s>';
+    });
+    h += '<div class="sp-ke"><em>四课</em>' +
+      cells.map(function (c, i) {
+        return '<span class="spc' + (i === 3 ? ' day' : '') + '">' + c + '</span>';
+      }).join('') + '</div>';
+  }
+  if (sc) {
+    var zs = [].slice.call(sc.querySelectorAll('.cr .z')).map(function (z) { return z.outerHTML; });
+    h += '<div class="sp-sc"><em>三传</em>' + zs.join('<b>›</b>') + '</div>';
+  }
+  h += '<span class="sp-more">' + (pan ? '全盘' : '') + '</span>';
+  box.innerHTML = h;
+  body.insertBefore(box, body.firstChild.nextSibling || body.firstChild);
+  box.onclick = function () { showPanSheet(body); };
+}
+function showPanSheet(body) {
+  var mask = $('#tocMask'), box = $('.tocbox', mask);
+  var parts = ['<div class="toch">本课课盘</div>'];
+  [].slice.call(body.querySelectorAll('.panwrap, .sike, .sanchuan')).forEach(function (el) {
+    parts.push(el.outerHTML);
+  });
+  box.innerHTML = parts.join('');
+  mask.classList.add('on');
+  bindPan(box);
+}
+
+/* 课内目录：一课上万字，没这个只能靠搜 */
+function buildToc(l) {
+  // ⚠️ 目录与「全盘」共用这一个浮层，各自重建整块内容——
+  //    早先目录容器是写死在 html 里的，点过全盘后它就被覆盖掉，再点目录直接崩。
+  var box = $('.tocbox');
+  var hs = (l.heads || []);
+  box.innerHTML = '<div class="toch">本课目录</div><div id="tocList">' + (hs.length
+    ? hs.map(function (h) { return '<button class="toci" data-a="' + h.a + '">' + h.t + '</button>'; }).join('')
+    : '<p class="muted">本课没有分节。</p>') + '</div>';
+  $$('.toci', box).forEach(function (b) {
+    b.onclick = function () {
+      $('#tocMask').classList.remove('on');
+      var el = document.getElementById(b.dataset.a);
+      if (el) el.scrollIntoView({ block: 'start' });
+    };
+  });
+}
+
 /* 正文里的式盘：点一格，中间说出这一格怎么读 */
 function bindPan(root) {
   $$('.pan .gong', root).forEach(function (g) {
@@ -261,6 +343,53 @@ function bindDoc(root) {
       var t = a.dataset.wiki || '', m = t.match(/^(\d\d)-/);
       if (m) { var id = 'L' + m[1]; if ((M.list || []).some(function (x) { return x.id === id; })) show('lesson', id); }
     };
+  });
+}
+
+RENDER.ref = function () {
+  var box = $('#rq');
+  if (!box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintRef, 160); };
+  }
+  paintRef();
+};
+function paintRef() {
+  // 数据已在手就同步画，别让读者看见一帧空白（与课文、搜索的处理一致）
+  if (window.DATA_REF) { renderRef(window.DATA_REF); return; }
+  $('#refList').innerHTML = '<p class="muted">正在取速查表…</p>';
+  needRef().then(renderRef).catch(function () {
+    $('#refList').innerHTML = '<p class="muted">速查表加载失败，检查网络后重试。</p>';
+  });
+}
+function renderRef(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) {
+      return (r.name + r.sec + r.lesson + r.text).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) { out.innerHTML = '<p class="muted">没找到这张表。换个词试试。</p>'; return; }
+  var html = '', cur2 = -1;
+  hit.forEach(function (r) {
+    if (r.num !== cur2) {
+      cur2 = r.num;
+      html += '<div class="refg">第 ' + r.num + ' 课 · ' + r.lesson + '</div>';
+    }
+    html += '<div class="refi"><button class="refh"><b>' + r.name +
+      '</b><span>' + r.sec + '</span></button><div class="refb">' + r.html +
+      '<button class="refj" data-id="L' + ('0' + r.num).slice(-2) + '">到第 ' + r.num + ' 课看讲解 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  $$('.refi', out).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () {
+      d.classList.toggle('open');
+      if (d.classList.contains('open')) bindPan(d);
+    };
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show('lesson', j.dataset.id); };
   });
 }
 
@@ -386,6 +515,12 @@ applyTheme(load(K.theme, null));
 /* ── 起动 ─────────────────────────────────────────────── */
 $('#btnBack').onclick = function () { history.back(); };
 $('#btnSearch').onclick = function () { show('search', null); };
+$('#fabToc').onclick = function () {
+  var body = $('#lessonBody'), l = lessonById(cur.id);
+  if (l) buildToc(l);
+  $('#tocMask').classList.add('on');
+};
+$('#tocMask').onclick = function (e) { if (e.target === $('#tocMask')) $('#tocMask').classList.remove('on'); };
 $$('.mi[data-go]').forEach(function (b) {
   b.onclick = function () { show(b.dataset.go, null); };
 });
