@@ -1,0 +1,14 @@
+{
+  "name": "六壬课程",
+  "short_name": "六壬课程",
+  "description": "按知识依赖顺序重排的大六壬自学教程",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12141c",
+  "theme_color": "#12141c",
+  "icons": [
+    { "src": "icon192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,208 @@
+/* 冒烟测试：在 jsdom 里真跑一遍页面。
+   ⭐ 这里的断言必须能真的失败——不只查"元素在不在"，还拿独立复算的盘面
+      与页面渲染出来的盘逐格比对，防止内容与算法悄悄分叉。 */
+const fs = require('fs');
+const path = require('path');
+let JSDOM;
+try { ({ JSDOM } = require('jsdom')); }
+catch (e) { ({ JSDOM } = require(path.join(__dirname, '..', 'bazi-course', 'node_modules', 'jsdom'))); }
+
+const dir = __dirname;
+let pass = 0, fail = 0;
+const ok = (c, m) => { c ? (pass++, console.log('  ✓', m)) : (fail++, console.log('  ✗', m)); };
+
+const dom = new JSDOM(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), {
+  runScripts: 'outside-only', pretendToBeVisual: true, url: 'https://x.test/liuren-course/'
+});
+const { window } = dom;
+const doc = window.document;
+let scrolls = [];
+window.scrollTo = (x, y) => { scrolls.push(typeof x === 'object' ? x.top : y); };
+window.matchMedia = window.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
+window.Element.prototype.scrollIntoView = function () { scrolls.push('into'); };
+
+// ⚠️ eval 在 strict 下不会把函数声明泄到全局，而浏览器的 <script> 会。
+// 去掉这一行指令，才是在模拟真实加载，而不是制造一个测不到函数的假环境。
+const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\s*/, ''));
+run('data/data-meta.js');
+run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
+run('app.js');
+const $ = s => doc.querySelector(s);
+const $$ = s => [].slice.call(doc.querySelectorAll(s));
+const M = window.DATA_META, C = window.DATA_COURSE;
+
+console.log('\n== 数据与内容源一致 ==');
+const mdFiles = fs.readdirSync(path.join(dir, 'content'))
+  .filter(f => /^\d\d-/.test(f) && !f.startsWith('00-'));
+ok(C.length === mdFiles.length, `课数与 content/ 的 md 数一致（${C.length}）`);
+ok(M.counts.lesson === C.length, 'meta 的课数与课文数一致');
+ok(M.plan.length >= C.length, `总目录计划表 ${M.plan.length} 课 ≥ 已成 ${C.length} 课`);
+ok(M.plan.filter(p => p.done).length === C.length, '标 ✅ 的课数＝实际写成的课数');
+ok(C.every(l => /class="src"/.test(l.html)), '每课都有出处标注');
+ok(C.every(l => /自测/.test(l.text) && /答案/.test(l.text)), '每课都有自测与答案');
+
+console.log('\n== 首页 ==');
+ok($('#hLesson').textContent === String(C.length), '首页课数＝' + C.length);
+ok($('#hPlan').textContent === String(M.counts.planned), '首页计划课数');
+ok(+$('#hPan').textContent > 0, '首页统计了式盘数');
+ok(/内容更新于/.test($('#buildInfo').textContent), '显示构建时间');
+const counts = JSON.parse(window.localStorage.getItem('liuren_course_counts') || '{}');
+ok(counts.lesson === C.length, '写了 liuren_course_counts 给导航看板当分母');
+
+console.log('\n== 课程列表 ==');
+$$('.mi[data-go="course"]')[0].onclick();
+const rows = $$('#courseList .li');
+ok(rows.length === M.plan.length, `列出全部 ${M.plan.length} 课（含未写的）`);
+ok($$('#courseList .li[data-id]').length === C.length, '可点的正好是已写成的 ' + C.length + ' 课');
+ok($$('#courseList .li.todo').length === M.plan.length - C.length, '其余标为待写');
+ok($$('#courseList .part').length >= 6, '按六部分分组');
+
+console.log('\n== 课文 ==');
+$$('#courseList .li[data-id]')[0].onclick();
+const body = $('#lessonBody');
+ok(/第1课/.test($('#ttl').textContent), '顶栏显示课号');
+ok(body.querySelectorAll('h2').length >= 5, '正文分节渲染');
+ok(!/\*\*/.test(body.textContent), '没有残留的 markdown 星号');
+ok(body.querySelectorAll('blockquote.cite').length > 0, '原文引用块有 cite 样式');
+ok(body.querySelectorAll('blockquote.warn').length > 0, '易错点有 warn 样式');
+
+console.log('\n== 式盘渲染（与独立复算逐格比对）==');
+const Z = '子丑寅卯辰巳午未申酉戌亥'.split('');
+const TJN = ['贵','蛇','朱','合','勾','青','空','虎','常','玄','阴','后'];
+const GR_D = {甲:'丑',戊:'丑',庚:'丑',乙:'子',己:'子',丙:'亥',丁:'亥',辛:'午',壬:'巳',癸:'巳'};
+const GR_N = {甲:'未',戊:'未',庚:'未',乙:'申',己:'申',丙:'酉',丁:'酉',辛:'寅',壬:'卯',癸:'卯'};
+function tp(yj, zs) { const off = (Z.indexOf(yj) - Z.indexOf(zs) + 12) % 12, m = {};
+  Z.forEach(d => m[d] = Z[(Z.indexOf(d) + off) % 12]); return m; }
+function tj(gan, shi, t) {
+  const gr = '卯辰巳午未申'.includes(shi) ? GR_D[gan] : GR_N[gan];
+  const dp = Z.find(d => t[d] === gr), shun = '亥子丑寅卯辰'.includes(dp), out = {};
+  TJN.forEach((n, i) => { const z = Z[((Z.indexOf(gr) + (shun ? i : -i)) % 12 + 12) % 12];
+    out[Z.find(k => t[k] === z)] = n; });
+  return { out, gr, dp, shun };
+}
+const pan = body.querySelector('.pan');
+ok(!!pan && pan.querySelectorAll('.gong').length === 12, '第1课的天地盘有十二宫');
+const exp = tp('未', '巳'), expTJ = tj('丙', '巳', exp);
+let panOK = true, tjOK = true;
+pan.querySelectorAll('.gong').forEach(g => {
+  const dp = g.querySelector('.dp').textContent;
+  if (g.querySelector('.tp').textContent !== exp[dp]) panOK = false;
+  if (g.querySelector('.tj').textContent !== expTJ.out[dp]) tjOK = false;
+});
+ok(panOK, '天盘十二格＝未将加巳时的复算结果');
+ok(tjOK, '天将十二格＝丙日昼贵亥临地盘酉、逆行的复算结果');
+ok(expTJ.gr === '亥' && expTJ.dp === '酉' && expTJ.shun === false, '复算本身：贵人亥临酉→逆行');
+
+console.log('\n== 四课与三传 ==');
+const ke = body.querySelectorAll('.sike .ke');
+ok(ke.length === 4, '四课渲染成四格');
+ok(ke[0].querySelector('.lb').textContent === '第四课' &&
+   ke[3].querySelector('.lb').textContent === '第一课', '四课从右到左：最左是第四课');
+ok(ke[3].querySelector('.dn').textContent === '丙', '第一课下神是日干丙');
+ok(/寄巳/.test(ke[3].textContent), '第一课标出日干寄宫');
+const cr = body.querySelectorAll('.sanchuan .cr');
+ok(cr.length === 3, '三传渲染成三行');
+ok(['初传','中传','末传'].every((t, i) => cr[i].querySelector('.lb').textContent === t), '初中末顺序');
+ok(cr[0].querySelector('.z').textContent === '子', '初传是子');
+ok(/w-shui/.test(cr[0].querySelector('.z').className), '干支按五行上色（子＝水）');
+
+console.log('\n== 点式盘看读法 ==');
+const g0 = pan.querySelectorAll('.gong')[0];
+g0.onclick();
+ok(/加/.test(pan.querySelector('.panmid').textContent), '点一格后中间说出「某加某」');
+ok(g0.classList.contains('hi'), '点中的格子高亮');
+
+console.log('\n== 起盘台 ==');
+$$('.mi[data-go="lab"]')[0].onclick();
+const lp = $('#labPan .pan');
+ok(!!lp && lp.querySelectorAll('.gong').length === 12, '起盘台画出十二宫');
+ok(/逆行/.test($('#labRead').textContent), '默认丙日巳时：说明为逆行');
+$('#s-gan').value = '戊'; $('#s-zs').value = '寅'; $('#s-yj').value = '未';
+$('#s-gan').onchange();
+ok(/夜/.test($('#labRead').textContent) && /顺行/.test($('#labRead').textContent),
+   '换成戊日寅时：夜贵未临地盘寅→顺行（＝第3课例二）');
+const lp2 = {};
+$('#labPan .pan').querySelectorAll('.gong').forEach(g => {
+  lp2[g.querySelector('.dp').textContent] = g.querySelector('.tj').textContent;
+});
+ok(lp2['寅'] === '贵' && lp2['卯'] === '蛇' && lp2['辰'] === '朱', '例二天将逐格：寅贵、卯蛇、辰朱');
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// 搜索走真实交互：填框 → 派发 input → 等 debounce。直接调内部函数测不出绑定有没有接上。
+async function typeSearch(kw) {
+  const q = $('#q');
+  q.value = kw;
+  q.dispatchEvent(new window.Event('input'));
+  await sleep(220);
+}
+
+(async () => {
+  console.log('\n== 搜索 ==');
+  $('#btnSearch').onclick();
+  await typeSearch('月将');
+  ok($$('#sres .sr').length > 0, '单词搜到结果');
+  ok($$('#sres .sr').every(b => /第\d课/.test(b.querySelector('b').textContent)), '结果标出课号');
+  ok($$('#sres .sr').some(b => /<em>/.test(b.querySelector('span').innerHTML)), '命中词在片段里高亮');
+
+  await typeSearch('月将 中气');
+  const multi = $$('#sres .sr');
+  ok(multi.length > 0, '空格分隔的多词搜索有结果');
+  ok(multi.every(b => {
+    const l = C.find(x => x.id === b.dataset.id);
+    return l.text.includes('月将') && l.text.includes('中气');
+  }), '多词结果里两个词都出现');
+
+  await typeSearch('这个词肯定不存在xyz');
+  ok(/没找到/.test($('#sres').textContent), '搜不到时给提示');
+
+  console.log('\n== 搜索跳转要滚到那一处，不是回课文顶部 ==');
+  await typeSearch('中气');
+  scrolls = [];
+  $$('#sres .sr')[0].onclick();
+  ok(!!$('#lessonBody mark.hit'), '命中处套上了 mark.hit');
+  ok(scrolls.includes('into'), '滚到了命中处');
+
+  console.log('\n== 路由与返回栈 ==');
+  ok($('#s-lesson').classList.contains('active'), '当前在课文屏');
+  window.history.back();
+  await sleep(30);
+  ok($('#s-search').classList.contains('active'), '返回回到搜索屏（栈没被截断）');
+  window.history.forward();
+  await sleep(30);
+  ok($('#s-lesson').classList.contains('active'), '前进还能回到课文（popstate 没截断 forward 侧）');
+
+  console.log('\n== 阅读进度 ==');
+  window.scrollY = 400;
+  Object.defineProperty(window.document.documentElement, 'scrollHeight', { value: 2000, configurable: true });
+  Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true });
+  window.dispatchEvent(new window.Event('scroll'));
+  await sleep(300);
+  const read = JSON.parse(window.localStorage.getItem('liuren_course_read') || '{}');
+  ok(Object.keys(read).length > 0, '滚动后记下了阅读百分比');
+
+  console.log('\n== 主题 ==');
+  const t0 = doc.documentElement.getAttribute('data-theme');
+  $('#btnTheme').onclick();
+  const t1 = doc.documentElement.getAttribute('data-theme');
+  $('#btnTheme').onclick();
+  const t2 = doc.documentElement.getAttribute('data-theme');
+  $('#btnTheme').onclick();
+  const t3 = doc.documentElement.getAttribute('data-theme');
+  ok(t0 === null && t1 === 'light' && t2 === 'dark' && t3 === null, '主题三态循环：随→浅→深→随');
+
+  console.log('\n== 按需加载与缓存 ==');
+  const app = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+  ok(/data-course\.js\?v=/.test(app), '按需加载的课文包带 ?v= 版本号');
+  const sw = fs.readFileSync(path.join(dir, 'sw.js'), 'utf8');
+  ok(/fetch\(e\.request\)[\s\S]{0,200}catch/.test(sw), 'sw 网络优先');
+  ok(/ignoreSearch:\s*true/.test(sw), 'sw 离线回退忽略 ?query');
+  ok(/addAll[\s\S]{0,80}catch/.test(sw), 'sw 的 addAll 有 catch');
+
+  console.log('\n== 套壳适配 ==');
+  ok(/wst-frame-guard/.test(app) && /window\.self\s*!==\s*window\.top/.test(app),
+     'iframe 内加 wst-frame-guard');
+  ok(/history\.pushState/.test(app) && /history\.go\(/.test(app), 'history 包装齐全');
+
+  console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);
+  process.exit(fail ? 1 : 0);
+})();

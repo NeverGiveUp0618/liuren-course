@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>六壬课程</title>
+<meta name="theme-color" content="#12141c">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <button class="back" id="btnBack" aria-label="返回">‹ 返回</button>
+  <h1 id="ttl">六壬课程</h1>
+  <div class="acts">
+    <button class="act" id="btnSearch" aria-label="搜索">索</button>
+    <button class="act" id="btnTheme" aria-label="配色：跟随系统">随</button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- 首页 -->
+  <section class="screen active" id="s-home">
+    <div class="hero">
+      <div class="hero-t">大六壬<em>课程</em></div>
+      <p class="hero-s">按知识依赖顺序重排的自学教程 · 一课一课往下读</p>
+      <div class="stats">
+        <div><b id="hLesson">—</b><span>课已成</span></div>
+        <div><b id="hPlan">—</b><span>课排定</span></div>
+        <div><b id="hPan">—</b><span>张课盘</span></div>
+      </div>
+    </div>
+    <div id="resume"></div>
+    <div class="menu">
+      <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
+      <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将与占时，天盘实时转</span></button>
+      <button class="mi" data-go="outline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>
+    </div>
+    <div class="card" id="progCard">
+      <div class="row spread"><b>学习进度</b><span class="muted" id="progPct">—</span></div>
+      <div class="bar"><i id="progBar" style="width:0"></i></div>
+      <div class="row wrap" id="progChips"></div>
+    </div>
+    <p class="muted center" id="buildInfo"></p>
+  </section>
+
+  <!-- 课程列表 -->
+  <section class="screen" id="s-course"><div id="courseList"></div></section>
+
+  <!-- 课文 -->
+  <section class="screen" id="s-lesson">
+    <div id="lessonBody" class="doc"></div>
+    <div class="pager">
+      <button class="btn" id="prevL">‹ 上一课</button>
+      <button class="btn" id="nextL">下一课 ›</button>
+    </div>
+  </section>
+
+  <!-- 学习路线 -->
+  <section class="screen" id="s-outline"><div id="outlineBody" class="doc"></div></section>
+
+  <!-- 起盘台 -->
+  <section class="screen" id="s-lab">
+    <p class="lead">第 2、3 课的两个动作——<b>月将加时</b>起天盘、<b>贵人落点定顺逆</b>排天将——在这里可以直接拨着看。</p>
+    <div class="ctrl">
+      <div class="fld"><label for="s-yj">月将</label><select id="s-yj"></select></div>
+      <div class="fld"><label for="s-zs">占时</label><select id="s-zs"></select></div>
+      <div class="fld"><label for="s-gan">日干</label><select id="s-gan"></select></div>
+    </div>
+    <div id="labPan"></div>
+    <div class="readout" id="labRead"></div>
+    <blockquote class="warn">⚠️ 只做天盘与天将两步，<b>不起四课三传</b>——那两步是第 4 课和第 5、6 课的内容。</blockquote>
+  </section>
+
+  <!-- 搜索 -->
+  <section class="screen" id="s-search">
+    <div class="sbox"><input id="q" type="search" placeholder="搜全部课文，如：月将 中气" autocomplete="off"></div>
+    <div id="sres"></div>
+  </section>
+</main>
+
+<script src="data/data-meta.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
