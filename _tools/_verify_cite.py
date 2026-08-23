@@ -13,8 +13,20 @@ for ln in raw:
 pages={k:"".join(v) for k,v in pages.items()}
 CJK=re.compile(r"[一-鿿]")
 def norm(s): return "".join(c for c in s if CJK.match(c))
-npages={k:norm(v) for k,v in pages.items()}
-allpg=sorted(npages)
+# ⚠️ 引文常跨页（原书一句话被页脚劈开）。按页分别 in 判断会把这类全判成"全书未找到"，
+#    所以拼成一条连续全文，记下每页的区间，再看命中位置压在哪几页上。
+allpg=sorted(pages)
+full=""; span={}
+for p_ in allpg:
+    t=norm(pages[p_]); span[p_]=(len(full),len(full)+len(t)); full+=t
+def pages_of(a,b):
+    return [p_ for p_ in allpg if span[p_][0] < b and a < span[p_][1]]
+def find_pages(ns):
+    out=[];i=full.find(ns)
+    while i>=0 and len(out)<6:
+        out.append(tuple(pages_of(i,i+len(ns))))
+        i=full.find(ns,i+1)
+    return out
 CITE=re.compile(r"〔通解上 p([\d\-]+)｜PDF p([\d\-]+)〕")
 bad=[];ok=0;total=0;untraced=[]
 for f in sorted(glob.glob(os.path.join(OB,"*.md"))):
@@ -41,17 +53,17 @@ for f in sorted(glob.glob(os.path.join(OB,"*.md"))):
                 untraced.append((os.path.basename(f),start,pdfpg));continue
             problems=[]
             for q in frags:
-                for s in re.split(r"…+",q):
-                    ns=norm(s)
+                for s_ in re.split(r"…+",q):
+                    ns=norm(s_)
                     if len(ns)<8: continue
-                    if any(ns in npages.get(p,"") for p in pgrange): continue
-                    where=[p for p in allpg if ns in npages[p]]
-                    problems.append((s[:26],where[:4]))
+                    hits=find_pages(ns)
+                    if any(set(h)&set(pgrange) for h in hits): continue
+                    problems.append((s_[:26],[list(h) for h in hits]))
             if problems: bad.append((os.path.basename(f),start,problems,pdfpg))
             else: ok+=1
 print("引文条目 %d：命中 %d，需复核 %d，转述未加引号 %d"%(total,ok,len(bad),len(untraced)))
 for b in bad:
     print("-"*58); print("%s 行%s  标注 PDF p%s"%(b[0],b[1],b[3]))
-    for s,where in b[2]: print("    x %s…  实际在 PDF页 %s"%(s,where if where else "全书未找到"))
+    for s_,where in b[2]: print("    x %s…  实际在 PDF页 %s"%(s_,where if where else "全书未找到"))
 for u in untraced: print("  · 转述(无「」)，页码需人工确认：%s 行%s PDF p%s"%u)
 

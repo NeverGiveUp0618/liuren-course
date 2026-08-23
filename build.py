@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, 'content')
 OUT = os.path.join(HERE, 'data')
 
-BASE_LESSONS = 3      # 已成课数下限
+BASE_LESSONS = 8      # 已成课数下限
 TOTAL_PLANNED = 25    # 大纲里排定的总课数
 
 

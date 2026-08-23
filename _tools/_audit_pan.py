@@ -71,4 +71,65 @@ for name,gan,zhi,yj,zs in CASES:
         else: c0=None; ct="需比用/涉害等"
         if c0: print("  三传:",chuan(t,c0),"　课体:",ct)
 print("="*60)
-print("盘面复算：不一致 %d 处"%bad)
+print("内置 case 复算：不一致 %d 处"%bad)
+
+# ── 通用校验：扫描 content 里的每一张天地盘，验证它自洽 ──────────────
+# ⭐ 内置 case 只覆盖已知的几张盘；新写的课随时会加新盘，所以再加一层通用检查：
+#    ① 天盘必须是地盘的整体平移（否则就不是"月将加时"排出来的）
+#    ② 天将若给了，必须是从某一格起顺行或逆行连续排满十二位
+import glob, re as _re
+def scan_all():
+    C = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "content")
+    bad = 0; n = 0
+    for f in sorted(glob.glob(os.path.join(C, "*.md"))):
+        lines = open(f).read().split("\n")
+        for i, ln in enumerate(lines):
+            if not ln.startswith("|") or "地盘" not in ln:
+                continue
+            cells = [c.replace("*", "").strip() for c in ln.strip().strip("|").split("|")]
+            if cells[0] != "地盘" or len(cells) != 13:
+                continue
+            order = cells[1:]
+            rows = {}
+            for j in range(i + 1, min(i + 5, len(lines))):
+                if not lines[j].startswith("|"):
+                    break
+                r = [c.replace("*", "").strip() for c in lines[j].strip().strip("|").split("|")]
+                if len(r) == 13 and r[0] in ("天盘", "天将"):
+                    rows[r[0]] = r[1:]
+            if "天盘" not in rows:
+                continue
+            n += 1
+            tag = "%s 行%d" % (os.path.basename(f)[:10], i + 1)
+            tpv = dict(zip(order, rows["天盘"]))
+            offs = {(Z.index(tpv[d]) - Z.index(d)) % 12 for d in order}
+            if len(offs) != 1:
+                print("  x %s 天盘不是整体平移（不可能由月将加时排出）" % tag); bad += 1; continue
+            off = offs.pop()
+            if "天将" in rows:
+                tjv = dict(zip(order, rows["天将"]))
+                gpos = [d for d in order if tjv[d] == "贵"]
+                if len(gpos) != 1:
+                    print("  x %s 天将里贵人不唯一" % tag); bad += 1; continue
+                gz_ = tpv[gpos[0]]
+                for shun in (True, False):
+                    exp = {}
+                    for k, name in enumerate(TJ):
+                        z = Z[((Z.index(gz_) + (k if shun else -k)) % 12 + 12) % 12]
+                        exp[[d for d in order if tpv[d] == z][0]] = name
+                    if exp == tjv:
+                        print("  ✓ %s 天盘平移%2d位，天将自贵人%s%s连续" % (tag, off, gz_, "顺行" if shun else "逆行"))
+                        break
+                else:
+                    print("  x %s 天将不是从贵人起连续顺行或逆行" % tag); bad += 1
+            else:
+                print("  ✓ %s 天盘平移%2d位（未给天将）" % (tag, off))
+    print("扫描课文里的盘 %d 张：不自洽 %d 张" % (n, bad))
+    return bad
+
+print("=" * 60)
+print("通用校验：课文里的每一张盘")
+bad += scan_all()
+print("=" * 60)
+print("总计：不一致 %d 处" % bad)
+
