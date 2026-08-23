@@ -279,6 +279,24 @@ async function typeSearch(kw) {
   ok(/ignoreSearch:\s*true/.test(sw), 'sw 离线回退忽略 ?query');
   ok(/addAll[\s\S]{0,80}catch/.test(sw), 'sw 的 addAll 有 catch');
 
+  console.log('\n== 窄屏不溢出（360px 的安卓在微信里最常见）==');
+  {
+    const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
+    // 内容块不许写裸的固定宽度：360px 屏减掉 main 的左右 padding 只剩 332px，
+    // 早先 .sanchuan 写死 max-width:340px，页面就能左右拖动。
+    const blocks = ['.sanchuan', '.pan', '.sike'];
+    blocks.forEach(sel => {
+      const m = css.match(new RegExp('\\' + sel + '\\{[^}]*\\}'));
+      ok(!!m, sel + ' 有样式');
+      if (!m) return;
+      const w = m[0].match(/(?:max-)?width:\s*([^;}]+)/);
+      ok(!w || /100%|min\(/.test(w[1]), sel + ' 的宽度带 100%／min() 保护（不是裸的固定 px）');
+    });
+    ok(/main\{overflow-x:clip\}/.test(css.replace(/\s/g, '')), '兜底 overflow-x:clip');
+    ok(!/body\{[^}]*overflow-x:\s*hidden/.test(css.replace(/\s/g, '')),
+       '没有给 body 上 overflow-x:hidden（那会让 sticky 失效）');
+  }
+
   console.log('\n== 套壳适配 ==');
   ok(/wst-frame-guard/.test(app) && /window\.self\s*!==\s*window\.top/.test(app),
      'iframe 内加 wst-frame-guard');

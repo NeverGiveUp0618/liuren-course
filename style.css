@@ -46,6 +46,9 @@ body{background:var(--ground);color:var(--ink);font-family:var(--f-body);
 html.wst-frame-guard .back{display:none}
 /* 屏 */
 main{max-width:820px;margin:0 auto;padding:14px 14px calc(40px + var(--safe-b))}
+/* 兜底：任何漏网的宽元素都不许把页面顶出横向滚动。
+   ⚠️ 只能用 clip，不能用 hidden —— hidden 会让 position:sticky 失效（吸顶盘直接没了）。 */
+main{overflow-x:clip}
 .screen{display:none}
 .screen.active{display:block;animation:fade .22s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -136,7 +139,7 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
   align-items:center;justify-content:center;text-align:center;font-family:var(--f-mono);
   font-size:11px;color:var(--ink3);padding:6px;line-height:1.7}
 /* ── 四课（从右到左，最右是第一课） ── */
-.sike{display:flex;gap:6px;justify-content:center;margin:18px 0;flex-wrap:nowrap;overflow-x:auto}
+.sike{display:flex;gap:6px;justify-content:center;margin:18px 0;flex-wrap:nowrap;overflow-x:auto;max-width:100%}
 .ke{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:8px 6px;
   min-width:66px;text-align:center;display:flex;flex-direction:column;gap:2px}
 .ke .tj{font-size:11px;color:var(--gold)}
@@ -145,12 +148,12 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .ke .dn{font-family:var(--f-disp);font-size:18px;padding-top:3px;border-top:1px solid var(--line)}
 .ke .nt{font-size:10px;color:var(--ink3);line-height:1.4}
 /* ── 三传 ── */
-.sanchuan{display:flex;flex-direction:column;gap:5px;margin:18px 0;max-width:340px}
+.sanchuan{display:flex;flex-direction:column;gap:5px;margin:18px 0;max-width:min(340px,100%)}
 .cr{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);
-  border-radius:3px;padding:7px 12px}
+  border-radius:3px;padding:7px 12px;min-width:0}
 .cr .lb{font-family:var(--f-mono);font-size:11px;color:var(--gold);min-width:32px}
 .cr .z{font-family:var(--f-disp);font-size:21px;font-weight:600;min-width:26px}
-.cr .ex{font-size:12.5px;color:var(--ink3)}
+.cr .ex{font-size:12.5px;color:var(--ink3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 起盘台 */
 .ctrl{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px;padding:14px;background:var(--paper);
   border:1px solid var(--line);border-radius:4px}
@@ -202,7 +205,8 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .refh{all:unset;cursor:pointer;display:flex;align-items:baseline;gap:8px;width:100%;padding:11px 13px}
 .refh:focus-visible{outline:2px solid var(--blue)}
 .refh b{font-size:14.5px;font-weight:600;flex:1;min-width:0}
-.refh span{font-size:11.5px;color:var(--ink3);white-space:nowrap;font-family:var(--f-mono)}
+.refh span{font-size:11.5px;color:var(--ink3);white-space:nowrap;font-family:var(--f-mono);
+  max-width:42%;overflow:hidden;text-overflow:ellipsis;flex-shrink:1}
 .refb{display:none;padding:0 13px 12px}
 .refi.open .refb{display:block}
 .refi.open .refh b{color:var(--gold)}

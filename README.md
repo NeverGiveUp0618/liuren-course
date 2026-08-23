@@ -76,6 +76,16 @@ python3 _tools/_audit_pan.py             # 盘面复算，与课文里的表逐�
 ⭐ 一个只会打印通过的脚本毫无价值。`_verify_cite.py` 的价值就在于它**真的报过错**；
 改了检查逻辑，先确认它对已知的坏数据仍会报警。
 
+## ⚠️ 窄屏：内容块不许写裸的固定宽度
+
+360px 的安卓（**微信里最常见的宽度**）减掉 `main` 左右各 14px 的 padding，内容区只剩 **332px**。
+`.sanchuan` 早先写死 `max-width:340px`，于是三传表比内容区宽 8px，**整页就能左右拖动**。
+
+- 内容块一律写 `min(340px, 100%)` 或 `width:100%`，smoke 有断言逐个查 `.sanchuan/.pan/.sike`
+- `main{overflow-x:clip}` 兜底。⚠️ **只能 clip 不能 hidden**——`body{overflow-x:hidden}` 会让
+  `position:sticky` 失效，吸顶盘直接没了
+- ⚠️ **headless Chrome 有 500px 最小视口，模拟不了 360px**，这类问题截图看不出来，只能审 CSS
+
 ## 2026-08-23 全量排查（做完一次，问题与结论记在这）
 
 **发现的最大问题是校验本身有盲区**：
@@ -153,7 +163,7 @@ mdlite.py       零依赖 markdown 转换器（含三种盘的识别）
 index.html      页面骨架
 style.css       青金蓝与琥珀（含深色模式）
 app.js          路由 / 渲染 / 起盘台 / 搜索定位 / 阅读位置
-smoke.js        jsdom 冒烟测试（81 项，含起课引擎 1440 组合穷举）
+smoke.js        jsdom 冒烟测试（89 项，含起课引擎 1440 组合穷举）
 data/*.js       产物，勿手改（course＝课文按需加载／meta＝首屏／ref＝速查表按需加载）
 _tools/         引文回查、盘面复算、docx 提取
 _ref/           参考资料
