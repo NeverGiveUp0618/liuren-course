@@ -141,7 +141,8 @@ async function typeSearch(kw) {
   $('#btnSearch').onclick();
   await typeSearch('月将');
   ok($$('#sres .sr').length > 0, '单词搜到结果');
-  ok($$('#sres .sr').every(b => /第\d课/.test(b.querySelector('b').textContent)), '结果标出课号');
+  // ⚠️ 课号会超过 9（现在有 25 课），这里必须 \d+ —— 写死一位数会在第 10 课上线时假红
+  ok($$('#sres .sr').every(b => /第\d+课/.test(b.querySelector('b').textContent)), '结果标出课号');
   ok($$('#sres .sr').some(b => /<em>/.test(b.querySelector('span').innerHTML)), '命中词在片段里高亮');
 
   await typeSearch('月将 中气');

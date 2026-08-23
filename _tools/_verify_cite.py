@@ -33,6 +33,10 @@ def load(fn):
             pages.setdefault(cur, [])
             continue
         if cur is not None:
+            # ⚠️ 页眉会被夹进跨页引文里，把连续的原文劈断（"…一般贵人" + "大六壬通解" + "六月以前见…"）。
+            #    这类整行页眉不是正文，扫描时丢掉。
+            if ln.strip() in ('大六壬通解', '叶飘然大六壬讲义'):
+                continue
             pages.setdefault(cur, []).append(ln)
     full, span = '', {}
     for p in sorted(pages):
