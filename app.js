@@ -8,6 +8,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   counts: 'liuren_course_counts', theme: 'liuren_course_theme',
+  progopen: 'liuren_course_progopen',
   qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen'
 };
 // ⚠️ 这个项目原本没有 esc——课例的标题/占类是从 md 抄来的纯文本，
@@ -174,6 +175,22 @@ RENDER.home = function () {
   var total = (M.list || []).length || 1;
   $('#progPct').textContent = done + ' / ' + total + ' 课已读完';
   $('#progBar').style.width = Math.round(done / total * 100) + '%';
+  // 25 个课号 chip 占掉大半屏，默认折起来；进度条和"x/25 已读完"照常露在外面
+  var pc = $('#progCard'), pt = $('#progTog');
+  if (pt && !pt._bound) {
+    pt._bound = 1;
+    pt.onclick = function () {
+      var on = !pc.classList.contains('open');
+      pc.classList.toggle('open', on);
+      pt.setAttribute('aria-expanded', on ? 'true' : 'false');
+      save(K.progopen, on ? 1 : 0);
+    };
+  }
+  if (pc) {
+    var on = !!load(K.progopen, 0);
+    pc.classList.toggle('open', on);
+    if (pt) pt.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
   $('#progChips').innerHTML = (M.list || []).map(function (l) {
     var p = read[l.id] || 0;
     return '<span class="chip' + (p >= 90 ? ' done' : '') + '">第' + l.num + '课 ' +

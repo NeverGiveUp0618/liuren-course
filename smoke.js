@@ -299,6 +299,22 @@ async function typeSearch(kw) {
        '没有给 body 上 overflow-x:hidden（那会让 sticky 失效）');
   }
 
+  console.log('\n== 学习进度折叠 ==');
+  {
+    const card = $('#progCard'), tog = $('#progTog');
+    ok(!!tog, '进度标题是可点的折叠头');
+    ok(!card.classList.contains('open'), '默认收起（25 个课号 chip 太占屏）');
+    // 进度条和"x/25 已读完"必须始终露在外面，折的只是 chip
+    ok(/\d+ \/ \d+ 课已读完/.test($('#progPct').textContent), '百分比常显');
+    ok(!!$('#progBar'), '进度条常显');
+    ok($$('#progChips .chip').length === M.list.length, '收起时 chip 仍然渲染了（只是 CSS 隐藏）');
+    tog.onclick();
+    ok(card.classList.contains('open'), '点一下展开');
+    ok(tog.getAttribute('aria-expanded') === 'true', 'aria-expanded 跟着变');
+    tog.onclick();
+    ok(!card.classList.contains('open'), '再点收起');
+  }
+
   console.log('\n== 课例题库 ==');
   {
     ok(Q.items.length === M.counts.quiz && Q.items.length >= 126,

@@ -260,3 +260,12 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .qrow .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
 .qrow .dot.new{background:var(--line)}
 .qrow .dot.ok{background:var(--gold)}
+
+/* 学习进度：25 个课号 chip 折叠收纳（进度条与百分比常显） */
+.proghd{display:flex;align-items:center;gap:7px;width:100%;padding:0;background:none;
+  border:0;color:var(--ink);font-family:inherit;font-size:inherit;cursor:pointer;text-align:left}
+.proghd b{flex:1;font-size:15px}
+.proghd .ar{color:var(--gold);transition:transform .18s;display:inline-block;font-size:15px}
+#progCard.open .proghd .ar{transform:rotate(90deg)}
+#progChips{display:none}
+#progCard.open #progChips{display:flex}
