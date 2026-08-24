@@ -72,8 +72,8 @@ def parse_plan(md):
 def build_lessons(collect_md=None):
     out = []
     for fn in sorted(os.listdir(SRC)):
-        if not fn.endswith('.md') or fn.startswith('00-') or fn.startswith('99-'):
-            continue   # 00 是总目录、99 是课例题库，都不是课
+        if not fn.endswith('.md') or fn.startswith(('00-', '98-', '99-')):
+            continue   # 00 总目录、98 格局详解、99 课例题库，都不是课
         m = re.match(r'^(\d\d)-(.+)\.md$', fn)
         if not m:
             print('  跳过（文件名不合规）：', fn)

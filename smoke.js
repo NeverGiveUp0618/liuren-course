@@ -36,7 +36,7 @@ const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ;
 console.log('\n== 数据与内容源一致 ==');
 // ⚠️ 00 是总目录、99 是课例题库——都不是课，别把它们算进课数
 const mdFiles = fs.readdirSync(path.join(dir, 'content'))
-  .filter(f => /^\d\d-/.test(f) && !f.startsWith('00-') && !f.startsWith('99-'));
+  .filter(f => /^\d\d-/.test(f) && !/^(00|98|99)-/.test(f));
 ok(C.length === mdFiles.length, `课数与 content/ 的 md 数一致（${C.length}）`);
 ok(M.counts.lesson === C.length, 'meta 的课数与课文数一致');
 ok(M.plan.length >= C.length, `总目录计划表 ${M.plan.length} 课 ≥ 已成 ${C.length} 课`);
