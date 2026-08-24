@@ -191,7 +191,7 @@ def check_structure(f, text):
             traced = any(k in blk for k in ('〔通解', '出处标注', '〔存疑〕', '略去')) or re.search(r'第 ?\d+ ?课', blk)
             # ⭐/💡 开头是**我写的提示块**，〔订正〕是校勘说明，题库开头的 **这是什么** 是导言——
             #    这三类里的「」是术语或复述，本来就不该有出处。以前它们占了误报的 12/14。
-            hint = re.match(r'>?\s*(⭐|💡|〔订正〕|\*\*这是什么\*\*|\*\*和 |⚠️)', blk.lstrip('> '))
+            hint = re.match(r'>?\s*(⭐|💡|〔订正〕|〔已核原书〕|〔存疑〕|\*\*这是什么\*\*|\*\*和 |⚠️)', blk.lstrip('> '))
             if hint: traced = True
             if '「' in blk and '」' in blk and not traced:
                 flag('引文无出处', f, start, blk.strip()[:44], '?')
