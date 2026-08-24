@@ -13,15 +13,14 @@ const i=h.indexOf("const DR_CASES=");const r=h.slice(i);const m=r.slice(1).searc
 const ctx={};vm.runInNewContext(r.slice(0,m+1)+";o=DR_CASES.map(c=>c.id)",ctx);
 console.log(JSON.stringify(ctx.o));"""],capture_output=True,text=True).stdout))
 
-# ⚠️ 已查实的盘面订正——**只有这一处是盘真的错了**，改的依据写在旁边
-FIX = {
- 'bing2': dict(yj='巳', why='原数据月将作「辰」（月将辰加占时酉＝第六局），'
-        '与格名自称的「第五局」、与「卯为日鬼加干」（己寄未，干上须为卯）、'
-        '与三传卯亥未的递取（须 off=8）三处都对不上；月将取巳三处同时成立，是唯一解。'),
-}
-# 标注措辞订正（盘本身没错）
-MT_FIX = {
- 'lmai4': ('丁丑日第二局', '丁丑日第一局（伏吟）'),
+# ⚠️ 这两处**源头 liuren-game 已经改好了**（2026-08-24），这里只留一句说明，
+#    让读者知道这张盘与某些流传版本不同。别再在这里改数据——那会造成两边分叉。
+NOTE = {
+ 'bing2': '〔订正〕原数据月将作「辰」（辰加酉＝第六局），与格名自称的「第五局」、'
+          '与「卯为日鬼加干」（己寄未，干上须为卯）、与三传卯亥未的递取（须 off=8）'
+          '三处都对不上；月将取**巳**三处同时成立，是唯一解，已订正。',
+ 'lmai4': '〔订正〕原标「第二局」，但月将＝占时，实为**伏吟第一局**；'
+          '三传丑戌未正是伏吟课的**用刑取传**（丑刑戌、戌刑未），与第一局吻合，已订正。',
 }
 
 CATS = ['求财','求官','占病','占婚','占产','占宅','买卖','失物','词讼','逃亡','谋事','趋谒','进退','因财致祸','天时','迁移']
@@ -41,7 +40,10 @@ out.append("""# 大六壬 · 课例题库
 
 > ⚠️ **盘是复算的，不是照抄**：原书只给日干支／月将／占时／三传四样，
 > 天盘、天将、四课、遁干、六亲、旬空**全部按课文第 2-7 课的方法重排**，所以盘必然自洽。
-> 复算与原书文字冲突的地方，已在该例下用〔订正〕注明。
+> 复算与原书文字冲突的地方，已在该例下注明：
+> **〔订正〕**＝原数据错了、已改（2 例）；**〔存疑〕**＝盘是据原书零星描述反推的，
+> 干上支上与格局说法都吻合，但原书另给的三传按此盘排不出来（5 例）——
+> 这 5 例**学格局照读，别拿它当「三传怎么起」的范例**。
 
 ---
 """)
@@ -53,14 +55,12 @@ for ci, cat in enumerate(CATS):
     out.append("## %s、%s\n" % (cnum(ci), cat))
     for c in items:
         bd = dict(c['board'])
-        note_fix = ''
-        if c['id'] in FIX:
-            f = FIX[c['id']]; bd.update({k: v for k, v in f.items() if k != 'why'})
-            note_fix = '〔订正〕**' + f['why'] + '**'
         b = build(bd)
         mt = bd.get('mt', '')
-        for k, (a, bb) in MT_FIX.items():
-            if c['id'] == k: mt = mt.replace(a, bb); note_fix = note_fix or ('〔订正〕原书标「%s」，但月将＝占时，是**伏吟第一局**；三传丑戌未正是伏吟课的**用刑取传**（丑刑戌、戌刑未），与第一局吻合。' % a)
+        notes = []
+        if c['id'] in NOTE: notes.append(NOTE[c['id']])
+        # board.warn ＝ 盘是据原书零星描述反推的，三传与本盘的递取对不上
+        if bd.get('warn'): notes.append('〔存疑〕' + bd['warn'])
         tg = tags_of(c, b)
         star = '⭐ ' if c['id'] in INTRO else ''
         stat['n'] += 1; stat['star'] += (1 if star else 0)
@@ -73,7 +73,7 @@ for ci, cat in enumerate(CATS):
         out.append("**四课**\n\n" + md_sike(b) + "\n")
         out.append("**三传**\n\n" + md_sanchuan(b) + "\n")
         out.append("**盘要点**：%s\n" % plain(c['bnote']))
-        if note_fix: out.append("> " + note_fix + "\n")
+        for nt in notes: out.append("> " + nt + "\n")
         out.append("**怎么断**\n")
         for st in c['steps']:
             out.append("**%s**\n" % plain(st['h']))

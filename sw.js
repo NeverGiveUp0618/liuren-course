@@ -1,7 +1,7 @@
 /* 网络优先。⚠️ 微信 X5 内核缓存极顽固，会无视 URL 的 ?query 按路径缓存，
    缓存优先会让改完的内容长期看不到——其余几个 App 都因此改成网络优先。
    内容更新只需重跑 build.py 并 push，不必每次 bump 这里。 */
-var CACHE = 'liuren-course-v3-quiz';
+var CACHE = 'liuren-course-v4-quizfix';
 var CORE = ['./', './index.html', './style.css', './app.js',
             './data/data-meta.js', './manifest.json'];
 
