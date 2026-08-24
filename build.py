@@ -72,8 +72,8 @@ def parse_plan(md):
 def build_lessons(collect_md=None):
     out = []
     for fn in sorted(os.listdir(SRC)):
-        if not fn.endswith('.md') or fn.startswith('00-'):
-            continue
+        if not fn.endswith('.md') or fn.startswith('00-') or fn.startswith('99-'):
+            continue   # 00 是总目录、99 是课例题库，都不是课
         m = re.match(r'^(\d\d)-(.+)\.md$', fn)
         if not m:
             print('  跳过（文件名不合规）：', fn)
@@ -178,6 +178,43 @@ def build_ref(lessons_md):
     return out
 
 
+def build_quiz():
+    """99-课例题库.md → 按占类分组的课例。
+    ⚠️ 题库的 md 是**生成物的再加工**（源在 liuren-game 的 DR_CASES/DR_CASELIB），
+       但落地之后**以这个 md 为准**——盘是照课文第 2-7 课的方法复算的，game 那边没有。"""
+    fp = os.path.join(SRC, '99-课例题库.md')
+    if not os.path.exists(fp):
+        return [], []
+    md = read(fp)
+    # 分类：## 一、求财
+    cats, items = [], []
+    parts = re.split(r'^## [一二三四五六七八九十]+、(.+)$', md, flags=re.M)
+    for i in range(1, len(parts), 2):
+        cat = parts[i].strip()
+        body = parts[i + 1]
+        blocks = re.split(r'^### (?=【例\d)', body, flags=re.M)
+        cnt = 0
+        for blk in blocks[1:]:
+            head = blk.split('\n', 1)[0]
+            m = re.match(r'【例(\d+)】\s*(⭐\s*)?(.+?)\s*(`.*)?$', head)
+            if not m:
+                sys.exit('✗ 题头解析不了：' + head[:60])
+            n = int(m.group(1))
+            tags = re.findall(r'`([^`]+)`', m.group(4) or '')
+            title = m.group(3).strip()
+            html = mdlite.md2html('### ' + blk)
+            items.append({'n': n, 'cat': cat, 'title': title,
+                          'star': 1 if m.group(2) else 0, 'tags': tags,
+                          'html': html, 'text': mdlite.strip_md(blk)})
+            cnt += 1
+        cats.append({'name': cat, 'n': cnt})
+    # ⚠️ 例号必须**从 1 连续排到底**：它是跨占类的全局序号，界面上直接显示
+    ns = sorted(x['n'] for x in items)
+    if ns != list(range(1, len(items) + 1)):
+        sys.exit('✗ 例号不连续：共 %d 例，但编号是 %s…%s' % (len(ns), ns[:3], ns[-3:]))
+    return cats, items
+
+
 def main():
     if not os.path.isdir(SRC):
         sys.exit('找不到内容源目录：%s' % SRC)
@@ -224,15 +261,21 @@ def main():
 
     ref = build_ref(lessons_md)
     counts['ref'] = len(ref)
+    qcats, qitems = build_quiz()
+    counts['quiz'] = len(qitems)
+    counts['quizstar'] = sum(x['star'] for x in qitems)
     meta['counts'] = counts
     s1 = write_js('data-course.js', 'DATA_COURSE', lessons)
     s2 = write_js('data-meta.js', 'DATA_META', meta)
     s3 = write_js('data-ref.js', 'DATA_REF', ref)
+    s4 = write_js('data-quiz.js', 'DATA_QUIZ', {'topics': qcats, 'items': qitems})
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
     print('  data-meta.js   %7.1f KB' % (s2 / 1024))
     print('  data-ref.js    %7.1f KB（速查：%d 张表）' % (s3 / 1024, len(ref)))
+    print('  data-quiz.js   %7.1f KB（课例 %d，其中入门精选 %d，%d 个占类）'
+          % (s4 / 1024, counts['quiz'], counts['quizstar'], len(qcats)))
     print('\n✓ 自检通过')
 
 

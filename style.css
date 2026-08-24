@@ -231,3 +231,32 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .sp-sc b{color:var(--ink3);font-weight:400;font-size:11px}
 .sp-more{margin-left:auto;font-size:11px;color:var(--blue);flex-shrink:0}
 @media(max-width:420px){.stickypan{gap:8px}.spc{padding:1px 3px}}
+
+/* ── 课例题库 ───────────────────────────────────────── */
+/* ⚠️ 变量名核对过：这套皮肤没有 --bg / --topbar。底色是 --ground，
+   顶栏高 49px（与 .stickypan 的 top 保持一致，那里也是写死的 49px）。 */
+.qbar{position:sticky;top:49px;z-index:20;background:var(--ground);
+  padding:10px 14px 8px;border-bottom:1px solid var(--line)}
+.qbar .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.qbar .chips::-webkit-scrollbar{display:none}
+.qbar .chip{flex:0 0 auto;cursor:pointer;white-space:nowrap}
+.qbar .chip.sel{background:var(--gold-s);color:var(--gold);border-color:var(--gold)}
+.qgrp{border-bottom:1px solid var(--line)}
+.qgh{display:flex;align-items:center;gap:8px;width:100%;padding:13px 14px;
+  background:none;border:0;color:var(--ink);font-size:14.5px;font-weight:600;
+  text-align:left;cursor:pointer;font-family:inherit}
+.qgh .ar{color:var(--gold);transition:transform .18s;display:inline-block}
+.qgrp.open .qgh .ar{transform:rotate(90deg)}
+.qgh .nm{flex:1}
+.qgh .ct{font-size:11.5px;color:var(--ink3);font-family:var(--f-mono)}
+.qgb{display:none}
+.qgrp.open .qgb{display:block}
+.qrow{display:flex;align-items:center;gap:8px;padding:11px 14px 11px 30px;
+  border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
+.qrow:active{background:var(--surface)}
+.qrow .qn{flex:0 0 auto;min-width:2.2em;text-align:right;font-size:11.5px;
+  color:var(--ink3);font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.qrow .t{flex:1;color:var(--ink2);line-height:1.5}
+.qrow .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.qrow .dot.new{background:var(--line)}
+.qrow .dot.ok{background:var(--gold)}

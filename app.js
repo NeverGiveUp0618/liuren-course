@@ -7,8 +7,16 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
-  counts: 'liuren_course_counts', theme: 'liuren_course_theme'
+  counts: 'liuren_course_counts', theme: 'liuren_course_theme',
+  qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen'
 };
+// ⚠️ 这个项目原本没有 esc——课例的标题/占类是从 md 抄来的纯文本，
+//    但插进 innerHTML 前照样得转义，别图省事直接拼。
+function esc(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
@@ -42,6 +50,19 @@ function needRef() {
   });
   return _refLoading;
 }
+var _quizLoading = null;
+function needQuiz() {
+  if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
+  if (_quizLoading) return _quizLoading;
+  _quizLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-quiz.js?v=' + VER;    // ⚠️ 同上，按需加载的大文件必须带 ?v=
+    el.onload = function () { res(window.DATA_QUIZ); };
+    el.onerror = function () { _quizLoading = null; rej(new Error('课例加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _quizLoading;
+}
 function lessonById(id) {
   var a = window.DATA_COURSE || [];
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
@@ -55,7 +76,8 @@ function lessonById(id) {
    popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学习路线',
-               lab: '起盘台', search: '搜索', ref: '速查' };
+               lab: '起盘台', search: '搜索', ref: '速查',
+               qlist: '课例题库', quiz: '课例' };
 var ROOTS = { home: 1 };
 var pendingFind = null;
 
@@ -146,6 +168,7 @@ RENDER.home = function () {
   $('#hPan').textContent = c.pan || 0;
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
+  var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var read = load(K.read, {}), done = 0;
   (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
   var total = (M.list || []).length || 1;
@@ -165,8 +188,100 @@ RENDER.home = function () {
     var b = $('#btnResume');
     if (b) b.onclick = function () { show('lesson', last.id); };
   } else box.innerHTML = '';
-  save(K.counts, { lesson: c.lesson, planned: c.planned, done: done });
+  save(K.counts, { lesson: c.lesson, planned: c.planned, done: done,
+                   quiz: c.quiz || 0, qseen: Object.keys(load(K.qseen, {})).length });
 };
+
+
+/* ── 课例题库 ──────────────────────────────────────────
+   按占类折叠。126 例平铺要滚很久，找不到自己想练的那一类。
+   ⚠️ 分组口径在 build.py 的 build_quiz（＝md 里的 ## 分类），这里只负责画。 */
+var qFilter = { tag: '', star: false };
+RENDER.qlist = function () {
+  var box = $('#qRows');
+  if (!window.DATA_QUIZ) box.innerHTML = '<p class="muted" style="padding:16px">载入课例…</p>';
+  needQuiz().then(function (Q) { paintQ(Q); });
+  if (window.DATA_QUIZ) paintQ(window.DATA_QUIZ);   // 已加载就同步画，别等 then（测试要断言 DOM）
+};
+function paintQ(Q) {
+  var seen = load(K.qseen, {});
+  var tags = {};
+  Q.items.forEach(function (it) { (it.tags || []).forEach(function (t) { tags[t] = (tags[t] || 0) + 1; }); });
+  var chips = [['', '全部 ' + Q.items.length], ['★', '入门精选 ' +
+    Q.items.filter(function (x) { return x.star; }).length]];
+  Object.keys(tags).sort(function (a, b) { return tags[b] - tags[a]; })
+    .forEach(function (t) { chips.push([t, t + ' ' + tags[t]]); });
+  var selv = qFilter.star ? '★' : qFilter.tag;
+  $('#qFilters').innerHTML = chips.map(function (c) {
+    return '<span class="chip' + (selv === c[0] ? ' sel' : '') + '" data-qf="' + esc(c[0]) + '">' +
+      esc(c[1]) + '</span>';
+  }).join('');
+  $$('[data-qf]').forEach(function (el) {
+    el.onclick = function () {
+      var v = el.dataset.qf;
+      qFilter = { tag: v === '★' ? '' : v, star: v === '★' };
+      paintQ(Q);
+    };
+  });
+
+  var list = Q.items.filter(function (it) {
+    if (qFilter.star) return it.star;
+    if (qFilter.tag) return (it.tags || []).indexOf(qFilter.tag) >= 0;
+    return true;
+  });
+  var filtering = !!(qFilter.tag || qFilter.star);
+  var open = load(K.qopen, {});
+  var byCat = {};
+  list.forEach(function (it) { (byCat[it.cat] = byCat[it.cat] || []).push(it); });
+  $('#qRows').innerHTML = (Q.topics || []).map(function (tp) {
+    var its = byCat[tp.name] || [];
+    if (!its.length) return '';
+    // ⚠️ 一旦筛了考点，全部展开——否则筛出来的结果藏在折叠里，等于没筛
+    var isOpen = filtering || !!open[tp.name];
+    var done = its.filter(function (it) { return seen[it.n]; }).length;
+    return '<div class="qgrp' + (isOpen ? ' open' : '') + '" data-g="' + esc(tp.name) + '">' +
+      '<button class="qgh"><span class="ar">›</span><span class="nm">' + esc(tp.name) + '</span>' +
+      '<span class="ct">' + (done ? done + '/' : '') + its.length + '</span></button>' +
+      '<div class="qgb">' + its.map(function (it) {
+        return '<div class="qrow" data-q="' + it.n + '">' +
+          '<span class="qn">' + it.n + '</span>' +
+          '<span class="t">' + (it.star ? '⭐ ' : '') + esc(it.title) + '</span>' +
+          '<span class="s"><i class="dot ' + (seen[it.n] ? 'ok' : 'new') + '"></i></span></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  $$('.qgh', $('#qRows')).forEach(function (b) {
+    b.onclick = function () {
+      var g = b.parentNode, nm = g.dataset.g;
+      g.classList.toggle('open');
+      var o = load(K.qopen, {});
+      if (g.classList.contains('open')) o[nm] = 1; else delete o[nm];
+      save(K.qopen, o);
+    };
+  });
+  $$('[data-q]', $('#qRows')).forEach(function (el) {
+    el.onclick = function () { show('quiz', +el.dataset.q); };
+  });
+}
+
+RENDER.quiz = function (n) {
+  needQuiz().then(function (Q) { paintQuiz(Q, n); });
+  if (window.DATA_QUIZ) paintQuiz(window.DATA_QUIZ, n);
+};
+function paintQuiz(Q, n) {
+  var it = Q.items.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '课例 ' + it.n;
+  var seen = load(K.qseen, {}); seen[it.n] = 1; save(K.qseen, seen);
+  var idx = Q.items.map(function (x) { return x.n; }).indexOf(n);
+  var prev = Q.items[idx - 1], next = Q.items[idx + 1];
+  $('#quizBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="qPrev">‹ 上一例</button>' : '') +
+    (next ? '<button class="btn" id="qNext">下一例 ›</button>' : '') + '</div>';
+  if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
+  if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
+  buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+}
 
 RENDER.course = function () {
   var read = load(K.read, {});

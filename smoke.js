@@ -27,14 +27,16 @@ const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
 run('data/data-ref.js');
+run('data/data-quiz.js');            // 同上，预置绕开按需加载
 run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
-const M = window.DATA_META, C = window.DATA_COURSE;
+const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ;
 
 console.log('\n== 数据与内容源一致 ==');
+// ⚠️ 00 是总目录、99 是课例题库——都不是课，别把它们算进课数
 const mdFiles = fs.readdirSync(path.join(dir, 'content'))
-  .filter(f => /^\d\d-/.test(f) && !f.startsWith('00-'));
+  .filter(f => /^\d\d-/.test(f) && !f.startsWith('00-') && !f.startsWith('99-'));
 ok(C.length === mdFiles.length, `课数与 content/ 的 md 数一致（${C.length}）`);
 ok(M.counts.lesson === C.length, 'meta 的课数与课文数一致');
 ok(M.plan.length >= C.length, `总目录计划表 ${M.plan.length} 课 ≥ 已成 ${C.length} 课`);
@@ -295,6 +297,57 @@ async function typeSearch(kw) {
     ok(/main\{overflow-x:clip\}/.test(css.replace(/\s/g, '')), '兜底 overflow-x:clip');
     ok(!/body\{[^}]*overflow-x:\s*hidden/.test(css.replace(/\s/g, '')),
        '没有给 body 上 overflow-x:hidden（那会让 sticky 失效）');
+  }
+
+  console.log('\n== 课例题库 ==');
+  {
+    ok(Q.items.length === M.counts.quiz && Q.items.length >= 126,
+       `课例 ${Q.items.length} 例，与 meta 计数一致`);
+    ok(Q.topics.reduce((a, t) => a + t.n, 0) === Q.items.length, '各占类题数之和＝总例数');
+    // ⚠️ 例号是跨占类的全局连续号，界面直接显示——断了就会出现"两个例12"
+    const ns = Q.items.map(x => x.n).sort((a, b) => a - b);
+    ok(ns.every((v, i) => v === i + 1), `例号 1…${ns.length} 连续不跳号`);
+    ok(Q.items.filter(x => x.star).length === M.counts.quizstar &&
+       M.counts.quizstar >= 44, `入门精选 ${M.counts.quizstar} 例`);
+    ok(Q.items.every(x => x.html && x.cat && x.title), '每例都有 html／占类／标题');
+    // ⚠️ 盘是复算的，每例都该有式盘；没有就是 md 的表格写歪了、mdlite 没认出来
+    const nopan = Q.items.filter(x => !/class="pan"/.test(x.html));
+    ok(!nopan.length, `每例都渲染出式盘（缺 ${nopan.length} 例）`);
+    ok(Q.items.every(x => /四课/.test(x.html) && /三传/.test(x.html)), '四课与三传都在');
+    // 标签：不能出现"每例都有"的废标签（那种筛了等于没筛）
+    const tc = {};
+    Q.items.forEach(x => (x.tags || []).forEach(t => tc[t] = (tc[t] || 0) + 1));
+    const useless = Object.keys(tc).filter(t => tc[t] === Q.items.length);
+    ok(!useless.length, '没有命中率 100% 的废标签' + (useless.length ? '：' + useless : ''));
+
+    // 首页那格数字在初始渲染时就填好了，不必先跳回首页再断言
+    ok($('#mQuiz').textContent === String(M.counts.quiz), '首页课例数读 counts，没写死');
+
+    // 走真实交互（点首页入口），直接调内部函数测不出绑定接没接上
+    $$('.mi[data-go="qlist"]')[0].onclick();
+    await sleep(10);
+    const grps = $$('#qRows .qgrp');
+    ok(grps.length === Q.topics.length, `列表分成 ${grps.length} 组（＝占类数）`);
+    ok(grps.every(g => !g.classList.contains('open')), '默认全部折叠');
+    const rows = $$('#qRows .qrow');
+    ok(rows.length === Q.items.length, '所有例都渲染出来了（折叠只是隐藏）');
+    ok(rows.every(r => r.querySelector('.qn')), '每行都有例号');
+    // 筛选：点"入门精选"，必须自动展开，否则筛出来的还藏在折叠里
+    const starChip = $$('#qFilters .chip').filter(c => /入门精选/.test(c.textContent))[0];
+    ok(!!starChip, '有「入门精选」筛选');
+    starChip.click();
+    ok($$('#qRows .qgrp').every(g => g.classList.contains('open')), '一筛就自动展开');
+    ok($$('#qRows .qrow').length === Q.items.filter(x => x.star).length,
+       '筛出来的正好是带 ⭐ 的那些');
+    $$('#qFilters .chip').filter(c => /^全部/.test(c.textContent))[0].click();
+
+    $$('#qRows .qrow')[0].onclick();
+    await sleep(30);
+    ok(/class="pan"/.test($('#quizBody').innerHTML), '详情页画出式盘');
+    ok(/例 1|课例 1/.test($('#ttl').textContent), '标题带例号');
+    ok(!!$('#quizBody .stickypan'), '课例也吸顶四课三传');
+    ok(!!$('#qNext'), '有「下一例」');
+
   }
 
   console.log('\n== 套壳适配 ==');
