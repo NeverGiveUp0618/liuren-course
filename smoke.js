@@ -26,12 +26,14 @@ window.Element.prototype.scrollIntoView = function () { scrolls.push('into'); };
 const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\s*/, ''));
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
+run('engine.js');            // 起课引擎（练习要用）
 run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
+run('data/data-ge.js');
 run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
-const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ;
+const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
 
 console.log('\n== 数据与内容源一致 ==');
 // ⚠️ 00 是总目录、99 是课例题库——都不是课，别把它们算进课数
@@ -313,6 +315,71 @@ async function typeSearch(kw) {
     ok(tog.getAttribute('aria-expanded') === 'true', 'aria-expanded 跟着变');
     tog.onclick();
     ok(!card.classList.contains('open'), '再点收起');
+  }
+
+  console.log('\n== 起课练习 ==');
+  {
+    ok(!!window.LiurenEngine, '引擎已加载');
+    $$('.mi[data-go="drill"]')[0].onclick();
+    await sleep(20);
+    const body = $('#drillBody');
+    ok(/日/.test($('.drillhd').textContent), '出题给出日干支·月将·占时');
+    ok($$('#drillBody .dke td').length === 4, '四课摆出来了');
+    ok($$('#drillBody .dsel select').length === 3, '三传三个下拉');
+    ok($$('#drillBody [data-ke]').length >= 10, '课体选项覆盖十种课式');
+
+    // 没填全不该判分
+    $('#dOk').onclick();
+    ok(/还没填全/.test($('#dFb').textContent), '三传没填全会拦下');
+
+    // 照抄正解 → 必须全对
+    const E2 = window.LiurenEngine;
+    const hd = $('.drillhd span').textContent;
+    const m = /^(..)日\s*(.)将\s*(.)时$/.exec(hd.replace(/\s+/g, ' ').trim());
+    ok(!!m, '题面能解析出盘的三要素');
+    const o = E2.qike(m[1], m[2], m[3]);
+    [0, 1, 2].forEach(i => { $('#dc' + i).value = o.chuan[i]; });
+    $$('#drillBody [data-ke]').filter(x => x.dataset.ke === o.ke)[0].onclick();
+    $('#dOk').onclick();
+    ok(/全对/.test($('#dFb').textContent), '照着正解答 → 判全对');
+    ok(!!$('#dFb .dfb.good'), '全对时用 good 样式');
+
+    // 故意答错 → 要指出错在哪一步，而不是只说"错"
+    const wrong = E2.Z[(E2.Z.indexOf(o.chuan[0]) + 1) % 12];
+    $('#dc0').value = wrong;
+    $('#dOk').onclick();
+    const fb = $('#dFb').textContent;
+    ok(/再看看/.test(fb), '答错判错');
+    ok(/初传错了/.test(fb), '⭐ 明确指出是初传错了（不是笼统说错）');
+    ok(/第\d课/.test(fb), '纠错提示带课号，能回去复习');
+    ok(new RegExp(o.ke).test(fb), '讲解里点明本盘的课式');
+
+    // 计分要累积
+    const st = JSON.parse(window.localStorage.getItem('liuren_course_drill') || '{}');
+    ok(st.n >= 2 && st.ok >= 1, `练习记录累积（已练 ${st.n} 题、对 ${st.ok} 题）`);
+    ok(st.byKe && Object.keys(st.byKe).length >= 1, '按课式分别记账（将来能挑薄弱课式）');
+  }
+
+  console.log('\n== 格局详解 ==');
+  {
+    ok(GE.length === M.counts.ge && GE.length >= 25, `格局 ${GE.length} 格，与 meta 计数一致`);
+    ok(GE.every((g, i) => g.n === i + 1), '序号 1…25 连续');
+    ok(GE.every(g => g.name && g.html), '每格都有格名与正文');
+    ok(GE.every(g => g.line), '每格都有「一句话」摘要（列表要显示）');
+    // ⚠️ 这批全部出自中册，出处必须是「通解中」——标成上册就是页码算错了
+    const bad = GE.filter(g => !/通解中/.test(g.html));
+    ok(!bad.length, '每格都带中册出处' + (bad.length ? '（缺：' + bad.map(x => x.name) + '）' : ''));
+    ok($('#mGe').textContent === String(M.counts.ge), '首页格数读 counts，没写死');
+
+    $$('.mi[data-go="gelist"]')[0].onclick();
+    await sleep(10);
+    const rows = $$('#geRows .gerow');
+    ok(rows.length === GE.length, `列表列出 ${rows.length} 格`);
+    rows[0].onclick();
+    await sleep(30);
+    ok(/游子/.test($('#ttl').textContent), '点开第一格，标题是格名');
+    ok(/class="src"/.test($('#geBody').innerHTML), '详情页带出处标注');
+    ok(!!$('#geNext'), '有「下一格」');
   }
 
   console.log('\n== 课例题库 ==');

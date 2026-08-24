@@ -178,6 +178,32 @@ def build_ref(lessons_md):
     return out
 
 
+def build_ge():
+    """98-格局详解.md → 一格一条，供「格局」屏按格名查。
+    ⚠️ 这不是课，也不进速查表——速查表长在课文里，这里是中册格局汇总的详解。"""
+    fp = os.path.join(SRC, '98-格局详解.md')
+    if not os.path.exists(fp):
+        return []
+    md = read(fp)
+    out = []
+    # ## 12. 侵害课   —— 附录那节没有序号，不收
+    for m in re.finditer(r'^## (\d+)\. (.+?)$', md, re.M):
+        beg = m.start()
+        nxt = re.search(r'^## ', md[m.end():], re.M)
+        body = md[beg:m.end() + nxt.start()] if nxt else md[beg:]
+        name = m.group(2).strip()
+        line = ''
+        one = re.search(r'\|\s*\*\*一句话\*\*\s*\|\s*(.+?)\s*\|', body)
+        if one:
+            line = re.sub(r'\*\*', '', one.group(1))
+        out.append({'n': int(m.group(1)), 'name': name, 'line': line,
+                    'html': mdlite.md2html(body), 'text': mdlite.strip_md(body)})
+    ns = [x['n'] for x in out]
+    if ns != list(range(1, len(ns) + 1)):
+        sys.exit('✗ 格局序号不连续：%s' % ns)
+    return out
+
+
 def build_quiz():
     """99-课例题库.md → 按占类分组的课例。
     ⚠️ 题库的 md 是**生成物的再加工**（源在 liuren-game 的 DR_CASES/DR_CASELIB），
@@ -261,6 +287,8 @@ def main():
 
     ref = build_ref(lessons_md)
     counts['ref'] = len(ref)
+    ge = build_ge()
+    counts['ge'] = len(ge)
     qcats, qitems = build_quiz()
     counts['quiz'] = len(qitems)
     counts['quizstar'] = sum(x['star'] for x in qitems)
@@ -269,6 +297,7 @@ def main():
     s2 = write_js('data-meta.js', 'DATA_META', meta)
     s3 = write_js('data-ref.js', 'DATA_REF', ref)
     s4 = write_js('data-quiz.js', 'DATA_QUIZ', {'topics': qcats, 'items': qitems})
+    s5 = write_js('data-ge.js', 'DATA_GE', ge)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -276,6 +305,7 @@ def main():
     print('  data-ref.js    %7.1f KB（速查：%d 张表）' % (s3 / 1024, len(ref)))
     print('  data-quiz.js   %7.1f KB（课例 %d，其中入门精选 %d，%d 个占类）'
           % (s4 / 1024, counts['quiz'], counts['quizstar'], len(qcats)))
+    print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('\n✓ 自检通过')
 
 

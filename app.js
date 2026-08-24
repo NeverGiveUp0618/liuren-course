@@ -8,6 +8,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   counts: 'liuren_course_counts', theme: 'liuren_course_theme',
+  drill: 'liuren_course_drill',
   progopen: 'liuren_course_progopen',
   qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen'
 };
@@ -51,6 +52,19 @@ function needRef() {
   });
   return _refLoading;
 }
+var _geLoading = null;
+function needGe() {
+  if (window.DATA_GE) return Promise.resolve(window.DATA_GE);
+  if (_geLoading) return _geLoading;
+  _geLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-ge.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_GE); };
+    el.onerror = function () { _geLoading = null; rej(new Error('格局详解加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _geLoading;
+}
 var _quizLoading = null;
 function needQuiz() {
   if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
@@ -78,7 +92,8 @@ function lessonById(id) {
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
-               qlist: '课例题库', quiz: '课例' };
+               qlist: '课例题库', quiz: '课例', drill: '起课练习',
+               gelist: '格局详解', ge: '格局' };
 var ROOTS = { home: 1 };
 var pendingFind = null;
 
@@ -170,6 +185,7 @@ RENDER.home = function () {
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
+  var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
   var read = load(K.read, {}), done = 0;
   (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
   var total = (M.list || []).length || 1;
@@ -209,6 +225,199 @@ RENDER.home = function () {
                    quiz: c.quiz || 0, qseen: Object.keys(load(K.qseen, {})).length });
 };
 
+
+/* ── 格局详解（中册二十五格）───────────────────────────
+   定完课体来查断意。列表一屏放得下，不做折叠也不做筛选。 */
+
+/* ── 起课练习 ─────────────────────────────────────────
+   给一张盘（日干支＋月将＋占时），让人自己排四课、起三传、认课体，当场判对错。
+   ⚠️ 答案由 engine.js 现算，口径＝《通解》（发用取上神），与第 5、6 课一致；
+      「六壬神课」App 取下神，两说并存——**别拿 App 的盘来判这里对错**。
+   ⚠️ 出题只在**已读过的课**覆盖得到的课式里挑：没学到伏吟就不该考伏吟。 */
+var E = window.LiurenEngine;
+var drill = null;
+
+// 课式 → 最早在第几课讲到（据第 5、6 课）
+var KE_LESSON = { 元首: 5, 重审: 5, 比用: 5, 知一: 5, 涉害: 5,
+                  遥克: 6, 昴星: 6, 别责: 6, 八专: 6, 伏吟: 6, 返吟: 6 };
+
+function drillStat() { return load(K.drill, { n: 0, ok: 0, byKe: {} }); }
+
+function newDrill() {
+  var read = load(K.read, {});
+  var maxLesson = 6;                       // 第 6 课之后全部课式都学过了
+  var done = 0;
+  (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done = Math.max(done, l.num); });
+  var allow = Object.keys(KE_LESSON).filter(function (k) {
+    return KE_LESSON[k] <= Math.max(done, 5);   // 至少让第 5 课那五种可考
+  });
+  // 随机摇盘，直到摇到一个"学过的课式"
+  for (var i = 0; i < 400; i++) {
+    var gi = Math.floor(Math.random() * 10), zi = Math.floor(Math.random() * 12);
+    if ((gi % 2) !== (zi % 2)) continue;        // 六十甲子只有阴阳同性
+    var rgz = E.G[gi] + E.Z[zi];
+    var yj = E.Z[Math.floor(Math.random() * 12)], zs = E.Z[Math.floor(Math.random() * 12)];
+    var o = E.qike(rgz, yj, zs);
+    if (o && allow.indexOf(o.ke) >= 0) return o;
+  }
+  return E.qike('甲子', '卯', '子');
+}
+
+RENDER.drill = function () {
+  drill = newDrill();
+  paintDrill();
+};
+
+function paintDrill() {
+  var o = drill, st = drillStat();
+  var pct = st.n ? Math.round(st.ok / st.n * 100) : 0;
+  var h = '<div class="drillhd"><span>' + o.rgz + '日　' + o.yj + '将　' + o.zs + '时</span>' +
+    (st.n ? '<em>已练 ' + st.n + ' 题 · 对 ' + pct + '%</em>' : '<em>先自己排，再对答案</em>') + '</div>';
+
+  h += '<div class="card"><p class="muted" style="margin:0 0 10px">' +
+    '按第 2-6 课的次序来：<b>月将加占时</b>起天盘 → <b>日干寄宫</b>与日支取四课 → 看克取初传 → 递取中末。' +
+    '</p>';
+  // 四课先给出来——练的是三传，不必每次重排四课（要练四课点下面那个按钮）
+  h += '<div class="dke"><em>四课</em><table><tr>' +
+    o.sk.slice().reverse().map(function (c, i) {
+      return '<td><span class="n">第' + '四三二一'.charAt(i) + '课</span>' +
+        '<b>' + c.shang + '</b><i>' + c.xia + '</i></td>';
+    }).join('') + '</tr></table></div>';
+
+  h += '<div class="dq">三传是什么？<span class="muted">（初 → 中 → 末）</span></div>';
+  h += '<div class="dsel">' + [0, 1, 2].map(function (k) {
+    return '<div class="dcol"><span>' + '初中末'.charAt(k) + '传</span>' +
+      '<select id="dc' + k + '"><option value="">—</option>' +
+      E.Z.map(function (z) { return '<option>' + z + '</option>'; }).join('') + '</select></div>';
+  }).join('') + '</div>';
+
+  h += '<div class="dq" style="margin-top:14px">课体？</div>';
+  h += '<div class="dkes">' + Object.keys(KE_LESSON).map(function (k) {
+    return '<span class="chip" data-ke="' + k + '">' + k + '</span>';
+  }).join('') + '</div>';
+
+  h += '<div class="row" style="gap:8px;margin-top:16px">' +
+    '<button class="btn main" id="dOk">对答案</button>' +
+    '<button class="btn" id="dSkip">换一题</button></div>';
+  h += '<div id="dFb"></div></div>';
+  $('#drillBody').innerHTML = h;
+
+  var pickKe = '';
+  $$('#drillBody [data-ke]').forEach(function (el) {
+    el.onclick = function () {
+      $$('#drillBody [data-ke]').forEach(function (x) { x.classList.remove('sel'); });
+      el.classList.add('sel'); pickKe = el.dataset.ke;
+    };
+  });
+  $('#dSkip').onclick = function () { drill = newDrill(); paintDrill(); };
+  $('#dOk').onclick = function () { judge(pickKe); };
+}
+
+function judge(pickKe) {
+  var o = drill;
+  var got = [0, 1, 2].map(function (k) { return $('#dc' + k).value; });
+  if (got.some(function (x) { return !x; })) {
+    $('#dFb').innerHTML = '<p class="dbad">三传还没填全。</p>';
+    return;
+  }
+  var right = o.chuan, allRight = got.join('') === right.join('') && pickKe === o.ke;
+  var st = drillStat();
+  st.n++; if (allRight) st.ok++;
+  st.byKe[o.ke] = st.byKe[o.ke] || { n: 0, ok: 0 };
+  st.byKe[o.ke].n++; if (allRight) st.byKe[o.ke].ok++;
+  save(K.drill, st);
+
+  var h = '<div class="dfb ' + (allRight ? 'good' : 'bad') + '">';
+  h += '<b>' + (allRight ? '✓ 全对' : '✗ 再看看') + '</b>';
+  h += '<table><tr><td></td><td>初</td><td>中</td><td>末</td><td>课体</td></tr>';
+  h += '<tr><td>你答</td>' + got.map(function (x, i) {
+    return '<td class="' + (x === right[i] ? 'y' : 'n') + '">' + x + '</td>';
+  }).join('') + '<td class="' + (pickKe === o.ke ? 'y' : 'n') + '">' + (pickKe || '—') + '</td></tr>';
+  h += '<tr><td>正解</td>' + right.map(function (x) { return '<td>' + x + '</td>'; }).join('') +
+    '<td>' + o.ke + (o.ge ? '·' + o.ge : '') + '</td></tr></table>';
+  // ⭐ 错了要说清错在哪一步，不然练了也不长进
+  h += '<div class="dwhy">' + why(o, got, pickKe) + '</div></div>';
+  $('#dFb').innerHTML = h;
+  $('#dFb').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function why(o, got, pickKe) {
+  var L = [], right = o.chuan;
+  var xia = o.sk.filter(function (c) { return kekk(c.xia, c.shang); });
+  var shang = o.sk.filter(function (c) { return kekk(c.shang, c.xia); });
+  L.push('<b>这一盘</b>：' + (o.off === 0 ? '月将＝占时，<b>伏吟</b>（第6课五）'
+    : o.off === 6 ? '月将冲占时，<b>返吟</b>（第6课六）'
+    : xia.length ? '有 ' + xia.length + ' 处<b>下贼上</b>（' + xia.map(function (c) { return c.xia + '↑' + c.shang; }).join('、') + '）——贼优先于克'
+    : shang.length ? '无下贼上，有 ' + shang.length + ' 处<b>上克下</b>（' + shang.map(function (c) { return c.shang + '↓' + c.xia; }).join('、') + '）'
+    : '四课全无正克，往下走遥克／昴星（第6课）'));
+  if (got[0] !== right[0]) {
+    L.push('<b>初传错了</b>：正解取 <b>' + right[0] + '</b>——' + keHint(o));
+  } else if (got[1] !== right[1] || got[2] !== right[2]) {
+    if (['伏吟', '返吟', '昴星', '别责', '八专'].indexOf(o.ke) < 0) {
+      L.push('<b>初传对了，中末传错了</b>：通例是「<b>初传的上神作中传，中传的上神作末传</b>」——' +
+        right[0] + ' 上是 ' + right[1] + '，' + right[1] + ' 上是 ' + right[2] + '。（第5课第四坑）');
+    } else {
+      L.push('<b>初传对了，中末传错了</b>：' + o.ke + '课的中末传<b>不按通例</b>，' + keHint(o));
+    }
+  }
+  if (pickKe !== o.ke) L.push('<b>课体认错了</b>：这是 <b>' + o.ke + '</b>课' + (o.ge ? '（' + o.ge + '格）' : '') + '。');
+  return L.map(function (x) { return '<p>' + x + '</p>'; }).join('');
+}
+function kekk(a, b) {
+  var W = { 子: '水', 亥: '水', 寅: '木', 卯: '木', 巳: '火', 午: '火', 申: '金', 酉: '金',
+            丑: '土', 辰: '土', 未: '土', 戌: '土', 甲: '木', 乙: '木', 丙: '火', 丁: '火',
+            戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' };
+  var K2 = { 水: '火', 火: '金', 金: '木', 木: '土', 土: '水' };
+  return K2[W[a]] === W[b];
+}
+function keHint(o) {
+  var H = {
+    元首: '只有一处上克下，取那个<b>上神</b>（第5课三）',
+    重审: '只有一处下贼上，取<b>受克的上神</b>（第5课三）',
+    比用: '克不止一处，取与<b>日干阴阳相同</b>的那个（第5课四）',
+    知一: '克不止一处，取与<b>日干阴阳相同</b>的那个（第5课四）',
+    涉害: '都比或都不比，<b>数涉害</b>——从上神所临地盘顺数回本家，克多者用；寄干也算一重（第5课五）',
+    遥克: '四课无正克，看<b>日干与上神斜克</b>：上神克日为蒿矢，日克上神为弹射（第6课一）',
+    昴星: '无克无遥克，<b>看酉</b>：阳日取地盘酉上的天盘支、中支上末日上；阴日取天盘酉下的地盘支、中日上末支上（第6课二）',
+    别责: '四课只有三课，阳日取<b>日干合干寄宫</b>的上神、阴日取<b>支前三合</b>，中末都取日上神（第6课三）',
+    八专: '干支同宫，无克时阳日从日上神<b>顺数三位</b>、阴日从第四课上神<b>逆数三位</b>，中末都取日上神（第6课四）',
+    伏吟: '有克按克；无克<b>刚日取日上、柔日取支上</b>；中末靠<b>刑</b>，自刑则另取（第6课五）',
+    返吟: '有克按克；无克用<b>日之驿马</b>发用，支上神为中、日上神为末（第6课六）'
+  };
+  return H[o.ke] || '';
+}
+
+RENDER.gelist = function () {
+  needGe().then(paintGe);
+  if (window.DATA_GE) paintGe(window.DATA_GE);
+};
+function paintGe(G) {
+  $('#geRows').innerHTML = G.map(function (g) {
+    return '<div class="gerow" data-ge="' + g.n + '">' +
+      '<span class="gn">' + g.n + '</span>' +
+      '<span class="gt">' + esc(g.name) + '</span>' +
+      '<span class="gl">' + esc(g.line) + '</span></div>';
+  }).join('');
+  $$('[data-ge]', $('#geRows')).forEach(function (el) {
+    el.onclick = function () { show('ge', +el.dataset.ge); };
+  });
+}
+RENDER.ge = function (n) {
+  needGe().then(function (G) { paintGeOne(G, n); });
+  if (window.DATA_GE) paintGeOne(window.DATA_GE, n);
+};
+function paintGeOne(G, n) {
+  var it = G.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = it.name;
+  var prev = G[n - 2], next = G[n];
+  $('#geBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="gePrev">‹ ' + esc(prev.name) + '</button>' : '') +
+    (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
+  if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
+  if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+}
 
 /* ── 课例题库 ──────────────────────────────────────────
    按占类折叠。126 例平铺要滚很久，找不到自己想练的那一类。

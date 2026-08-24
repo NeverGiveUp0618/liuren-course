@@ -35,7 +35,9 @@
     <div class="menu">
       <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
       <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将与占时，天盘实时转</span></button>
+      <button class="mi" data-go="drill"><b>起课练习</b><span>给你一张盘，自己起三传 · 当场判对错</span></button>
       <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
+      <button class="mi" data-go="gelist"><b>格局</b><span><b id="mGe">—</b> 格详解 · 定完课体来这儿查断意</span></button>
       <button class="mi" data-go="ref"><b>速查</b><span><b id="mRef">—</b> 张表 · 学完之后天天翻的那些</span></button>
       <button class="mi" data-go="outline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>
     </div>
@@ -69,6 +71,10 @@
 
   <section class="screen" id="s-quiz"><div id="quizBody" class="doc"></div></section>
 
+  <section class="screen" id="s-gelist"><div id="geRows"></div></section>
+  <section class="screen" id="s-ge"><div id="geBody" class="doc"></div></section>
+  <section class="screen" id="s-drill"><div id="drillBody"></div></section>
+
   <section class="screen" id="s-outline"><div id="outlineBody" class="doc"></div></section>
 
   <!-- 起盘台 -->
@@ -101,6 +107,7 @@
 <div class="tocmask" id="tocMask"><div class="tocbox"></div></div>
 
 <script src="data/data-meta.js"></script>
+<script src="engine.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
