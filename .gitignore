@@ -3,3 +3,10 @@ __pycache__/
 node_modules/
 .DS_Store
 _shot_*.html
+
+# ⚠️ 原书全文（《通解》三册 + 《图解六壬大全》三部，从 OCR 校对版 docx 提的）。
+#    _verify_cite.py / 查证课例都要用它，但**是版权书籍全文，绝不推到公开仓库**。
+#    源 docx 在：02_项目 (Projects)/马老师项目/大六壬笔记提炼/
+#    重建方法见 _tools/_mkref.py
+_ref/通解_*.txt
+_ref/大全*.txt

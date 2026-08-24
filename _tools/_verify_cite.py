@@ -14,7 +14,10 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OB = os.path.join(os.path.dirname(HERE), 'content')
-SRC_DIR = '/private/tmp/claude-501/-Users-xiaojin/404e36e5-811f-4d03-801d-25a063f69971/scratchpad/txt'
+# ⚠️ 曾经写死成会话的临时目录，临时文件一清，308 条引文就全部"缺原文跳过"了，
+#    脚本还照样打印"✓"——等于哑火了很久。现在固定在项目内的 _ref/，
+#    txt 本身被 .gitignore 挡着不进仓库（版权书全文），换机器跑 _tools/_mkref.py 重建。
+SRC_DIR = os.path.join(os.path.dirname(HERE), '_ref')
 BOOKS = {'上': ('通解_上.txt', -15), '中': ('通解_中.txt', 364), '下': ('通解_下.txt', 732)}
 CJK = re.compile(r'[一-鿿]')
 # ⚠️ 原书有整段是繁体（如「傳送」一节），教材统一用简体。比对前做一次繁→简归一，
