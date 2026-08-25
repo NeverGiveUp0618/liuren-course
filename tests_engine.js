@@ -48,7 +48,7 @@ ok(n === 8640, `穷举 ${n} 盘（六十甲子 60 日 × 12 月将 × 12 占时�
 ok(badLen === 0, '每一盘都算出了三个合法的传');
 ok(badTail === 0, '通例课式的中末传一律是"初上→中上"（第5课第四坑）');
 
-console.log('\n== 与题库 126 例对照 ==');
+console.log('\n== 与题库全部课例对照 ==');
 const md = fs.readFileSync(path.join(__dirname, 'content', '99-课例题库.md'), 'utf8');
 const blocks = md.split(/^### 【例/m).slice(1);
 let tot = 0, same = 0; const diff = [];
@@ -63,13 +63,25 @@ blocks.forEach(b => {
   const off = E.Z.indexOf(row[0]);
   tot++;
   const got = chuan(rg[1] + rz[1], E.Z[off], '子');
-  if (got === c.join('')) same++; else diff.push(rg[1] + rz[1] + ' 书:' + c.join('') + ' 引擎:' + got);
+  if (got === c.join('')) same++; else diff.push(rg[1] + rz[1] + '|' + c.join('') + '|' + got);
 });
 ok(tot >= 126, `题库里 ${tot} 例可自动对照`);
-// ⚠️ 4 例对不上是**异书口径**，不是引擎错，逐例手算复核过：
-//    癸巳那例书取的是下神（第 5 课第六节的两说）；其余三例两书涉害数法有别。
-//    这个数字只许降不许升——升了就是引擎被改坏了。
-ok(diff.length <= 4, `与原书三传一致 ${same}/${tot}，差异 ${diff.length} 例（已知异书口径，上限 4）`);
+// ⚠️ 差异**逐例白名单**，不是数量上限——只放行已经手算复核过的这几例，
+//    名单外冒出任何新差异都要红，那才说明引擎被改坏了。
+const KNOWN = [
+  // 出自《图解六壬大全》，与《通解》取用口径有别（逐个手算复核过）
+  '庚午|戌午寅|子申辰',   // 涉害数法两书不同
+  '甲辰|戌午寅|子申辰',   // 同上
+  '庚午|午辰寅|寅子戌',   // 同上
+  '癸巳|巳申亥|申亥寅',   // 书取的是**下神**（第 5 课第六节的两说）
+  // 出自《通解》下册例二十六：伏吟末传，教材规则是 寅刑巳→巳，
+  // 原书作者主张作「申」（题库该例已注明「原书作者主张」）
+  '庚午|申寅申|申寅巳'
+];
+const unknown = diff.filter(d => KNOWN.indexOf(d) < 0);
+ok(!unknown.length,
+   `与原书三传一致 ${same}/${tot}；差异 ${diff.length} 例全在白名单内` +
+   (unknown.length ? `，新差异：${unknown.join('；')}` : ''));
 if (diff.length) diff.forEach(d => console.log('     · ' + d));
 
 console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);
