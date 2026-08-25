@@ -7,6 +7,29 @@
 <meta name="theme-color" content="#12141c">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon180.png">
+<!-- ⚠️ 2026-08-25 加：防「一进来界面不对、等一下才好」。
+     style.css 是外部文件，微信里网络一慢就迟迟不到，页面会先按浏览器默认排版画出来——
+     所有 .screen 同时显示、内容占满整屏、中文回落宋体，就是用户截到的那个样子。
+     这里内联**最少的几条**保证首屏不乱：屏幕切换、容器宽度、底色字体。
+     ⚠️ 放在 <link> 之前、不用 !important，外部 CSS 一到就正常接管。
+     ⚠️ 只写这三类，别往里堆——内联多了改一处要改两地方。 -->
+<style>
+  :root{color-scheme:light dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:#EEEDF1;color:#191C28;
+    font:16px/1.85 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  @media (prefers-color-scheme:dark){body{background:#101219;color:#E2E5EE}}
+  main{max-width:820px;margin:0 auto;padding:14px}
+  .screen{display:none}
+  .screen.active{display:block}
+  .menu{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+  .mi{display:block;width:100%;text-align:left;padding:14px 16px;border:0;background:none;
+    color:inherit;font:inherit;cursor:pointer}
+  .mi b{display:block}
+  .stats{display:flex;gap:10px;margin:18px 0 6px}
+  .stats div{flex:1;text-align:center}
+  .stats b{display:block}
+</style>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

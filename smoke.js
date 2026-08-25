@@ -279,7 +279,11 @@ async function typeSearch(kw) {
   const app = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
   ok(/data-course\.js\?v=/.test(app), '按需加载的课文包带 ?v= 版本号');
   const sw = fs.readFileSync(path.join(dir, 'sw.js'), 'utf8');
-  ok(/fetch\(e\.request\)[\s\S]{0,200}catch/.test(sw), 'sw 网络优先');
+  // ⚠️ 2026-08-25 起是「网络优先但不干等」：超时先拿缓存顶上，网络回来照样写缓存。
+  //    纯网络优先会让微信里首屏干等 CSS，页面先按无样式排版画出来（用户报过）。
+  ok(/fetch\(req\)[\s\S]{0,400}catch/.test(sw), 'sw 网络优先');
+  ok(/setTimeout[\s\S]{0,200}caches\.match/.test(sw), '⭐ 网络超时会回退缓存（不许干等）');
+  ok(/caches\.open\(CACHE\)[\s\S]{0,120}put/.test(sw), '拿到新版照样写进缓存，下次即最新');
   ok(/ignoreSearch:\s*true/.test(sw), 'sw 离线回退忽略 ?query');
   ok(/addAll[\s\S]{0,80}catch/.test(sw), 'sw 的 addAll 有 catch');
 
@@ -431,6 +435,24 @@ async function typeSearch(kw) {
     ok(!!$('#quizBody .stickypan'), '课例也吸顶四课三传');
     ok(!!$('#qNext'), '有「下一例」');
 
+  }
+
+  console.log('\n== 首屏防闪（关键样式内联）==');
+  {
+    const rawHtml = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+    const head = rawHtml.slice(0, rawHtml.indexOf('</head>'));
+    // ⚠️ 别把这段内联样式当冗余删掉：style.css 是外部文件，微信里网络一慢就迟迟不到，
+    //    页面会先按浏览器默认排版画出来（所有 .screen 同时显示、内容占满整屏、中文回落宋体），
+    //    用户 2026-08-25 截到的就是那个样子。
+    ok(/<style>[\s\S]*?<\/style>/.test(head), 'head 里有内联的关键样式');
+    const inline = /<style>([\s\S]*?)<\/style>/.exec(head)[1];
+    ok(/\.screen\s*\{[^}]*display:\s*none/.test(inline),
+       '⭐ 内联了 .screen{display:none}——否则所有屏会一起堆出来，这是最难看的一种');
+    ok(/main\s*\{[^}]*max-width/.test(inline), '内联了 main 的 max-width（否则内容占满整屏）');
+    ok(/body\s*\{[^}]*background/.test(inline), '内联了底色（否则先白后黑地闪）');
+    // ⚠️ 别用 indexOf('style.css')：上面的注释里就有这个字面量，会把位置比错
+    ok(head.indexOf('<style>') < head.search(/<link[^>]+stylesheet/),
+       '内联样式在 <link> 之前——外部 CSS 一到就正常接管，不用 !important');
   }
 
   console.log('\n== 套壳适配 ==');
