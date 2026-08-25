@@ -301,6 +301,13 @@ async function typeSearch(kw) {
       ok(!w || /100%|min\(/.test(w[1]), sel + ' 的宽度带 100%／min() 保护（不是裸的固定 px）');
     });
     ok(/main\{overflow-x:clip\}/.test(css.replace(/\s/g, '')), '兜底 overflow-x:clip');
+    // 宽屏下三样都要横向居中：方盘靠 .panwrap 的 flex、四课靠自身 justify-content，
+    // ⚠️ 三传是**列向** flex，justify-content 管不到横向，只能 margin:auto——当初漏了，
+    //    2026-08-25 用户截图报「三传没有居中」。这条断言锁住它。
+    const sc = css.match(/\.sanchuan\{[^}]*\}/)[0];
+    ok(/margin:\s*[^;}]*auto/.test(sc), '.sanchuan 用 margin:auto 横向居中');
+    ok(/\.panwrap\{[^}]*justify-content:\s*center/.test(css), '.panwrap 居中方盘');
+    ok(/\.sike\{[^}]*justify-content:\s*center/.test(css), '.sike 自身居中');
     ok(!/body\{[^}]*overflow-x:\s*hidden/.test(css.replace(/\s/g, '')),
        '没有给 body 上 overflow-x:hidden（那会让 sticky 失效）');
   }
