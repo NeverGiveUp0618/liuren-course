@@ -118,7 +118,7 @@ var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
                gelist: '格局详解', ge: '格局' };
-var ROOTS = { home: 1 };
+var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -127,6 +127,7 @@ function _apply(scr, id) {
   var el = $('#s-' + scr);
   if (el) el.classList.add('active');
   $('#btnBack').classList.toggle('on', !ROOTS[scr]);
+  $$('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === scr); });
   $('#fabToc').classList.toggle('on', scr === 'lesson');
   $('#tocMask').classList.remove('on');
   $('#ttl').textContent = TITLES[scr] || '六壬课程';
@@ -888,6 +889,18 @@ $('#fabToc').onclick = function () {
 $('#tocMask').onclick = function (e) { if (e.target === $('#tocMask')) $('#tocMask').classList.remove('on'); };
 $$('.mi[data-go]').forEach(function (b) {
   b.onclick = function () { show(b.dataset.go, null); };
+});
+/* 底栏：四个 tab 都是根屏。再点当前 tab＝回到顶部；跨 tab 切换把历史栈压回栈底，
+   免得来回切堆出一长串历史（与命理精讲同一做法）。 */
+$$('.tabbar button').forEach(function (b) {
+  b.onclick = function () {
+    var t = b.dataset.tab;
+    if (t === cur.scr) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    stack = [{ scr: t, id: null }];
+    pos = 0;
+    history.replaceState({ i: 0 }, '', '');
+    _apply(t, null);
+  };
 });
 if (window.self !== window.top) document.documentElement.classList.add('wst-frame-guard');
 history.replaceState({ i: 0 }, '', '');

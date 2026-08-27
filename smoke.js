@@ -467,6 +467,36 @@ async function typeSearch(kw) {
      'iframe 内加 wst-frame-guard');
   ok(/history\.pushState/.test(app) && /history\.go\(/.test(app), 'history 包装齐全');
 
+  console.log('\n== 底栏（任何一屏都能回首页）==');
+  {
+    const css2 = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
+    const tabs = $$('.tabbar button');
+    ok(tabs.length === 4, `底栏 4 个 tab（${tabs.map(b => b.querySelector('span').textContent).join(' ')}）`);
+    ok(tabs.every(b => ['home', 'course', 'qlist', 'ref'].includes(b.dataset.tab)),
+       '四个 tab 指向的都是真实的根屏');
+    // ⚠️ 这条是这次改动的起因：套壳在五术堂里时，本站返回键曾被 CSS 藏掉，
+    //    而套壳那条「返回首页」是回导航首页、不是回本站 —— 别再把它藏回去。
+    ok(!/wst-frame-guard\s+\.back\s*\{\s*display:\s*none/.test(css2),
+       '套壳里没有把本站返回键藏掉');
+    ok(/main\{[^}]*padding:[^}]*--tabh/.test(css2), '正文底部留出了底栏的高度');
+    ok(/\.fab\{[^}]*bottom:calc\(var\(--tabh\)/.test(css2), '目录悬浮键抬到了底栏之上');
+    // 真点一次：底栏 → 课程列表 → 课文，再从课文一步回首页
+    tabs[1].onclick();
+    await sleep(30);
+    ok($('#s-course').classList.contains('active'), '点底栏「课程」到课程列表');
+    $$('#courseList .li[data-id]')[0].onclick();
+    await sleep(30);
+    ok($('#s-lesson').classList.contains('active'), '再进到课文里');
+    tabs[0].onclick();
+    await sleep(30);
+    ok($('#s-home').classList.contains('active'), '⭐ 点底栏「首页」一步回到首页');
+    ok($$('.tabbar button.on').length === 1 && $$('.tabbar button.on')[0].dataset.tab === 'home',
+       '底栏高亮跟着当前屏走');
+    tabs[3].onclick();
+    await sleep(30);
+    ok($('#s-ref').classList.contains('active'), '点底栏「速查」直达速查屏');
+  }
+
   console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);
   process.exit(fail ? 1 : 0);
 })();
