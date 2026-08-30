@@ -50,7 +50,7 @@ ok(badTail === 0, '通例课式的中末传一律是"初上→中上"（第5课�
 
 console.log('\n== 与题库全部课例对照 ==');
 const md = fs.readFileSync(path.join(__dirname, 'content', '99-课例题库.md'), 'utf8');
-const blocks = md.split(/^### 【例/m).slice(1);
+const blocks = md.split(/^### 【例/m).slice(1);   // 下面「涉害口径」一节也用它
 let tot = 0, same = 0; const diff = [];
 blocks.forEach(b => {
   const c = [...b.matchAll(/\|\s*\*\*(初|中|末)传\*\*\s*\|\s*([子丑寅卯辰巳午未申酉戌亥])\s*\|/g)].map(m => m[2]);
@@ -83,6 +83,70 @@ ok(!unknown.length,
    `与原书三传一致 ${same}/${tot}；差异 ${diff.length} 例全在白名单内` +
    (unknown.length ? `，新差异：${unknown.join('；')}` : ''));
 if (diff.length) diff.forEach(d => console.log('     · ' + d));
+
+console.log('\n== 与毕法赋详解（97）的 260 张盘对照 ==');
+/* ⭐ 为什么要这一段：97 的盘是 2026-08-30 迁入时**用本引擎复算**写进 md 的。
+   一旦有人改了 engine.js 却忘了重跑 _tools/_mk97.py，md 就是过期的，
+   而 _audit_pan.py 只验盘面自洽（天盘是不是整体平移），验不出这种「引擎变了、
+   课文没跟上」。这一段专门盯这个失配，**应当 100% 一致**，一条都不许差。 */
+{
+  const bf = fs.readFileSync(path.join(__dirname, 'content', '97-毕法赋详解.md'), 'utf8');
+  const pans = [...bf.matchAll(
+    /\*\*盘\*\*[\s\u3000]*([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])日[^\n]*?月将 ([子丑寅卯辰巳午未申酉戌亥]) 加占时 ([子丑寅卯辰巳午未申酉戌亥])[\s\S]{0,900}?\*\*三传\*\*[\s\u3000]*\*\*([子丑寅卯辰巳午未申酉戌亥]) → ([子丑寅卯辰巳午未申酉戌亥]) → ([子丑寅卯辰巳午未申酉戌亥])\*\*/g)];
+  ok(pans.length >= 255, `97 里解析出 ${pans.length} 张带三传的盘（应 ≈260）`);
+  const bad = [];
+  pans.forEach(m => {
+    const got = chuan(m[1], m[2], m[3]);
+    const want = m[4] + m[5] + m[6];
+    if (got !== want) bad.push(`${m[1]} ${m[2]}/${m[3]} md作${want} 引擎作${got}`);
+  });
+  ok(!bad.length,
+     `每张盘都与引擎现算一致（${pans.length - bad.length}/${pans.length}）` +
+     (bad.length ? `　⚠️ 不一致 ${bad.length} 张，多半是改了 engine.js 没重跑 _mk97.py：`
+                   + bad.slice(0, 5).join('；') : ''));
+}
+
+console.log('\n== 涉害：把口径钉死 ==');
+/* 2026-08-30 拍板：涉害深浅按《通解》**数克害重数**取深者，
+   不是 game 的「孟＞仲＞季」（按候选所临地盘位定深浅）。
+
+   ⚠️⚠️ 别拿「题库有多少例对得上」当这条口径的证据——试过，**方向是反的**：
+   把引擎退化成孟仲季法，题库 30 例涉害的一致数反而从 27 升到 29。
+   因为题库出自《图解六壬大全》，那本书本身就偏孟仲季。
+   一致率高低只说明「跟哪本书像」，证明不了该用哪本。
+
+   所以这里改成**直接钉具体盘**：下面四张两法结论相反，
+   期望值一律是数克害法的答案。谁把引擎改回孟仲季，这四条立刻全红。 */
+{
+  const SHE = [
+    // 日干支, 月将, 占时, 数克害法(本教材), 孟仲季法(game), 说明
+    ['庚午', '亥', '卯', '子申辰', '戌午寅', '子临辰5重 > 戌临寅4重；孟仲季法则取临孟位的戌'],
+    ['甲辰', '寅', '午', '子申辰', '戌午寅', '同上'],
+    ['庚午', '卯', '巳', '寅子戌', '午辰寅', '寅临辰6重 > 午临申4重；孟仲季法取临孟位的午'],
+    ['甲午', '卯', '巳', '寅子戌', '戌申午', '寅临辰6重 > 戌临子2重；孟仲季法取临仲位的戌']
+  ];
+  SHE.forEach(([r, yj, zs, want, other, why]) => {
+    const o = E.qike(r, yj, zs);
+    ok(o && o.ke === '涉害', `${r} ${yj}/${zs} 判为涉害课`);
+    ok(o && o.chuan.join('') === want,
+       `${r} ${yj}/${zs} → ${want}（数克害法）` +
+       (o && o.chuan.join('') === other ? `　✗ 得到 ${other}，引擎退回孟仲季法了！` :
+        (o && o.chuan.join('') !== want ? `　✗ 实得 ${o.chuan.join('')}` : `　${why}`)));
+  });
+  // 覆盖度（只作参考，不作口径证据——理由见上）
+  let she = 0;
+  blocks.forEach(b => {
+    const tp = /\|\s*\*\*天盘\*\*\s*\|([^|]*(?:\|[^|]*){11})\|/.exec(b);
+    const rg = /\|\s*\*\*下神\*\*\s*\|[^|]*\|[^|]*\|[^|]*\|\s*([甲乙丙丁戊己庚辛壬癸])〔日干/.exec(b);
+    const rz = /([子丑寅卯辰巳午未申酉戌亥])〔日支〕/.exec(b);
+    if (!tp || !rg || !rz) return;
+    const row = tp[1].split('|').map(x => x.trim()).filter(Boolean);
+    if (row.length < 12) return;
+    const o = E.qike(rg[1] + rz[1], E.Z[E.Z.indexOf(row[0])], '子');
+    if (o && o.ke === '涉害') she++;
+  });
+  ok(she >= 28, `题库里 ${she} 例走涉害分支（覆盖度参考值，不是口径证据）`);
+}
 
 console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);
 process.exit(fail ? 1 : 0);
