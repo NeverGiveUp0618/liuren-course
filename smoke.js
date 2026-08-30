@@ -35,10 +35,90 @@ const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
 const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
 
+
+// ── 象法速查（2026-08-30 从 liuren-game 的 XF_FA/XF_LEI/XF_BZG 迁入）──
+console.log('\n== 象法速查 ==');
+(function () {
+  const xp = path.join(dir, 'data', 'data-xf.js');
+  ok(fs.existsSync(xp), 'data-xf.js 已生成');
+  if (!fs.existsSync(xp)) return;
+  // ⚠️ 必须套一层括号：DATA_XF 是**对象**，`{...}` 在语句位置会被当成代码块，
+  //    不是对象字面量（DATA_BIFA 是数组，所以那边不加也没事）。
+  const X = eval('(' + fs.readFileSync(xp, 'utf8')
+    .replace(/^[\s\S]*?DATA_XF\s*=/, '').replace(/;\s*$/, '') + ')');
+  ok(X.items.length === 289, `象法 289 条（实得 ${X.items.length}）`);
+  ok(X.libs.length === 5, '五库');
+  const byLib = {}; X.items.forEach(i => byLib[i.lib] = (byLib[i.lib] || 0) + 1);
+  ok(byLib['取象法则'] === 106 && byLib['分类类神'] === 113
+     && byLib['百章歌断诀'] === 46, '前三库 106/113/46');
+  // ⭐ 08/09 课写明「完整清单请查 App 的象法速查」——清单必须在站内，
+  //    否则 game 冻结后那两条指路就悬空了
+  ok(byLib['支神类象·白话'] === 12 && byLib['天将类象·白话'] === 12,
+     '两套白话类象各 12 条（08/09 课指向的那份清单）');
+  ok(X.libs.every(l => l.n === byLib[l.name]), '库计数与实际条数一致');
+  ok(X.items.every(i => i.name && i.grp && i.html && i.src), '每条都有名/组/正文/出处');
+  ok(M.counts.xf === 289, 'meta.counts.xf = 289（首页菜单的分母）');
+  // ⚠️ FX_CATS 是练习入口（fn:startZM 这类函数引用），不是内容——不该被迁进来
+  ok(!/startZM|startSC|startZL/.test(fs.readFileSync(xp, 'utf8')),
+     '没有把练习入口函数当内容迁进来');
+  ok(!!$('#s-xflist') && !!$('[data-go="xflist"]'), '象法屏与首页入口都在');
+})();
+
+// ── 附篇：源流 / 课式八要素（2026-08-30 迁入）──────────────────
+console.log('\n== 附篇 ==');
+(function () {
+  const ep = path.join(dir, 'data', 'data-extra.js');
+  ok(fs.existsSync(ep), 'data-extra.js 已生成');
+  if (!fs.existsSync(ep)) return;
+  const E = eval(fs.readFileSync(ep, 'utf8')
+    .replace(/^[\s\S]*?DATA_EXTRA\s*=/, '').replace(/;\s*$/, ''));
+  ok(E.length === 2, `附篇 2 篇（实得 ${E.length}）`);
+  ok(E.every(x => x.id && x.title && x.html), '每篇都有 id/标题/正文');
+  const ids = E.map(x => x.id).sort().join(',');
+  ok(ids === 'bayao,liuyuan', `id 为 bayao,liuyuan（实得 ${ids}）`);
+  const bay = E.filter(x => x.id === 'bayao')[0];
+  ok(bay && bay.heads.length === 8, '课式八要素正好 8 项');
+  // ⚠️ 源流篇不该混进「核心逻辑/起课流程/四大断则」——那段是与 1-11 课重复的总纲摘要
+  const ly = E.filter(x => x.id === 'liuyuan')[0];
+  ok(ly && !/四大断则|起课流程/.test(ly.text), '源流篇没有混入重复的总纲摘要');
+  ok(!!$('#s-extra'), '附篇屏在 index.html 里');
+  ok($$('[data-go="extra"]').length === 2, '首页两个附篇入口');
+  ok($$('[data-go="extra"]').every(b => b.dataset.id), '入口都带 data-id');
+})();
+
+// ── 毕法赋（2026-08-30 从 liuren-game 的 BF_KU 迁入）───────────────
+// ⚠️ data-bifa.js 是按需加载的，smoke 里直接 require 进来验，别指望首屏有它
+console.log('\n== 毕法赋 ==');
+(function () {
+  const bp = path.join(dir, 'data', 'data-bifa.js');
+  ok(fs.existsSync(bp), 'data-bifa.js 已生成');
+  if (!fs.existsSync(bp)) return;
+  const src = fs.readFileSync(bp, 'utf8');
+  ok(!/^\s*<script/.test(src), 'data-bifa.js 是纯 js');
+  const B = eval(src.replace(/^[\s\S]*?DATA_BIFA\s*=/, '') .replace(/;\s*$/, ''));
+  ok(B.length === 100, `毕法赋 100 法（实得 ${B.length}）`);
+  ok(B.every((f, i) => f.n === i + 1), '法号 1–100 连续');
+  const ge = B.reduce((a, f) => a + f.ge.length, 0);
+  ok(ge === 356, `格 356（实得 ${ge}）`);
+  ok(B.every(f => f.html && f.ju && f.pian), '每法都有 ju/pian/html');
+  // ⚠️ 首屏 data-meta 必须带上分母，否则首页菜单显示「—」
+  ok(M.counts.bifa === 100, 'meta.counts.bifa = 100（首页菜单的分母）');
+  // ⭐ 口径：统一《通解》。md 里凡与原数据不符的都留了〔订正〕，别把注抹掉
+  const md = fs.readFileSync(path.join(dir, 'content', '97-毕法赋详解.md'), 'utf8');
+  const fixes = (md.match(/〔订正〕/g) || []).length;
+  ok(fixes >= 53, `订正注至少 53 条（月将 13 ＋ 三传 40，实得 ${fixes}）`);
+  ok(/涉害深浅/.test(md) && /取下神/.test(md), '订正注带分歧类型');
+  ok($('#s-bflist') && $('#s-bifa'), '毕法赋两个屏都在 index.html 里');
+  ok(!!$('[data-go="bflist"]'), '首页菜单有毕法赋入口');
+})();
+
 console.log('\n== 数据与内容源一致 ==');
-// ⚠️ 00 是总目录、99 是课例题库——都不是课，别把它们算进课数
+// ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 90 的都是附篇。
+//    与 build.py 的 build_lessons 同一条规则——这样以后加 95- 之类不必两边改。
+//    （先前写死成 (00|98|99) 的清单，加一次附篇就红一次。）
 const mdFiles = fs.readdirSync(path.join(dir, 'content'))
-  .filter(f => /^\d\d-/.test(f) && !/^(00|98|99)-/.test(f));
+  .filter(f => /^\d\d-/.test(f))
+  .filter(f => { const n = +f.slice(0, 2); return n !== 0 && n < 90; });
 ok(C.length === mdFiles.length, `课数与 content/ 的 md 数一致（${C.length}）`);
 ok(M.counts.lesson === C.length, 'meta 的课数与课文数一致');
 ok(M.plan.length >= C.length, `总目录计划表 ${M.plan.length} 课 ≥ 已成 ${C.length} 课`);
@@ -374,12 +454,18 @@ async function typeSearch(kw) {
   console.log('\n== 格局详解 ==');
   {
     ok(GE.length === M.counts.ge && GE.length >= 25, `格局 ${GE.length} 格，与 meta 计数一致`);
-    ok(GE.every((g, i) => g.n === i + 1), '序号 1…25 连续');
+    ok(GE.every((g, i) => g.n === i + 1), `序号 1…${GE.length} 连续`);
     ok(GE.every(g => g.name && g.html), '每格都有格名与正文');
     ok(GE.every(g => g.line), '每格都有「一句话」摘要（列表要显示）');
-    // ⚠️ 这批全部出自中册，出处必须是「通解中」——标成上册就是页码算错了
-    const bad = GE.filter(g => !/通解中/.test(g.html));
-    ok(!bad.length, '每格都带中册出处' + (bad.length ? '（缺：' + bad.map(x => x.name) + '）' : ''));
+    // ⚠️ 出处分两源：1–25 出自《通解》中册，26–66 是 2026-08-30 从 game 的
+    //    K64 迁来的**讲义**六十四课经。**每格都必须标明出自哪一本**——
+    //    以前只认「通解中」，把讲义那批全判成缺出处了。
+    const bad = GE.filter(g => !/通解中|讲义/.test(g.html));
+    ok(!bad.length, '每格都注明出处（通解中册或讲义）'
+       + (bad.length ? '（缺：' + bad.map(x => x.name) + '）' : ''));
+    // ⭐ 23 个格两书重名，讲义说法并列在原节里——别被后续编辑抹掉
+    const both = GE.filter(g => /通解中/.test(g.html) && /讲义（六十四课经）/.test(g.html));
+    ok(both.length === 23, `23 格并列了通解与讲义两说（实得 ${both.length}）`);
     ok($('#mGe').textContent === String(M.counts.ge), '首页格数读 counts，没写死');
 
     $$('.mi[data-go="gelist"]')[0].onclick();

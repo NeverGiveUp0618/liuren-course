@@ -89,6 +89,45 @@ function needGe() {
   });
   return _geLoading;
 }
+var _extraLoading = null;
+function needExtra() {
+  if (window.DATA_EXTRA) return Promise.resolve(window.DATA_EXTRA);
+  if (_extraLoading) return _extraLoading;
+  _extraLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-extra.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_EXTRA); };
+    el.onerror = function () { _extraLoading = null; rej(new Error('附篇加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _extraLoading;
+}
+var _xfLoading = null;
+function needXf() {
+  if (window.DATA_XF) return Promise.resolve(window.DATA_XF);
+  if (_xfLoading) return _xfLoading;
+  _xfLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-xf.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_XF); };
+    el.onerror = function () { _xfLoading = null; rej(new Error('象法速查加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _xfLoading;
+}
+var _bifaLoading = null;
+function needBifa() {
+  if (window.DATA_BIFA) return Promise.resolve(window.DATA_BIFA);
+  if (_bifaLoading) return _bifaLoading;
+  _bifaLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-bifa.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=（1.4MB，别进首屏）
+    el.onload = function () { res(window.DATA_BIFA); };
+    el.onerror = function () { _bifaLoading = null; rej(new Error('毕法赋加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _bifaLoading;
+}
 var _quizLoading = null;
 function needQuiz() {
   if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
@@ -117,7 +156,8 @@ var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
-               gelist: '格局详解', ge: '格局' };
+               gelist: '格局详解', ge: '格局',
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇' };
 var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
@@ -211,6 +251,8 @@ RENDER.home = function () {
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
+  var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
+  var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
   var read = load(K.read, {}), done = 0;
   (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
   var total = (M.list || []).length || 1;
@@ -442,6 +484,118 @@ function paintGeOne(G, n) {
     (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
   if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
   if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+}
+
+/* ── 附篇（源流 / 八要素）──────────────────────────────
+   整篇一条，直接铺 html。两篇都不是课，也没有自测。
+   ⚠️ 内容源 content/94-*.md、95-*.md。 */
+RENDER.extra = function (id) {
+  needExtra().then(function (E) { paintExtra(E, id); });
+  if (window.DATA_EXTRA) paintExtra(window.DATA_EXTRA, id);
+};
+function paintExtra(E, id) {
+  var it = (E || []).filter(function (x) { return x.id === id; })[0];
+  if (!it) return;
+  $('#ttl').textContent = it.title.replace(/^大六壬\s*·\s*/, '');
+  $('#extraBody').innerHTML = it.html;
+}
+
+/* ── 象法速查 ──────────────────────────────────────────
+   265 条断法规则，三库：取象法则 / 分类类神 / 百章歌断诀。
+   ⚠️ 内容源 content/96-象法速查.md。
+   ⚠️ 刻意**不并进「速查」屏**——那屏按第几课分组、每条带「到第 N 课看讲解」，
+      象法条目不属于任何一课，塞进去要到处特判。 */
+var xfLib = '';
+RENDER.xflist = function () {
+  var box = $('#xq');
+  if (box && !box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintXf, 160); };
+  }
+  paintXf();
+};
+function paintXf() {
+  if (window.DATA_XF) { renderXf(window.DATA_XF); return; }
+  $('#xfList').innerHTML = '<p class="muted">正在取象法…</p>';
+  needXf().then(renderXf).catch(function () {
+    $('#xfList').innerHTML = '<p class="muted">象法加载失败，检查网络后重试。</p>';
+  });
+}
+function renderXf(D) {
+  var libs = D.libs || [], all = D.items || [];
+  $('#xfFilters').innerHTML = ['<button class="chip' + (xfLib ? '' : ' on') +
+    '" data-lib="">全部 ' + all.length + '</button>']
+    .concat(libs.map(function (l) {
+      return '<button class="chip' + (xfLib === l.name ? ' on' : '') +
+        '" data-lib="' + esc(l.name) + '">' + esc(l.name) + ' ' + l.n + '</button>';
+    })).join('');
+  $$('[data-lib]', $('#xfFilters')).forEach(function (b) {
+    b.onclick = function () { xfLib = b.dataset.lib; renderXf(D); };
+  });
+
+  var kw = ($('#xq').value || '').trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = all.filter(function (r) {
+    if (xfLib && r.lib !== xfLib) return false;
+    return words.every(function (w) {
+      return (r.name + r.grp + r.lib + r.text + r.src).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) {
+    $('#xfList').innerHTML = '<p class="muted">没找到。换个词试试。</p>';
+    return;
+  }
+  var html = '', cur2 = '';
+  hit.forEach(function (r) {
+    var g = r.lib + ' · ' + r.grp;
+    if (g !== cur2) { cur2 = g; html += '<div class="refg">' + esc(g) + '</div>'; }
+    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
+      '</b></button><div class="refb">' + r.html +
+      '<p class="src">〔出处〕' + esc(r.src) + '</p></div></div>';
+  });
+  $('#xfList').innerHTML = html;
+  $$('.refi', $('#xfList')).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+  });
+}
+
+/* ── 毕法赋详解 ────────────────────────────────────────
+   100 法、356 格。列表按「法」列，一法一行带它辖下的格名，
+   点进去是整条法（含全部格的原文·白话·课盘）。
+   ⚠️ 内容源是 content/97-毕法赋详解.md，这里只负责画。
+   ⚠️ data-bifa.js 有 1.4MB，只在进这两屏时才加载——别搬进首屏。 */
+RENDER.bflist = function () {
+  needBifa().then(paintBf);
+  if (window.DATA_BIFA) paintBf(window.DATA_BIFA);
+};
+function paintBf(B) {
+  $('#bfRows').innerHTML = B.map(function (f) {
+    return '<div class="gerow" data-bf="' + f.n + '">' +
+      '<span class="gn">' + f.n + '</span>' +
+      '<span class="gt">' + esc(f.ju) + '</span>' +
+      '<span class="gl">' + esc(f.pian) +
+      (f.ge.length ? '　· ' + esc(f.ge.join('／')) : '') + '</span></div>';
+  }).join('');
+  $$('[data-bf]', $('#bfRows')).forEach(function (el) {
+    el.onclick = function () { show('bifa', +el.dataset.bf); };
+  });
+}
+RENDER.bifa = function (n) {
+  needBifa().then(function (B) { paintBfOne(B, n); });
+  if (window.DATA_BIFA) paintBfOne(window.DATA_BIFA, n);
+};
+function paintBfOne(B, n) {
+  var it = B.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '第 ' + it.n + ' 法 · ' + it.pian;
+  var prev = B[n - 2], next = B[n];
+  $('#bfBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="bfPrev">‹ 第 ' + prev.n + ' 法</button>' : '') +
+    (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
+  if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
+  if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
 }
 
 /* ── 课例题库 ──────────────────────────────────────────
@@ -704,10 +858,19 @@ function bindPan(root) {
 }
 function bindDoc(root) {
   bindPan(root);
+  // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
+  //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
+  var EXTRA_ROUTE = { '94': ['extra', 'liuyuan'], '95': ['extra', 'bayao'],
+                      '96': ['xflist', null], '97': ['bflist', null],
+                      '98': ['gelist', null], '99': ['qlist', null] };
   $$('a.wiki', root).forEach(function (a) {
     a.onclick = function () {
       var t = a.dataset.wiki || '', m = t.match(/^(\d\d)-/);
-      if (m) { var id = 'L' + m[1]; if ((M.list || []).some(function (x) { return x.id === id; })) show('lesson', id); }
+      if (!m) return;
+      var r = EXTRA_ROUTE[m[1]];
+      if (r) { show(r[0], r[1]); return; }
+      var id = 'L' + m[1];
+      if ((M.list || []).some(function (x) { return x.id === id; })) show('lesson', id);
     };
   });
 }
@@ -888,7 +1051,8 @@ $('#fabToc').onclick = function () {
 };
 $('#tocMask').onclick = function (e) { if (e.target === $('#tocMask')) $('#tocMask').classList.remove('on'); };
 $$('.mi[data-go]').forEach(function (b) {
-  b.onclick = function () { show(b.dataset.go, null); };
+  // data-id 供「附篇」用——同一个 extra 屏要靠 id 分辨是源流还是八要素
+  b.onclick = function () { show(b.dataset.go, b.dataset.id || null); };
 });
 /* 底栏：四个 tab 都是根屏。再点当前 tab＝回到顶部；跨 tab 切换把历史栈压回栈底，
    免得来回切堆出一长串历史（与命理精讲同一做法）。 */

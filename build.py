@@ -72,8 +72,14 @@ def parse_plan(md):
 def build_lessons(collect_md=None):
     out = []
     for fn in sorted(os.listdir(SRC)):
-        if not fn.endswith('.md') or fn.startswith(('00-', '98-', '99-')):
-            continue   # 00 总目录、98 格局详解、99 课例题库，都不是课
+        # ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 90 的都是附篇
+        #   （96 象法速查、97 毕法赋详解、98 格局详解、99 课例题库）。
+        #   ⚠️ smoke.js 里有同一条规则，加附篇时两边都不用改——但改规则要一起改。
+        if not fn.endswith('.md'):
+            continue
+        mnum = re.match(r'(\d\d)-', fn)
+        if not mnum or mnum.group(1) == '00' or int(mnum.group(1)) >= 90:
+            continue
         m = re.match(r'^(\d\d)-(.+)\.md$', fn)
         if not m:
             print('  跳过（文件名不合规）：', fn)
@@ -204,6 +210,92 @@ def build_ge():
     return out
 
 
+def build_extra():
+    """94 六壬源流 / 95 课式八要素 —— 两篇独立附篇，整篇一条，走「附篇」屏。
+
+    ⚠️ 都不是课（编号 ≥ 90 已被 build_lessons 排除）。
+       2026-08-30 自 liuren-game 迁入：94 出 p5 屏的源流段（工具 _mk94.py），
+       95 出 BYS_DATA（工具 _mk95.py）。
+    """
+    out = []
+    for fn, key in (('94-六壬源流.md', 'liuyuan'), ('95-课式八要素.md', 'bayao')):
+        fp = os.path.join(SRC, fn)
+        if not os.path.exists(fp):
+            continue
+        md = read(fp)
+        m = re.match(r'#\s*(.+)', md)
+        out.append({'id': key, 'file': fn, 'title': (m.group(1) if m else fn).strip(),
+                    'heads': re.findall(r'^##\s+(.+)$', md, re.M),
+                    'html': mdlite.md2html(md), 'text': mdlite.strip_md(md)})
+    return out
+
+
+def build_xf():
+    """96-象法速查.md → 三库 × 若干组 × 条目，供「象法」屏按组或关键词查。
+
+    ⚠️ 这不是课，也不进「速查」屏——那屏按第几课分组、每条带「到第 N 课看讲解」，
+       象法条目不属于任何一课。2026-08-30 从 liuren-game 的
+       XF_FA／XF_LEI／XF_BZG 迁来（工具 _tools/_mk96.py，只留出处，不进构建）。
+    """
+    fp = os.path.join(SRC, '96-象法速查.md')
+    if not os.path.exists(fp):
+        return [], []
+    md = read(fp)
+    libs, items = [], []
+    parts = re.split(r'^## [一二三四五六七八九十]+、(.+)$', md, flags=re.M)
+    for i in range(1, len(parts), 2):
+        lib = parts[i].strip()
+        body = parts[i + 1]
+        cnt = 0
+        for gm in re.finditer(r'^### (.+?)$', body, re.M):
+            nxt = re.search(r'^### ', body[gm.end():], re.M)
+            gbody = body[gm.end():gm.end() + nxt.start()] if nxt else body[gm.end():]
+            gbody = gbody.split('\n---')[0]
+            grp = gm.group(1).strip()
+            # 一条＝**名** → 正文 → 〔出处〕。
+            # ⚠️ 正文既可能是要点行（前三库），也可能是表格（两套白话类象），
+            #    所以不限定形状，只非贪婪吃到〔出处〕为止。
+            # ⚠️ 靠「行首 **粗体** 单独成行」认条目起点——渲染时表内不许出现这种行。
+            for em in re.finditer(r'^\*\*(.+?)\*\*\n\n([\s\S]*?)\n〔出处〕(.+?)$',
+                                  gbody, re.M):
+                items.append({'lib': lib, 'grp': grp, 'name': em.group(1).strip(),
+                              'html': mdlite.md2html(em.group(2)),
+                              'text': mdlite.strip_md(em.group(2)),
+                              'src': em.group(3).strip()})
+                cnt += 1
+        libs.append({'name': lib, 'n': cnt})
+    if len(items) != 289:
+        sys.exit('✗ 象法条目数 %d，应为 289（106+113+46+12+12）——解析器可能吞了条目'
+                 % len(items))
+    return libs, items
+
+
+def build_bifa():
+    """97-毕法赋详解.md → 一法一条（法内含若干格），供「毕法」屏按法号或格名查。
+
+    ⚠️ 这不是课。源出《图解六壬大全·第三部》，2026-08-30 从 liuren-game 的
+       BF_KU 迁来（迁移工具留在 _tools/_mk97.py，只为留出处，不进构建）。
+    ⚠️ 盘一律按 engine.js 复算（《通解》口径），与原数据不符处 md 里已逐张注明。
+    """
+    fp = os.path.join(SRC, '97-毕法赋详解.md')
+    if not os.path.exists(fp):
+        return []
+    md = read(fp)
+    out = []
+    for m in re.finditer(r'^## 第 (\d+) 法\u3000(.+?)：(.+?)$', md, re.M):
+        beg = m.start()
+        nxt = re.search(r'^## ', md[m.end():], re.M)
+        body = md[beg:m.end() + nxt.start()] if nxt else md[beg:]
+        ges = re.findall(r'^### (.+?)：', body, re.M)
+        out.append({'n': int(m.group(1)), 'ju': m.group(2).strip(),
+                    'pian': m.group(3).strip(), 'ge': ges,
+                    'html': mdlite.md2html(body), 'text': mdlite.strip_md(body)})
+    ns = [x['n'] for x in out]
+    if ns != list(range(1, len(ns) + 1)):
+        sys.exit('✗ 毕法赋法号不连续：%s…%s（共 %d）' % (ns[:3], ns[-3:], len(ns)))
+    return out
+
+
 def build_quiz():
     """99-课例题库.md → 按占类分组的课例。
     ⚠️ 题库的 md 是**生成物的再加工**（源在 liuren-game 的 DR_CASES/DR_CASELIB），
@@ -289,6 +381,13 @@ def main():
     counts['ref'] = len(ref)
     ge = build_ge()
     counts['ge'] = len(ge)
+    extra = build_extra()
+    counts['extra'] = len(extra)
+    xflibs, xfitems = build_xf()
+    counts['xf'] = len(xfitems)
+    bifa = build_bifa()
+    counts['bifa'] = len(bifa)
+    counts['bifage'] = sum(len(x['ge']) for x in bifa)
     qcats, qitems = build_quiz()
     counts['quiz'] = len(qitems)
     counts['quizstar'] = sum(x['star'] for x in qitems)
@@ -298,6 +397,9 @@ def main():
     s3 = write_js('data-ref.js', 'DATA_REF', ref)
     s4 = write_js('data-quiz.js', 'DATA_QUIZ', {'topics': qcats, 'items': qitems})
     s5 = write_js('data-ge.js', 'DATA_GE', ge)
+    s6 = write_js('data-bifa.js', 'DATA_BIFA', bifa)
+    s7 = write_js('data-xf.js', 'DATA_XF', {'libs': xflibs, 'items': xfitems})
+    s8 = write_js('data-extra.js', 'DATA_EXTRA', extra)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -306,6 +408,13 @@ def main():
     print('  data-quiz.js   %7.1f KB（课例 %d，其中入门精选 %d，%d 个占类）'
           % (s4 / 1024, counts['quiz'], counts['quizstar'], len(qcats)))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
+    print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
+          % (s6 / 1024, counts['bifa'], counts['bifage']))
+    print('  data-extra.js  %7.1f KB（附篇 %d 篇：%s）'
+          % (s8 / 1024, counts['extra'], '、'.join(x['title'] for x in extra)))
+    print('  data-xf.js     %7.1f KB（象法 %d 条 / %s）'
+          % (s7 / 1024, counts['xf'],
+             '＋'.join('%s%d' % (x['name'], x['n']) for x in xflibs)))
     print('\n✓ 自检通过')
 
 
