@@ -55,18 +55,30 @@
       </div>
     </div>
     <div id="resume"></div>
+    <!-- ⚠️ 首页是**目录**（一眼看全站有什么），底栏是**快捷**（常用四处随时跳）。
+         课程／课例／速查三项两处都有，这是有意的：分组之后它读起来是「这一组里的一项」，
+         不是把导航又摆一遍。⚠️ 别把这里改成四张大卡片＋底栏四栏——
+         那就成了同一件事做两遍（六壬神课 2026-08-12 踩过，用户原话「太繁琐」）。
+         ⚠️ 分组口径＝00 总目录里那句「依赖驱动 vs 查阅式」，改这里先回去看那句。 -->
     <div class="menu">
+      <div class="mgrp">学 · 一课一课往下读</div>
       <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
-      <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将与占时，天盘实时转</span></button>
-      <button class="mi" data-go="drill"><b>起课练习</b><span>给你一张盘，自己起三传 · 当场判对错</span></button>
-      <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
-      <button class="mi" data-go="gelist"><b>格局</b><span><b id="mGe">—</b> 格详解 · 定完课体来这儿查断意</span></button>
-      <button class="mi" data-go="extra" data-id="liuyuan"><b>源流与背景</b><span>六壬从哪来 · 三式里的位置 · 汉代式盘实证</span></button>
-      <button class="mi" data-go="extra" data-id="bayao"><b>课式八要素</b><span>太岁·月建·日辰·占时·月将·空亡·本命·行年</span></button>
-      <button class="mi" data-go="xflist"><b>象法速查</b><span><b id="mXf">—</b> 条断法规则 · 占什么事看什么字</span></button>
-      <button class="mi" data-go="bflist"><b>毕法赋</b><span><b id="mBifa">—</b> 法逐格详解 · 断课时按法号或格名查</span></button>
-      <button class="mi" data-go="ref"><b>速查</b><span><b id="mRef">—</b> 张表 · 学完之后天天翻的那些</span></button>
       <button class="mi" data-go="outline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>
+
+      <div class="mgrp">练 · 自己动手</div>
+      <button class="mi" data-go="drill"><b>起课练习</b><span>给你一张盘，自己起三传 · 当场判对错</span></button>
+      <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将与占时，天盘实时转</span></button>
+      <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
+
+      <div class="mgrp">查 · 断课时随用随翻</div>
+      <button class="mi" data-go="ref"><b>速查</b><span><b id="mRef">—</b> 张表 · 学完之后天天翻的那些</span></button>
+      <button class="mi" data-go="xflist"><b>象法速查</b><span><b id="mXf">—</b> 条断法规则 · 占什么事看什么字</span></button>
+      <button class="mi" data-go="gelist"><b>格局</b><span><b id="mGe">—</b> 格详解 · 定完课体来这儿查断意</span></button>
+      <button class="mi" data-go="bflist"><b>毕法赋</b><span><b id="mBifa">—</b> 法逐格详解 · 断课时按法号或格名查</span></button>
+      <button class="mi" data-go="extra" data-id="bayao"><b>课式八要素</b><span>排盘前的检查单 · 太岁月建日辰占时月将空亡本命行年</span></button>
+
+      <div class="mgrp">读 · 不读也不影响起课</div>
+      <button class="mi" data-go="extra" data-id="liuyuan"><b>源流与背景</b><span>六壬从哪来 · 三式里的位置 · 汉代式盘实证</span></button>
     </div>
     <div class="card" id="progCard">
       <button class="proghd" id="progTog" aria-expanded="false">

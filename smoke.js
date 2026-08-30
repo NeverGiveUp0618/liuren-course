@@ -64,6 +64,28 @@ console.log('\n== 象法速查 ==');
   ok(!!$('#s-xflist') && !!$('[data-go="xflist"]'), '象法屏与首页入口都在');
 })();
 
+// ── 首页分组（2026-08-30：11 项平铺改成四组）────────────────────
+console.log('\n== 首页分组 ==');
+{
+  const groups = $$('.menu .mgrp').map(e => e.textContent.trim());
+  ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
+  ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
+  const items = $$('.menu .mi');
+  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}）`);
+  // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
+  const kids = [].slice.call($('.menu').children);
+  let seen = 0, orphan = 0;
+  kids.forEach(el => {
+    if (el.classList.contains('mgrp')) seen++;
+    else if (el.classList.contains('mi') && !seen) orphan++;
+  });
+  ok(!orphan, `没有落在组外的入口（${orphan} 项）`);
+  // ⚠️ 底栏那三项（课程/课例/速查）在首页也有，是有意的：首页当目录、底栏当快捷。
+  //    但别让它变成「四张大卡片＋底栏四栏」那种同一件事做两遍（六壬神课踩过）。
+  ok($$('.menu .mi').length > $$('.tabbar button').length * 2,
+     '首页目录明显比底栏宽（不是把底栏又摆一遍）');
+}
+
 // ── 附篇：源流 / 课式八要素（2026-08-30 迁入）──────────────────
 console.log('\n== 附篇 ==');
 (function () {
