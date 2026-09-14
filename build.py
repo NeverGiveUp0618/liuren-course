@@ -296,6 +296,96 @@ def build_bifa():
     return out
 
 
+def build_jinsuo():
+    """93-金锁玉匙.md → 初传查表：象类 94 首（按「X加Y」查）＋神将神煞 41 首＋12×12 格子。
+
+    ⚠️ 不是课，不进「速查」屏。源出《通解》下册第七章第一节（2026-09-14，工具 _tools/_mk93.py 只留出处）。
+    ⭐ 格子（grid）在这里算，不在 md 里另画一张表：每格＝第一条把它写进「相加」的条目，
+       其余认领它的条目（别条的「相加」或「又见」）进 alt——原书同一格常被两条认领，
+       主次的取舍理由都在各条「备注」里，这里只照 md 写的分主次，不再裁决。
+    """
+    fp = os.path.join(SRC, '93-金锁玉匙.md')
+    if not os.path.exists(fp):
+        return None
+    md = read(fp)
+    Z = '子丑寅卯辰巳午未申酉戌亥'
+    secA = md.index('\n## 一、')
+    secX = md.index('\n### 原书交叉注')
+    secB = md.index('\n## 二、')
+    intro = md[:secA]
+    partA, xref, partB = md[secA:secX], md[secX:secB], md[secB:]
+
+    def fields(blk):
+        f = {}
+        for m in re.finditer(r'^- (相加|又见|卦|诗|备注|条件)：(.*)$', blk, re.M):
+            f[m.group(1)] = m.group(2).strip()
+        q = re.search(r'^> (.+)$', blk, re.M)
+        f['quote'] = mdlite.md2html(q.group(0)) if q else ''
+        return f
+
+    def pairs(s):
+        if not s or s.startswith('（'):
+            return []
+        return [x.strip().replace('加', '') for x in s.split('·') if '加' in x]
+
+    A, xuantai = [], None
+    for m in re.finditer(r'^### (.+?)$', partA, re.M):
+        nxt = re.search(r'^### ', partA[m.end():], re.M)
+        blk = partA[m.start():m.end() + nxt.start()] if nxt else partA[m.start():]
+        f = fields(blk)
+        h = m.group(1)
+        if h.startswith('玄胎课象'):
+            xuantai = {'name': '玄胎课象', 'gua': f.get('卦', ''), 'quote': f['quote']}
+            continue
+        mm = re.match(r'(\d+)\. (.+)$', h)
+        A.append({'n': int(mm.group(1)), 'name': mm.group(2).strip(),
+                  'p': pairs(f.get('相加', '')), 'also': pairs(f.get('又见', '')),
+                  'gua': f.get('卦', ''), 'poem': f.get('诗', ''), 'note': f.get('备注', ''),
+                  'quote': f['quote']})
+    if [x['n'] for x in A] != list(range(1, 95)):
+        sys.exit('✗ 金锁玉匙象类条目应为 1..94，实得 %d' % len(A))
+    if not xuantai:
+        sys.exit('✗ 金锁玉匙缺玄胎课象条')
+    B = []
+    for m in re.finditer(r'^### (\d+)\. (.+?)$', partB, re.M):
+        nxt = re.search(r'^### ', partB[m.end():], re.M)
+        blk = partB[m.start():m.end() + nxt.start()] if nxt else partB[m.start():]
+        f = fields(blk)
+        B.append({'n': int(m.group(1)), 'name': m.group(2).strip(), 'cond': f.get('条件', ''),
+                  'poem': f.get('诗', ''), 'note': f.get('备注', ''), 'quote': f['quote']})
+    if [x['n'] for x in B] != list(range(1, 42)):
+        sys.exit('✗ 金锁玉匙神将神煞条目应为 1..41，实得 %d' % len(B))
+    none = re.search(r'^- 无课无诗：(.+?)（', partA, re.M)
+    none = pairs(none.group(1)) if none else []
+
+    grid = {}
+    for e in A:
+        for c in e['p']:
+            if c not in grid:
+                grid[c] = {'n': e['n'], 'alt': []}
+            else:
+                grid[c]['alt'].append(e['n'])
+    for e in A:
+        for c in e['also']:
+            grid.setdefault(c, {'n': 0, 'alt': []})['alt'].append(e['n'])
+    for c in none:
+        if c in grid:
+            sys.exit('✗ 金锁玉匙：%s 既标无课又有条目认领' % c)
+        grid[c] = {'n': -1, 'alt': []}
+    grid['寅亥'] = {'n': -2, 'alt': []}
+    cells = [a + b for a in Z for b in Z]
+    bad = [c for c in grid if c not in cells]
+    if bad:
+        sys.exit('✗ 金锁玉匙：相加写错了字：%s' % bad)
+    miss = [c for c in cells if c not in grid]
+    # ⚠️ 原书没点名的格是事实（多为课式里排不出的），这里只报数不补——补了就是编造
+    print('  金锁玉匙：象类 %d 首 / 神将神煞 %d 首；格子 144，原书未列 %d 格（%s）'
+          % (len(A), len(B), len(miss), '、'.join(a + '加' + b for a, b in miss)))
+    return {'intro': mdlite.md2html(intro), 'a': A, 'xuantai': xuantai,
+            'xref': mdlite.md2html(xref), 'b': B, 'grid': grid, 'none': none, 'miss': miss,
+            'text': mdlite.strip_md(md)}
+
+
 def build_quiz():
     """99-课例题库.md → 按占类分组的课例。
     ⚠️ 题库的 md 是**生成物的再加工**（源在 liuren-game 的 DR_CASES/DR_CASELIB），
@@ -388,6 +478,9 @@ def main():
     bifa = build_bifa()
     counts['bifa'] = len(bifa)
     counts['bifage'] = sum(len(x['ge']) for x in bifa)
+    js = build_jinsuo()
+    counts['jinsuo'] = len(js['a']) if js else 0
+    counts['jinsuob'] = len(js['b']) if js else 0
     qcats, qitems = build_quiz()
     counts['quiz'] = len(qitems)
     counts['quizstar'] = sum(x['star'] for x in qitems)
@@ -400,6 +493,7 @@ def main():
     s6 = write_js('data-bifa.js', 'DATA_BIFA', bifa)
     s7 = write_js('data-xf.js', 'DATA_XF', {'libs': xflibs, 'items': xfitems})
     s8 = write_js('data-extra.js', 'DATA_EXTRA', extra)
+    s9 = write_js('data-jinsuo.js', 'DATA_JINSUO', js or {})
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -412,6 +506,7 @@ def main():
           % (s6 / 1024, counts['bifa'], counts['bifage']))
     print('  data-extra.js  %7.1f KB（附篇 %d 篇：%s）'
           % (s8 / 1024, counts['extra'], '、'.join(x['title'] for x in extra)))
+    print('  data-jinsuo.js %7.1f KB（金锁玉匙 %d＋%d 首）' % (s9 / 1024, counts['jinsuo'], counts['jinsuob']))
     print('  data-xf.js     %7.1f KB（象法 %d 条 / %s）'
           % (s7 / 1024, counts['xf'],
              '＋'.join('%s%d' % (x['name'], x['n']) for x in xflibs)))

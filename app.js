@@ -128,6 +128,19 @@ function needBifa() {
   });
   return _bifaLoading;
 }
+var _jsLoading = null;
+function needJinsuo() {
+  if (window.DATA_JINSUO) return Promise.resolve(window.DATA_JINSUO);
+  if (_jsLoading) return _jsLoading;
+  _jsLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'data/data-jinsuo.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_JINSUO); };
+    el.onerror = function () { _jsLoading = null; rej(new Error('金锁玉匙加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _jsLoading;
+}
 var _quizLoading = null;
 function needQuiz() {
   if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
@@ -157,7 +170,8 @@ var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
                gelist: '格局详解', ge: '格局',
-               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇' };
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇',
+               jinsuo: '金锁玉匙' };
 var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
@@ -253,6 +267,7 @@ RENDER.home = function () {
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
   var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
   var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
+  var mj = $('#mJs'); if (mj) mj.textContent = c.jinsuo ? (c.jinsuo + '＋' + (c.jinsuob || 0)) : '—';
   var read = load(K.read, {}), done = 0;
   (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
   var total = (M.list || []).length || 1;
@@ -403,8 +418,17 @@ function judge(pickKe) {
   h += '<tr><td>正解</td>' + right.map(function (x) { return '<td>' + x + '</td>'; }).join('') +
     '<td>' + o.ke + (o.ge ? '·' + o.ge : '') + '</td></tr></table>';
   // ⭐ 错了要说清错在哪一步，不然练了也不长进
-  h += '<div class="dwhy">' + why(o, got, pickKe) + '</div></div>';
+  h += '<div class="dwhy">' + why(o, got, pickKe) + '</div>';
+  // 顺手给一条路：初传落在地盘哪个字上，到金锁玉匙查那首诗（下册外编第一节的简断法）
+  var u0 = right[0], d0 = E.Z.filter(function (d) { return o.t[d] === u0; })[0];
+  if (u0 && d0) {
+    h += '<p class="dlink"><button class="lnk" id="dJs">初传 ' + u0 + ' 加 ' + d0 +
+      ' → 查金锁玉匙诗诀 ›</button></p>';
+  }
+  h += '</div>';
   $('#dFb').innerHTML = h;
+  var dj = $('#dJs');
+  if (dj) dj.onclick = function () { show('jinsuo', u0 + d0); };
   $('#dFb').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -556,6 +580,134 @@ function renderXf(D) {
   });
   $('#xfList').innerHTML = html;
   $$('.refi', $('#xfList')).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+  });
+}
+
+/* ── 金锁玉匙（初传查表）──────────────────────────────
+   《通解》下册外编第一节的发用简断：只看初传天盘字加在地盘哪个字上，查一首诗。
+   两排 12 个字点选（上排＝初传，下排＝所临地盘），当场出诗；下面是全表可搜可翻。
+   ⚠️ 内容源 content/93-金锁玉匙.md；格子由 build.py 算（每格主条＋又见），这里只画。
+   ⚠️ 不并进「速查」屏（那屏按课分组）；id 传「天地」两字可直接定位一格（起课练习用）。 */
+var jsSel = { a: '', b: '' }, jsTab = 'a';
+RENDER.jinsuo = function (id) {
+  if (id && /^[子丑寅卯辰巳午未申酉戌亥]{2}$/.test(id)) { jsSel = { a: id[0], b: id[1] }; jsTab = 'a'; }
+  var box = $('#jsq');
+  if (box && !box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintJs, 160); };
+  }
+  paintJs();
+};
+function paintJs() {
+  if (window.DATA_JINSUO) { renderJs(window.DATA_JINSUO); return; }
+  $('#jsList').innerHTML = '<p class="muted">正在取诗诀…</p>';
+  needJinsuo().then(renderJs).catch(function () {
+    $('#jsList').innerHTML = '<p class="muted">金锁玉匙加载失败，检查网络后重试。</p>';
+  });
+}
+function jsPoem(p) {
+  // 诗按句号断行，读起来才像诗；原文里逗号不动
+  return esc(p).split('。').filter(Boolean).map(function (x) { return x + '。'; }).join('<br>');
+}
+function jsEntryHTML(D, e, open) {
+  var pairs = e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
+  var also = e.also.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
+  return '<div class="refi jse' + (open ? ' open' : '') + '" data-js="' + e.n + '">' +
+    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' + esc(pairs || '—') + '</span></button>' +
+    '<div class="refb">' +
+    (pairs ? '<p class="jsk">相加：' + esc(pairs) + '</p>' : '') +
+    (also ? '<p class="jsk">又见：' + esc(also) + '</p>' : '') +
+    (e.gua ? '<p class="jsk">卦：' + esc(e.gua) + '</p>' : '') +
+    '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
+    (e.note ? '<p class="jsnote">备注：' + esc(e.note) + '</p>' : '') +
+    '<details class="jsq"><summary>原文</summary>' + e.quote + '</details>' +
+    '</div></div>';
+}
+function jsEntryBHTML(e, open) {
+  return '<div class="refi jse' + (open ? ' open' : '') + '" data-jsb="' + e.n + '">' +
+    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' +
+    esc(e.cond.split(/[，。（]/)[0]) + '</span></button>' +
+    '<div class="refb">' +
+    '<p class="jsk">条件：' + esc(e.cond) + '</p>' +
+    '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
+    (e.note ? '<p class="jsnote">备注：' + esc(e.note) + '</p>' : '') +
+    '<details class="jsq"><summary>原文</summary>' + e.quote + '</details>' +
+    '</div></div>';
+}
+function renderJs(D) {
+  var A = D.a || [], B = D.b || [], grid = D.grid || {};
+  function byN(n) { return A.filter(function (x) { return x.n === n; })[0]; }
+  // 两排字
+  $('#jsPick').innerHTML = [['a', '初传'], ['b', '临于']].map(function (r) {
+    return '<div class="jsrow"><span class="jsl">' + r[1] + '</span><div class="jsz">' +
+      Z.map(function (z) {
+        return '<button class="jz' + (jsSel[r[0]] === z ? ' on' : '') + '" data-r="' + r[0] +
+          '" data-z="' + z + '">' + z + '</button>';
+      }).join('') + '</div></div>';
+  }).join('');
+  $$('.jz', $('#jsPick')).forEach(function (b) {
+    b.onclick = function () {
+      jsSel[b.dataset.r] = (jsSel[b.dataset.r] === b.dataset.z) ? '' : b.dataset.z;
+      renderJs(D);
+    };
+  });
+  // 命中格
+  var hit = $('#jsHit'), h = '';
+  if (jsSel.a && jsSel.b) {
+    var c = jsSel.a + jsSel.b, g = grid[c];
+    h += '<div class="jshit"><div class="jshk">' + jsSel.a + ' 加 ' + jsSel.b +
+      '<span class="muted">（初传 ' + jsSel.a + ' 临地盘 ' + jsSel.b + '）</span></div>';
+    if (!g) {
+      h += '<p class="muted">原书未列这一格（多为正规课式里排不出的相加）。</p>';
+    } else if (g.n === -1) {
+      h += '<p class="muted">原书明说这一格「无发用无课，并无类诗」。</p>';
+    } else if (g.n === -2) {
+      h += '<p class="muted">玄胎课象——原书注「无诗」（' + esc((D.xuantai || {}).gua || '') +
+        '）。玄胎课的断意见第 18 课。</p>' + ((D.xuantai || {}).quote || '');
+    } else {
+      var main = g.n > 0 ? byN(g.n) : null;
+      if (main) h += jsEntryHTML(D, main, true);
+      (g.alt || []).forEach(function (n) {
+        var e = byN(n);
+        if (!e) return;
+        h += '<p class="muted jsalt">又见（原书两处说法不一，理由在备注）：</p>' + jsEntryHTML(D, e, false);
+      });
+    }
+    h += '</div>';
+  } else {
+    h += '<p class="muted center">上排点初传的字，下排点它所临的地盘字。</p>';
+  }
+  hit.innerHTML = h;
+  // 页签
+  $('#jsTabs').innerHTML = [['a', '象类 ' + A.length], ['b', '神将神煞 ' + B.length], ['i', '怎么用']]
+    .map(function (t) {
+      return '<button class="chip' + (jsTab === t[0] ? ' sel' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>';
+    }).join('');
+  $$('[data-tab]', $('#jsTabs')).forEach(function (b) {
+    b.onclick = function () { jsTab = b.dataset.tab; renderJs(D); };
+  });
+  // 列表
+  var kw = ($('#jsq').value || '').trim(), words = kw.split(/\s+/).filter(Boolean);
+  var list = $('#jsList'), out = '';
+  if (jsTab === 'i') {
+    out = '<div class="doc">' + (D.intro || '') + (D.xref || '') + '</div>';
+  } else if (jsTab === 'a') {
+    A.forEach(function (e) {
+      var txt = e.name + e.p.join(' ') + e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' ') + e.poem + e.gua + e.note;
+      if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+      out += jsEntryHTML(D, e, false);
+    });
+  } else {
+    B.forEach(function (e) {
+      var txt = e.name + e.cond + e.poem + e.note;
+      if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+      out += jsEntryBHTML(e, false);
+    });
+  }
+  list.innerHTML = out || '<p class="muted">没找到。换个词试试。</p>';
+  $$('.jse', $('#s-jinsuo')).forEach(function (d) {
     d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
   });
 }
@@ -860,7 +1012,7 @@ function bindDoc(root) {
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
-  var EXTRA_ROUTE = { '94': ['extra', 'liuyuan'], '95': ['extra', 'bayao'],
+  var EXTRA_ROUTE = { '93': ['jinsuo', null], '94': ['extra', 'liuyuan'], '95': ['extra', 'bayao'],
                       '96': ['xflist', null], '97': ['bflist', null],
                       '98': ['gelist', null], '99': ['qlist', null] };
   $$('a.wiki', root).forEach(function (a) {

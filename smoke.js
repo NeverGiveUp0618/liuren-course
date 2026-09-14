@@ -64,6 +64,51 @@ console.log('\n== 象法速查 ==');
   ok(!!$('#s-xflist') && !!$('[data-go="xflist"]'), '象法屏与首页入口都在');
 })();
 
+// ── 金锁玉匙（2026-09-14 自《通解》下册外编第一节整理）──────────
+// ⚠️ data-jinsuo.js 按需加载，这里直接读文件验；屏的交互在下面的异步块里真点一遍
+console.log('\n== 金锁玉匙 ==');
+let J = null;   // 下面的异步块也要用它核对练习链接落点
+(function () {
+  const jp = path.join(dir, 'data', 'data-jinsuo.js');
+  ok(fs.existsSync(jp), 'data-jinsuo.js 已生成');
+  if (!fs.existsSync(jp)) return;
+  J = eval('(' + fs.readFileSync(jp, 'utf8')
+    .replace(/^[\s\S]*?DATA_JINSUO\s*=/, '').replace(/;\s*$/, '') + ')');
+  ok(J.a.length === 94 && J.a.every((e, i) => e.n === i + 1), `象类 94 首、序号连续（实得 ${J.a.length}）`);
+  ok(J.b.length === 41 && J.b.every((e, i) => e.n === i + 1), `神将神煞 41 首（原书序号三十八重出，实为 41）`);
+  ok(J.a.every(e => e.name && e.poem && e.quote) && J.b.every(e => e.name && e.poem && e.cond && e.quote),
+     '每首都有格名/诗/原文引用块');
+  ok(J.a.every(e => /通解下 p\d+/.test(e.quote)), '象类每条引用块都带下册页码');
+  // ⭐ 12×12 格子：主条＋又见由 build.py 从各条「相加/又见」算出，这里独立复核几处
+  const Z = '子丑寅卯辰巳午未申酉戌亥';
+  const cells = []; for (const a of Z) for (const b of Z) cells.push(a + b);
+  const listed = cells.filter(c => J.grid[c]);
+  ok(cells.length - listed.length === J.miss.length && J.miss.length === 4,
+     `原书未列 4 格（${J.miss.join('、')}），其余 ${listed.length} 格都能查到`);
+  ok(J.grid['丑子'] && J.a[J.grid['丑子'].n - 1].name === '鹊噪高枝', '老师示例：丑加子 → 鹊噪高枝');
+  ok(J.grid['子子'] && J.a[J.grid['子子'].n - 1].name === '重载浅水' && J.grid['戌戌'] && J.grid['戌戌'].n === 2,
+     '伏吟十二式都指到重载浅水（含原书未单列的五式，条目备注写了推定）');
+  ok(J.grid['辰巳'] && J.grid['辰巳'].n === -1 && J.none.length === 8, '原书「无课无诗」8 格');
+  ok(J.grid['寅亥'] && J.grid['寅亥'].n === -2, '寅加亥＝玄胎课象，无诗');
+  // ⚠️ 原书同一格两条认领的，主条与又见都要留着——不能替原书裁掉一条
+  ok(J.grid['巳亥'] && J.grid['巳亥'].n === 53 && J.grid['巳亥'].alt.indexOf(37) >= 0, '巳加亥：主条闪电春雷，又见白浪翻江');
+  ok(J.grid['辰子'] && J.grid['辰子'].n === 40 && J.grid['辰子'].alt.indexOf(41) >= 0, '辰加子：龙投枯井＋见青龙的春雷行雨');
+  ok(J.grid['戌丑'] && J.grid['戌丑'].n === 19 && J.grid['戌丑'].alt.indexOf(31) >= 0, '戌加丑：主鸣鹤在阴，又见巍峰枯木');
+  // ⚠️ OCR 讹字要照录进引用块、在备注里说明，不能改原文——否则 _verify_cite 对不上
+  const e19 = J.a[18];
+  ok(/戊加丑/.test(e19.quote) && /「戊加丑」是 OCR 讹字/.test(e19.note), '讹字照录＋备注说明（十九鸣鹤在阴）');
+  ok(J.b[37].poem.startsWith('功曹太冲为草木'), '被脚注劈开的诗句已接回（三十八茂草逢春）');
+  ok(M.counts.jinsuo === 94 && M.counts.jinsuob === 41, 'meta.counts 带两个分母');
+  ok(!!$('#s-jinsuo') && !!$('[data-go="jinsuo"]'), '金锁玉匙屏与首页入口都在');
+  ok(/data-jinsuo\.js\?v=/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')), '按需加载带 ?v=');
+  // 内容源里每条引用都写了页码，且页码换算是「书内 = PDF + 732」
+  const md = fs.readFileSync(path.join(dir, 'content', '93-金锁玉匙.md'), 'utf8');
+  const cites = md.match(/〔通解下 p(\d+)(?:-\d+)?｜PDF p(\d+)/g) || [];
+  ok(cites.length >= 150 && cites.every(c => {
+    const m = c.match(/p(\d+)(?:-\d+)?｜PDF p(\d+)/); return +m[1] === +m[2] + 732;
+  }), `93 篇 ${cites.length} 条引用页码换算一致`);
+})();
+
 // ── 首页分组（2026-08-30：11 项平铺改成四组）────────────────────
 console.log('\n== 首页分组 ==');
 {
@@ -71,7 +116,7 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}）`);
+  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}）`);
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
   let seen = 0, orphan = 0;
@@ -588,6 +633,53 @@ async function typeSearch(kw) {
        '套壳里没有把本站返回键藏掉');
     ok(/main\{[^}]*padding:[^}]*--tabh/.test(css2), '正文底部留出了底栏的高度');
     ok(/\.fab\{[^}]*bottom:calc\(var\(--tabh\)/.test(css2), '目录悬浮键抬到了底栏之上');
+    // 金锁玉匙屏：真点两排字出诗、搜索、页签、从练习判分跳过来直接定位
+    run('data/data-jinsuo.js');
+    $$('.mi[data-go="jinsuo"]')[0].onclick();
+    await sleep(10);
+    ok($('#s-jinsuo').classList.contains('active') && $('#ttl').textContent === '金锁玉匙', '进金锁玉匙屏');
+    ok($$('#jsPick .jz').length === 24, '两排各 12 个字');
+    $$('#jsPick .jz[data-r="a"][data-z="丑"]')[0].onclick();
+    $$('#jsPick .jz[data-r="b"][data-z="子"]')[0].onclick();
+    ok(/鹊噪高枝/.test($('#jsHit').textContent) && /求谋皆遂/.test($('#jsHit').textContent), '点 丑·子 → 鹊噪高枝全诗');
+    ok(/〔通解下 p1068/.test($('#jsHit').innerHTML), '命中卡带原文与页码');
+    $$('#jsPick .jz[data-r="b"][data-z="巳"]')[0].onclick();
+    $$('#jsPick .jz[data-r="a"][data-z="辰"]')[0].onclick();
+    ok(/无发用无课/.test($('#jsHit').textContent), '辰·巳 → 原书明说无课无诗');
+    $$('#jsPick .jz[data-r="a"][data-z="巳"]')[0].onclick();
+    $$('#jsPick .jz[data-r="b"][data-z="亥"]')[0].onclick();
+    ok(/闪电春雷/.test($('#jsHit').textContent) && /又见/.test($('#jsHit').textContent) && /白浪翻江/.test($('#jsHit').textContent),
+       '巳·亥 → 主条与又见都显示');
+    ok($$('#jsList .jse').length === 94, '列表默认列象类 94 首');
+    $$('#jsTabs [data-tab="b"]')[0].onclick();
+    ok($$('#jsList .jse').length === 41, '切到神将神煞 41 首');
+    $$('#jsTabs [data-tab="a"]')[0].onclick();
+    $('#jsq').value = '升迁';
+    $('#jsq').oninput();
+    await sleep(200);
+    ok($$('#jsList .jse').length >= 1 && $$('#jsList .jse').length < 94 && /鹊噪高枝/.test($('#jsList').textContent), '搜「升迁」缩到含此词的条目');
+    $('#jsq').value = '';
+    $('#jsq').oninput();
+    await sleep(200);
+    // 练习判分后要有那条链接，点过去 id＝「天地」两字直接定位到那一格
+    $$('.mi[data-go="drill"]')[0].onclick();
+    await sleep(10);
+    {
+      const E2 = window.LiurenEngine;
+      const hd = $('.drillhd span').textContent;
+      const m = /^(..)日\s*(.)将\s*(.)时$/.exec(hd.replace(/\s+/g, ' ').trim());
+      const o = E2.qike(m[1], m[2], m[3]);
+      [0, 1, 2].forEach(i => { $('#dc' + i).value = o.chuan[i]; });
+      $('#dOk').onclick();
+      const u = o.chuan[0], d = E2.Z.filter(z => o.t[z] === u)[0];
+      ok(!!$('#dJs') && new RegExp('初传 ' + u + ' 加 ' + d).test($('#dJs').textContent), `练习判分后给「初传 ${u} 加 ${d} → 查金锁玉匙」链接`);
+      $('#dJs').onclick();
+      await sleep(10);
+      const g = J.grid[u + d];
+      const want = !g ? '原书未列' : g.n === -1 ? '无发用无课' : g.n === -2 ? '玄胎课象' : J.a[g.n - 1].name;
+      ok($('#s-jinsuo').classList.contains('active') && new RegExp(want).test($('#jsHit').textContent),
+         `点链接跳到对应那格（${u}加${d} → ${want}）`);
+    }
     // 真点一次：底栏 → 课程列表 → 课文，再从课文一步回首页
     tabs[1].onclick();
     await sleep(30);

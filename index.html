@@ -75,6 +75,7 @@
       <button class="mi" data-go="xflist"><b>象法速查</b><span><b id="mXf">—</b> 条断法规则 · 占什么事看什么字</span></button>
       <button class="mi" data-go="gelist"><b>格局</b><span><b id="mGe">—</b> 格详解 · 定完课体来这儿查断意</span></button>
       <button class="mi" data-go="bflist"><b>毕法赋</b><span><b id="mBifa">—</b> 法逐格详解 · 断课时按法号或格名查</span></button>
+      <button class="mi" data-go="jinsuo"><b>金锁玉匙</b><span><b id="mJs">—</b> 首诗诀 · 只看初传加在哪个字上的简断</span></button>
       <button class="mi" data-go="extra" data-id="bayao"><b>课式八要素</b><span>排盘前的检查单 · 太岁月建日辰占时月将空亡本命行年</span></button>
 
       <div class="mgrp">读 · 不读也不影响起课</div>
@@ -118,6 +119,15 @@
     <div id="xfList"></div>
   </section>
   <section class="screen" id="s-bflist"><div id="bfRows"></div></section>
+  <!-- 金锁玉匙：上排初传、下排所临地盘，两下出诗；下面全表可搜 -->
+  <section class="screen" id="s-jinsuo">
+    <p class="lead">初传天盘字<b>加</b>在地盘哪个字上，查一首诗——《通解》下册外编的<b>发用简断</b>。⚠️ 再看初传乘的天将定吉凶。</p>
+    <div id="jsPick"></div>
+    <div id="jsHit"></div>
+    <div class="sbox"><input id="jsq" type="search" placeholder="搜格名、相加或诗句，如：鹊噪 子加丑 升迁" autocomplete="off"></div>
+    <div class="qbar"><div id="jsTabs" class="chips"></div></div>
+    <div id="jsList"></div>
+  </section>
   <section class="screen" id="s-bifa"><div id="bfBody" class="doc"></div></section>
   <section class="screen" id="s-ge"><div id="geBody" class="doc"></div></section>
   <section class="screen" id="s-drill"><div id="drillBody"></div></section>

@@ -178,9 +178,10 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .readout b{color:var(--ink)}
 /* 搜索 */
 .sbox{margin:12px 0 16px}
-#q{width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;
-  background:var(--paper);color:var(--ink);font-family:var(--f-body)}
-#q:focus-visible{outline:2px solid var(--blue)}
+/* ⚠️ 原先只写了 #q（全文搜索），速查 #rq、象法 #xq、金锁玉匙 #jsq 三个框一直是浏览器默认的窄框——统一按 .sbox 选 */
+.sbox input{width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;
+  background:var(--paper);color:var(--ink);font-family:var(--f-body);box-sizing:border-box}
+.sbox input:focus-visible{outline:2px solid var(--blue)}
 .sr{all:unset;cursor:pointer;display:block;width:100%;padding:11px 13px;background:var(--paper);
   border:1px solid var(--line);border-radius:4px;margin-bottom:7px}
 .sr:focus-visible{outline:2px solid var(--blue)}
@@ -352,3 +353,25 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
    这条必须放在**所有 all:unset 规则之后**才压得住（同特异性，后者胜）。
    ⭐ 以后再写 all:unset，要么补 box-sizing，要么把选择器加进下面这一行。 */
 .back, .act, .mi, .li, .sr, .btn, .toci, .refh, .refj { box-sizing: border-box }
+
+/* 金锁玉匙：两排 12 字点选。⚠️ 332px 内容宽（360px 安卓）要放下 12 格，格宽只能靠 1fr，别写死像素 */
+.jsrow{display:flex;align-items:center;gap:6px;margin:6px 0}
+.jsl{flex:0 0 2.2em;font-size:12px;color:var(--ink3);letter-spacing:.06em}
+.jsz{flex:1;min-width:0;display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.jz{all:unset;cursor:pointer;text-align:center;font-size:14px;line-height:30px;border-radius:4px;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink2);box-sizing:border-box}
+.jz.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.jz:focus-visible{outline:2px solid var(--gold)}
+.jshit{margin:12px 0 16px}
+.jshk{font-family:var(--f-disp);font-size:18px;color:var(--gold);margin:0 0 8px}
+.jshk .muted{font-size:12px;margin-left:6px;font-family:inherit}
+.jsalt{margin:12px 0 4px}
+.jsk{margin:6px 0;font-size:13px;color:var(--ink2)}
+.jspoem{margin:10px 0;font-family:var(--f-disp);font-size:16px;line-height:1.9;color:var(--ink)}
+.jsnote{margin:6px 0;font-size:12.5px;color:var(--ink3);line-height:1.7}
+.jsq{margin:8px 0 2px;font-size:13px}
+.jsq summary{cursor:pointer;color:var(--blue);font-size:12.5px}
+.jsq blockquote{margin:6px 0 0}
+.dlink{margin:10px 0 0}
+.lnk{all:unset;cursor:pointer;color:var(--blue);font-size:13.5px;text-decoration:underline;text-underline-offset:3px}
+.lnk:focus-visible{outline:2px solid var(--gold)}
