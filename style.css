@@ -303,11 +303,7 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .gerow .gt{flex:0 0 auto;font-size:14.5px;font-weight:600;color:var(--ink)}
 .gerow .gl{flex:1;font-size:12px;color:var(--ink3);line-height:1.5}
 
-/* ── 起课练习 ───────────────────────────────────────── */
-.drillhd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
-.drillhd span{font-size:16px;font-weight:600;letter-spacing:.06em;color:var(--ink)}
-.drillhd em{font-style:normal;font-size:11.5px;color:var(--ink3);font-family:var(--f-mono)}
+/* ── 四课小表（起盘台用；起课练习 2026-10-22 已删）── */
 .dke{margin:10px 0 4px}
 .dke em{font-style:normal;font-size:11px;letter-spacing:.14em;color:var(--gold)}
 .dke table{width:100%;border-collapse:collapse;margin-top:5px;table-layout:fixed}
@@ -315,27 +311,6 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .dke .n{display:block;font-size:10px;color:var(--ink3);letter-spacing:.06em}
 .dke b{display:block;font-size:17px;color:var(--ink);line-height:1.5}
 .dke i{display:block;font-style:normal;font-size:12px;color:var(--ink3)}
-.dq{margin-top:14px;font-size:14px;font-weight:600;color:var(--ink)}
-.dsel{display:flex;gap:8px;margin-top:8px}
-.dcol{flex:1;text-align:center}
-.dcol span{display:block;font-size:11px;color:var(--ink3);margin-bottom:3px}
-.dcol select{width:100%;padding:9px 4px;border-radius:8px;border:1px solid var(--line);
-  background:var(--paper);color:var(--ink);font-size:16px;font-family:inherit;text-align:center}
-.dkes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.dkes .chip{cursor:pointer;font-size:13px;padding:6px 11px}
-.dkes .chip.sel{background:var(--gold-s);color:var(--gold);border-color:var(--gold)}
-.dfb{margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--paper)}
-.dfb.good{border-color:var(--green);background:rgba(47,91,74,.06)}
-.dfb.bad{border-color:var(--red);background:var(--red-s)}
-.dfb>b{font-size:15px}
-.dfb.good>b{color:var(--green)} .dfb.bad>b{color:var(--red)}
-.dfb table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px;table-layout:fixed}
-.dfb td{border:1px solid var(--line);text-align:center;padding:5px 2px}
-.dfb tr:first-child td{font-size:11px;color:var(--ink3);background:var(--surface)}
-.dfb td:first-child{font-size:11px;color:var(--ink3)}
-.dfb td.y{color:var(--green);font-weight:600}
-.dfb td.n{color:var(--red);font-weight:600;text-decoration:line-through}
-.dwhy p{margin:6px 0;font-size:12.5px;line-height:1.8;color:var(--ink2)}
 
 /* ⚠️ all:unset 会把第 31 行的 *{box-sizing:border-box} 一并重置回 content-box。
    对 width:auto 的 block（如 .mi）无害——浏览器会自己收缩，不会溢出；
@@ -369,16 +344,6 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 /* 主题切换按钮：照 App 的胶囊样式，字是「点了会切到哪套」 */
 .act.theme-tog{width:auto;height:24px;padding:0 10px;border-radius:12px;border:1px solid var(--line);
   font-size:11px;letter-spacing:1px;color:var(--ink3);white-space:nowrap}
-/* 综合训练（2026-10-22 自六壬神课 App 迁入） */
-.tq{font-size:16px;font-weight:600;margin:12px 0 10px;line-height:1.7}
-.topts{display:grid;gap:8px}
-.topt{all:unset;cursor:pointer;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);line-height:1.6;font-size:15px}
-.topt.y{border-color:var(--green);background:rgba(46,125,90,.1)}
-.topt.n{border-color:var(--red);background:var(--red-s)}
-.ttab{width:100%;border-collapse:collapse}.ttab td,.ttab th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
-.big{font-size:32px;font-family:var(--f-disp);color:var(--blue)}
-#tCats .chip.sel{background:var(--gold-s);color:var(--gold);border-color:var(--gold)}
-#tCats .chip{cursor:pointer}
-#tCats,#labFull .chips{display:flex;flex-wrap:wrap;gap:6px}
-#tCats .chip,#labFull .chip{white-space:nowrap;padding:3px 10px}
+#labFull .chips{display:flex;flex-wrap:wrap;gap:6px}
+#labFull .chip{white-space:nowrap;padding:3px 10px}
 .mi em.old{font-style:normal;font-size:11px;color:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:6px;vertical-align:2px}

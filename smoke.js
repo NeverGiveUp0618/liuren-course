@@ -26,7 +26,8 @@ window.Element.prototype.scrollIntoView = function () { scrolls.push('into'); };
 const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\s*/, ''));
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
-run('engine.js');            // 起课引擎（练习要用）
+run('engine.js');            // 起课引擎（起盘台要用）
+run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按需加载，这里预置）
 run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
 run('data/data-ge.js');
@@ -116,7 +117,8 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}；2026-10-22 精简：起课练习进综合训练、学习路线进课程列表、源流进附篇）`);
+  ok(items.length === 10, `入口 10 项一个不少（实得 ${items.length}；2026-10-22：做题训练整套删除待重做，学习路线进课程列表，源流进附篇）`);
+  ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
   let seen = 0, orphan = 0;
@@ -479,49 +481,6 @@ async function typeSearch(kw) {
     ok(!card.classList.contains('open'), '再点收起');
   }
 
-  console.log('\n== 起课练习 ==');
-  {
-    ok(!!window.LiurenEngine, '引擎已加载');
-    window.__go('drill');
-    await sleep(20);
-    const body = $('#drillBody');
-    ok(/日/.test($('.drillhd').textContent), '出题给出日干支·月将·占时');
-    ok($$('#drillBody .dke td').length === 4, '四课摆出来了');
-    ok($$('#drillBody .dsel select').length === 3, '三传三个下拉');
-    ok($$('#drillBody [data-ke]').length >= 10, '课体选项覆盖十种课式');
-
-    // 没填全不该判分
-    $('#dOk').onclick();
-    ok(/还没填全/.test($('#dFb').textContent), '三传没填全会拦下');
-
-    // 照抄正解 → 必须全对
-    const E2 = window.LiurenEngine;
-    const hd = $('.drillhd span').textContent;
-    const m = /^(..)日\s*(.)将\s*(.)时$/.exec(hd.replace(/\s+/g, ' ').trim());
-    ok(!!m, '题面能解析出盘的三要素');
-    const o = E2.qike(m[1], m[2], m[3]);
-    [0, 1, 2].forEach(i => { $('#dc' + i).value = o.chuan[i]; });
-    $$('#drillBody [data-ke]').filter(x => x.dataset.ke === o.ke)[0].onclick();
-    $('#dOk').onclick();
-    ok(/全对/.test($('#dFb').textContent), '照着正解答 → 判全对');
-    ok(!!$('#dFb .dfb.good'), '全对时用 good 样式');
-
-    // 故意答错 → 要指出错在哪一步，而不是只说"错"
-    const wrong = E2.Z[(E2.Z.indexOf(o.chuan[0]) + 1) % 12];
-    $('#dc0').value = wrong;
-    $('#dOk').onclick();
-    const fb = $('#dFb').textContent;
-    ok(/再看看/.test(fb), '答错判错');
-    ok(/初传错了/.test(fb), '⭐ 明确指出是初传错了（不是笼统说错）');
-    ok(/第\d课/.test(fb), '纠错提示带课号，能回去复习');
-    ok(new RegExp(o.ke).test(fb), '讲解里点明本盘的课式');
-
-    // 计分要累积
-    const st = JSON.parse(window.localStorage.getItem('liuren_course_drill') || '{}');
-    ok(st.n >= 2 && st.ok >= 1, `练习记录累积（已练 ${st.n} 题、对 ${st.ok} 题）`);
-    ok(st.byKe && Object.keys(st.byKe).length >= 1, '按课式分别记账（将来能挑薄弱课式）');
-  }
-
   console.log('\n== 格局详解 ==');
   {
     ok(GE.length === M.counts.ge && GE.length >= 25, `格局 ${GE.length} 格，与 meta 计数一致`);
@@ -665,24 +624,13 @@ async function typeSearch(kw) {
     $('#jsq').value = '';
     $('#jsq').oninput();
     await sleep(200);
-    // 练习判分后要有那条链接，点过去 id＝「天地」两字直接定位到那一格
-    window.__go('drill');
+    // id＝「天地」两字直接定位到那一格（原由起课练习判分后跳来，2026-10-22 练习删除后仍保留这个入口能力）
+    window.__go('jinsuo', '丑子');
     await sleep(10);
     {
-      const E2 = window.LiurenEngine;
-      const hd = $('.drillhd span').textContent;
-      const m = /^(..)日\s*(.)将\s*(.)时$/.exec(hd.replace(/\s+/g, ' ').trim());
-      const o = E2.qike(m[1], m[2], m[3]);
-      [0, 1, 2].forEach(i => { $('#dc' + i).value = o.chuan[i]; });
-      $('#dOk').onclick();
-      const u = o.chuan[0], d = E2.Z.filter(z => o.t[z] === u)[0];
-      ok(!!$('#dJs') && new RegExp('初传 ' + u + ' 加 ' + d).test($('#dJs').textContent), `练习判分后给「初传 ${u} 加 ${d} → 查金锁玉匙」链接`);
-      $('#dJs').onclick();
-      await sleep(10);
-      const g = J.grid[u + d];
+      const g = J.grid['丑子'];
       const want = !g ? '原书未列' : g.n === -1 ? '无发用无课' : g.n === -2 ? '玄胎课象' : J.a[g.n - 1].name;
-      ok($('#s-jinsuo').classList.contains('active') && new RegExp(want).test($('#jsHit').textContent),
-         `点链接跳到对应那格（${u}加${d} → ${want}）`);
+      ok($('#s-jinsuo').classList.contains('active') && new RegExp(want).test($('#jsHit').textContent), `id 直达「丑加子」那一格（${want}）`);
     }
     // 真点一次：底栏 → 课程列表 → 课文，再从课文一步回首页
     tabs[1].onclick();

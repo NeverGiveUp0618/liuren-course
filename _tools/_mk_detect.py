@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-一次性迁移工具（2026-10-22）：从「六壬神课」App 抽出练习要用的**纯逻辑与数据**，生成 train-core.js。
+一次性迁移工具（2026-10-22）：从旧版「六壬神课」App 抽出**起盘台要用的判定逻辑**（六十四课经成格、毕法与八煞九宝初判），生成 pan-detect.js。
+
+⚠️ 2026-10-22 用户要重新开发做题训练，旧的综合训练整套删除——本工具原名 _mk_train.py，现在只抽判定，不再抽题库。
 
 做法：把 App 的 <script> 切成顶层语句，按名字取需要的声明，再按标识符引用**自动补齐依赖**
 （数据表引用数据表、判定函数引用工具函数）。碰 DOM 的函数一律不取——界面在课程里重写。
@@ -8,16 +10,19 @@
 ⚠️ 三传与课体**不用 App 的** _compute3chuan/_detectMethod（App 取下神），
    train-core.js 末尾用 engine.js（《通解》取上神）覆盖这两个名字。2026-10-22 用户拍板统一口径。
 
-用法：python3 _tools/_mk_train.py     输出 train-core.js（生成物，别手改）
+用法：python3 _tools/_mk_detect.py     输出 pan-detect.js（生成物，别手改）
 """
-import os, re, sys
+import os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 GAME = os.path.join(os.path.dirname(ROOT), 'liuren-game', 'index.html')
-OUT = os.path.join(ROOT, 'train-core.js')
+OUT = os.path.join(ROOT, 'pan-detect.js')
 
-html = open(GAME, encoding='utf-8').read()
+# 旧版 App 已删（2026-10-22），源码从 liuren-game 的 git 历史里取最后一版
+GAME_REV = '0b3b228~1:legacy.html'
+html = subprocess.run(['git', '-C', os.path.dirname(GAME), 'show', GAME_REV],
+                      capture_output=True, text=True, check=True).stdout
 scripts = re.findall(r'<script>(.*?)</script>', html, re.S)
 SRC = max(scripts, key=len)
 
@@ -104,12 +109,8 @@ for s in STMTS:
 
 DOM_WORDS = ('document.', 'getElementById', 'innerHTML', 'localStorage', 'querySelector', 'window.')
 # 要的入口
-WANT = ['QZ_YJ', 'QZ_GR', 'TJ_QUIZ', 'TRAIN_ZS', 'BJ_TBL', 'BJ_MONTH', 'K64', 'K64X', 'K64_RULES',
-        'TJ_XIANG', 'WSD_STATES', 'TW_QUIZ', 'BF_FA', 'KJ_DATA', 'GZ_REL_ID', 'GZ_REL_NAMES', 'buildGZ',
-        'GZ_HE', 'GZ_CHONG', 'GZ_SANHE', 'ZM_METHODS', 'YJ_TBL', 'GR_Z', 'GR_Y', 'ZHU_SHI', 'KONG_TBL',
-        'TJ_NAMES', 'GAN_JI', 'GAN_ALL', 'ZHI_ALL', 'k64Detect', '_bfDetect', '_bjDetect', '_tjMapOf', '_luqin', '_relToRi',
-        '_shangshen', 'k64PartialSet', 'K64_NINE_SET', 'shuffleArr',
-        'trainBJPool', 'trainQuestion', 'trainPick', 'trainShuffle']
+WANT = ['K64', 'K64_RULES', 'YJ_TBL', 'GR_Z', 'GR_Y', 'ZHU_SHI', 'KONG_TBL', 'GAN_JI', 'GAN_ALL', 'ZHI_ALL',
+        'k64Detect', '_bfDetect', '_bjDetect', '_tjMapOf', '_luqin']
 SKIP = {'_compute3chuan', '_detectMethod', '_genKC', 'kcState', '_genKC3', 'k64GenOnce'}
 
 got, order, queue = set(), [], list(WANT)
@@ -139,8 +140,8 @@ for nm, t in order:
         continue
     seen.add(t); body.append(t)
 
-head = '''/* 由 _tools/_mk_train.py 从「六壬神课」App 抽出（2026-10-22 App 退役）——**生成物，别手改**。
-   内容：练习题库数据＋六十四课经判定规则＋毕法/八煞九宝初判。三传与课体改用 engine.js（见文件末尾）。 */
+head = '''/* 由 _tools/_mk_detect.py 从旧版「六壬神课」App 抽出——**生成物，别手改**。
+   内容：起盘台用的六十四课经成格判定、毕法与八煞九宝初判。三传与课体改用 engine.js（见文件末尾）。 */
 (function (root) {
 '''
 tail = '''
@@ -164,7 +165,7 @@ function makeState(rgz, yjZhi, zs) {
   st.mt = r.ke + '课' + (r.ge ? '·' + r.ge : '');
   return st;
 }
-function randState(filter) {
+function _unusedRandState(filter) {
   for (var k = 0; k < 500; k++) {
     var ri = Math.floor(Math.random() * 60);
     var st = makeState(GAN_ALL[ri % 10] + ZHI_ALL[ri % 12], ZHI_ALL[Math.floor(Math.random() * 12)],
@@ -173,21 +174,12 @@ function randState(filter) {
   }
   return null;
 }
-root.TrainCore = {
-  makeState: makeState, randState: randState, _detectMethod: _detectMethod,
-  k64Detect: typeof k64Detect !== 'undefined' ? k64Detect : null,
-  bfDetect: typeof _bfDetect !== 'undefined' ? _bfDetect : null,
-  bjDetect: typeof _bjDetect !== 'undefined' ? _bjDetect : null,
-  tjMapOf: _tjMapOf, shuffle: shuffleArr,
-  bjPool: function () { return trainBJPool('bj'); },
-  D: { QZ_YJ: QZ_YJ, QZ_GR: QZ_GR, TJ_QUIZ: TJ_QUIZ, TRAIN_ZS: typeof TRAIN_ZS !== 'undefined' ? TRAIN_ZS : null,
-       BJ_TBL: BJ_TBL, BJ_MONTH: typeof BJ_MONTH !== 'undefined' ? BJ_MONTH : null, K64: K64, K64X: K64X,
-       K64_RULES: K64_RULES, TJ_XIANG: TJ_XIANG, WSD_STATES: WSD_STATES, TW_QUIZ: TW_QUIZ, BF_FA: BF_FA,
-       KJ_DATA: KJ_DATA, buildGZ: buildGZ, ZM_METHODS: ZM_METHODS, GAN_ALL: GAN_ALL, ZHI_ALL: ZHI_ALL,
-       YJ_TBL: YJ_TBL, K64_NINE_SET: typeof K64_NINE_SET !== 'undefined' ? K64_NINE_SET : null }
+root.PanDetect = {
+  makeState: makeState,
+  k64Detect: k64Detect, bfDetect: _bfDetect, bjDetect: _bjDetect
 };
 })(typeof window !== 'undefined' ? window : globalThis);
 '''
 open(OUT, 'w', encoding='utf-8').write(head + '\n\n'.join(body) + tail)
-print('✓ train-core.js', round(os.path.getsize(OUT) / 1024, 1), 'KB，', len(body), '条声明：',
+print('✓ pan-detect.js', round(os.path.getsize(OUT) / 1024, 1), 'KB，', len(body), '条声明：',
       ', '.join(sorted(got))[:900])
