@@ -1178,16 +1178,19 @@ window.addEventListener('scroll', function () {
 }, { passive: true });
 
 /* ── 主题 ─────────────────────────────────────────────── */
-var THEMES = [null, 'light', 'dark'], TLAB = { 'null': '随', light: '浅', dark: '深' };
+// 两套主题照「六壬神课」App：薰衣草（默认）／朱雀红，按钮显示的是「点了会切到哪套」
+var TNAME = { lav: '薰衣草', red: '朱雀红' };
 function applyTheme(t) {
-  if (t) document.documentElement.setAttribute('data-theme', t);
-  else document.documentElement.removeAttribute('data-theme');
-  $('#btnTheme').textContent = TLAB[String(t)];
-  $('#btnTheme').setAttribute('aria-label', '配色：' + (t === 'light' ? '浅色' : t === 'dark' ? '深色' : '跟随系统'));
+  t = t === 'red' ? 'red' : 'lav';
+  document.documentElement.setAttribute('data-theme', t);
+  var other = t === 'red' ? 'lav' : 'red';
+  $('#btnTheme').textContent = TNAME[other];
+  $('#btnTheme').setAttribute('aria-label', '配色：现在是' + TNAME[t] + '，点击切到' + TNAME[other]);
+  var mc = document.querySelector('meta[name="theme-color"]');
+  if (mc) mc.setAttribute('content', t === 'red' ? '#F5F0E6' : '#F3F0F9');
 }
 $('#btnTheme').onclick = function () {
-  var t = load(K.theme, null);
-  var next = THEMES[(THEMES.indexOf(t) + 1) % 3];
+  var next = load(K.theme, null) === 'red' ? 'lav' : 'red';
   save(K.theme, next);
   applyTheme(next);
 };

@@ -416,11 +416,11 @@ async function typeSearch(kw) {
   const t0 = doc.documentElement.getAttribute('data-theme');
   $('#btnTheme').onclick();
   const t1 = doc.documentElement.getAttribute('data-theme');
+  const lab1 = $('#btnTheme').textContent;
   $('#btnTheme').onclick();
   const t2 = doc.documentElement.getAttribute('data-theme');
-  $('#btnTheme').onclick();
-  const t3 = doc.documentElement.getAttribute('data-theme');
-  ok(t0 === null && t1 === 'light' && t2 === 'dark' && t3 === null, '主题三态循环：随→浅→深→随');
+  ok(t0 === 'lav' && t1 === 'red' && t2 === 'lav', '两套主题来回切：薰衣草→朱雀红→薰衣草');
+  ok(lab1 === '薰衣草' && $('#btnTheme').textContent === '朱雀红', '按钮写的是点了会切到哪套');
 
   console.log('\n== 按需加载与缓存 ==');
   const app = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');

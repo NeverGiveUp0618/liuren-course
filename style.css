@@ -1,32 +1,23 @@
 /* 六壬课程 · 青金蓝与琥珀
    取汉代六壬式盘的意象：天盘为太阳（琥珀金），地盘为方（青金蓝），底色是漆木。 */
 :root{
-  --ground:#EEEDF1; --surface:#F5F4F8; --paper:#FAF9FB; --line:#D6D4DE;
-  --ink:#191C28; --ink2:#4A4E60; --ink3:#7A7E90;
-  --blue:#2C4A70; --blue-s:#E2E7EF; --gold:#8F6412; --gold-s:#F3EAD6;
-  --red:#8C2F35; --red-s:#F5E5E5; --green:#2F5B4A;
-  --pan-bg:#F4F1E9; --pan-line:#C9C3B4;
+  /* 两套主题，照「六壬神课」App（2026-10-22 用户要求）：默认薰衣草，可切朱雀红 */
+  --ground:#F3F0F9; --surface:#F8F6FC; --paper:#FDFCFF; --line:#CEC7E8;
+  --ink:#1C0A00; --ink2:#6B5040; --ink3:#9B8570;
+  --blue:#7060B0; --blue-s:#EAE5F5; --gold:#8B6914; --gold-s:#F3EAD6;
+  --red:#C41230; --red-s:#F8E4E7; --green:#2E7D5A;
+  --pan-bg:#F5F2FC; --pan-line:#C0B8E0;
   --w-mu:#2E6B4F; --w-huo:#A33228; --w-tu:#8A6A1F; --w-jin:#7A6A46; --w-shui:#2B4A6B;
   --f-disp:"Noto Serif SC",Songti SC,STSong,serif;
   --f-body:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --f-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
   --safe-b:env(safe-area-inset-bottom,0px); --tabh:60px;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ground:#101219; --surface:#171A23; --paper:#1B1E29; --line:#2E3240;
-  --ink:#E2E5EE; --ink2:#A9AEBF; --ink3:#787E92;
-  --blue:#89AEDA; --blue-s:#1E2836; --gold:#D6A548; --gold-s:#2A2318;
-  --red:#D98A8E; --red-s:#2B1D1E; --green:#7FB79F;
-  --pan-bg:#1D2029; --pan-line:#3A3F4E;
-  --w-mu:#6FBF95; --w-huo:#E08A80; --w-tu:#D8B45C; --w-jin:#C9BC97; --w-shui:#8FB6DE;
-}}
-:root[data-theme="dark"]{
-  --ground:#101219; --surface:#171A23; --paper:#1B1E29; --line:#2E3240;
-  --ink:#E2E5EE; --ink2:#A9AEBF; --ink3:#787E92;
-  --blue:#89AEDA; --blue-s:#1E2836; --gold:#D6A548; --gold-s:#2A2318;
-  --red:#D98A8E; --red-s:#2B1D1E; --green:#7FB79F;
-  --pan-bg:#1D2029; --pan-line:#3A3F4E;
-  --w-mu:#6FBF95; --w-huo:#E08A80; --w-tu:#D8B45C; --w-jin:#C9BC97; --w-shui:#8FB6DE;
+:root[data-theme="red"]{
+  --ground:#F5F0E6; --surface:#FDF8F2; --paper:#FFFCF7; --line:#D4C4A0;
+  --blue:#A30F28; --blue-s:#EDE7D8; --gold:#8B6914; --gold-s:#F3EAD6;
+  --red:#C41230; --red-s:#F8E4E7;
+  --pan-bg:#FDF8F2; --pan-line:#C4B49A;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -375,3 +366,6 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .dlink{margin:10px 0 0}
 .lnk{all:unset;cursor:pointer;color:var(--blue);font-size:13.5px;text-decoration:underline;text-underline-offset:3px}
 .lnk:focus-visible{outline:2px solid var(--gold)}
+/* 主题切换按钮：照 App 的胶囊样式，字是「点了会切到哪套」 */
+.act.theme-tog{width:auto;height:24px;padding:0 10px;border-radius:12px;border:1px solid var(--line);
+  font-size:11px;letter-spacing:1px;color:var(--ink3);white-space:nowrap}
