@@ -649,8 +649,8 @@ function paintQ(Q) {
     var isOpen = filtering || !!open[tp.name];
     var done = its.filter(function (it) { return seen[it.n]; }).length;
     return '<div class="qgrp' + (isOpen ? ' open' : '') + '" data-g="' + esc(tp.name) + '">' +
-      '<button class="qgh"><span class="ar">›</span><span class="nm">' + esc(tp.name) + '</span>' +
-      '<span class="ct">' + (done ? done + '/' : '') + its.length + '</span></button>' +
+      '<button class="qgh"><span class="qi">' + esc(tp.name.charAt(0)) + '</span><span class="nm">' + esc(tp.name) + '</span>' +
+      '<span class="ct">' + (done ? done + '/' : '') + its.length + '</span><span class="ar">›</span></button>' +
       '<div class="qgb">' + its.map(function (it) {
         return '<div class="qrow" data-q="' + it.n + '">' +
           '<span class="qn">' + it.n + '</span>' +
@@ -695,13 +695,24 @@ function paintQuiz(Q, n) {
 RENDER.course = function () {
   var read = load(K.read, {});
   var byId = {}; (M.list || []).forEach(function (l) { byId[l.num] = l; });
-  var html = '', part = '';
+  var html = '', part = '', pk = 0;
+  // 每部分已读几课，写在部分标题右侧（2026-10-22 界面优化）
+  var partN = {}, partDone = {};
   (M.plan || []).forEach(function (p) {
-    if (p.part !== part) { part = p.part; html += '<div class="part">' + part + '</div>'; }
+    partN[p.part] = (partN[p.part] || 0) + 1;
+    var l = byId[p.num]; if (l && (read[l.id] || 0) >= 90) partDone[p.part] = (partDone[p.part] || 0) + 1;
+  });
+  (M.plan || []).forEach(function (p) {
+    if (p.part !== part) {
+      part = p.part; pk++;
+      var m = /^第(.)部分\s*[·・]?\s*(.*)$/.exec(part);
+      html += '<div class="part"><i>' + (m ? m[1] : pk) + '</i><span>' + esc(m ? m[2] : part) + '</span>' +
+        '<em>' + (partDone[part] || 0) + ' / ' + partN[part] + '</em></div>';
+    }
     var l = byId[p.num];
     if (l) {
       var pct = read[l.id] || 0;
-      html += '<button class="li" data-id="' + l.id + '"><span class="n">' + p.num +
+      html += '<button class="li' + (pct >= 90 ? ' read' : pct > 0 ? ' doing' : '') + '" data-id="' + l.id + '"><span class="n">' + p.num +
         '</span><span class="t"><b>' + l.short + '</b><span>' + (l.line || p.line) +
         '</span></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') +
         '</span></button>';
@@ -966,7 +977,7 @@ function renderRef(all) {
   hit.forEach(function (r) {
     if (r.num !== cur2) {
       cur2 = r.num;
-      html += '<div class="refg">第 ' + r.num + ' 课 · ' + r.lesson + '</div>';
+      html += '<div class="refg"><i>' + r.num + '</i><span>' + r.lesson + '</span></div>';
     }
     html += '<div class="refi"><button class="refh"><b>' + r.name +
       '</b><span>' + r.sec + '</span></button><div class="refb">' + r.html +
