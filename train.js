@@ -1,4 +1,4 @@
-/* 六壬课程 · 综合训练（依赖 app.js 的 $/RENDER/K/show/panHTML 与 train-core.js、engine.js） */
+/* 六壬神课 · 综合训练（依赖 app.js 的 $/RENDER/K/show/panHTML 与 train-core.js、engine.js） */
 'use strict';
 K.train = 'liuren_course_train'; K.trainN = 'liuren_course_train_n'; K.trainCats = 'liuren_course_train_cats';
 /* ── 综合训练（2026-10-22 自「六壬神课」App 迁入，App 退役）────────────
@@ -7,7 +7,22 @@ K.train = 'liuren_course_train'; K.trainN = 'liuren_course_train_n'; K.trainCats
    ⚠️ 凡是要起盘的题（九宗门／三传／课体格局），盘一律由 engine.js 现算，
       口径＝《通解》发用取上神，与课文一致——App 原来取下神，2026-10-22 用户拍板统一。
    ⚠️ 全部客观四选一，不做「记住了/再背」那种自评。 */
-var TC = window.TrainCore;
+var TC = window.TrainCore || null;
+/* train-core.js 152 KB，只有综合训练和起盘台要用——按需加载，别拖慢首屏（2026-10-22）。
+   ⚠️ 必须带 ?v=，否则 sw 缓存里永远是旧题库。 */
+var _tcLoading = null;
+function needTrain() {
+  if (TC) return Promise.resolve(TC);
+  if (_tcLoading) return _tcLoading;
+  _tcLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = 'train-core.js?v=' + VER;
+    el.onload = function () { TC = window.TrainCore; res(TC); };
+    el.onerror = function () { _tcLoading = null; rej(new Error('训练题库加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _tcLoading;
+}
 var TCATS = [
   ['yj', '月将节气', '月将、月令与节气'], ['gr', '昼夜贵人', '日干与贵人定位'],
   ['tj', '十二天将', '名称、主象与吉凶'], ['zs', '十二支神', '神名与核心类象'],
@@ -156,6 +171,13 @@ function tBuild(cats, n) {
 function tToday() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
 
 RENDER.train = function (mode) {
+  if (!TC) {
+    $('#trainBody').innerHTML = '<div class="empty">载入题库…</div>';
+    needTrain().then(function () { RENDER.train(mode); }, function () {
+      $('#trainBody').innerHTML = '<div class="empty">题库加载失败，检查网络后重试</div>';
+    });
+    return;
+  }
   mode = mode || 'menu';
   if (mode === 'menu') return tMenu();
   if (mode === 'report') return tReport();
@@ -185,6 +207,7 @@ function tMenu() {
   var h = '<p class="lead">十三类客观题，盘一律现算（《通解》口径，与课文一致）。</p>' +
     '<div class="menu">' +
     '<button class="mi" data-t="daily"><b>今日挑战</b><span>十三类各抽一点，共 10 题</span></button>' +
+    '<button class="mi" data-t="drill"><b>手填三传</b><span>给盘与四课，自己填初中末传、选课体 · 原「起课练习」</span></button>' +
     '<button class="mi" data-t="weak"><b>薄弱点专练</b><span>挑正确率最低的三类出题（每类做满 3 题才算数）</span></button>' +
     '<button class="mi" data-t="nb"><b>错题本</b><span>' + nb + ' 道 · 做对一次就移出</span></button>' +
     '<button class="mi" data-t="report"><b>掌握度</b><span>每一类做了多少、对了多少</span></button>' +
@@ -194,7 +217,9 @@ function tMenu() {
     }).join('') + '</div><div class="row" style="gap:8px;margin-top:12px">' +
     [10, 20, 30].map(function (n) { return '<button class="btn" data-n="' + n + '">' + n + ' 题</button>'; }).join('') + '</div></div>';
   $('#trainBody').innerHTML = h;
-  $$('#trainBody [data-t]').forEach(function (b) { b.onclick = function () { show('train', b.dataset.t); }; });
+  $$('#trainBody [data-t]').forEach(function (b) {
+    b.onclick = function () { if (b.dataset.t === 'drill') show('drill'); else show('train', b.dataset.t); };
+  });
   $$('#tCats [data-c]').forEach(function (b) {
     b.onclick = function () {
       b.classList.toggle('sel');
@@ -292,6 +317,7 @@ window.__train = { TGEN: TGEN, TCATS: TCATS, TDYN: TDYN, show: show, get tr() { 
    有些格还要年命、太岁才判得全，这里没输入这些，命中的也只是「盘面条件成立」。 */
 window.labFullRender = function (rgz, yj, zs) {
   var box = $('#labFull'); if (!box) return;
+  if (!TC) { needTrain().then(function () { window.labFullRender(rgz, yj, zs); }); return; }
   var st = TC.makeState(rgz, yj, zs);
   if (!st) { box.innerHTML = ''; return; }
   var h = '<div class="card"><div class="dke"><em>四课</em><table><tr>' + st.sk.slice().reverse().map(function (c, i) {

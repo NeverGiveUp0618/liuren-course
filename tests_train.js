@@ -62,6 +62,17 @@ const D = w.document, $ = s => D.querySelector(s), $$ = s => [...D.querySelector
   ok([...z.options].every(o => '子寅辰午申戌'.includes(o.value)), '甲日只给阳支');
   ok(/初 戌 → 中 午 → 末 寅/.test($('#labFull').textContent.replace(/\s+/g, ' ')), '起盘台排出 甲子日亥将卯时 三传 戌午寅：' + $('#labFull').textContent.slice(0, 80));
   ok(/成格/.test($('#labFull').textContent) && /毕法/.test($('#labFull').textContent), '起盘台列出成格与毕法初判');
+  // 全站搜：附篇/格局/毕法/课例/象法也搜得到（以前只搜 25 课）
+  H.show('search'); const sq = $('#q'); sq.value = '晴雨'; sq.dispatchEvent(new w.Event('input'));
+  await new Promise(r => setTimeout(r, 400));
+  ok([...D.querySelectorAll('#sres .refg')].some(g => /旧版 App 存档/.test(g.textContent)), '搜「晴雨」能搜到附篇里的天时晴雨');
+  sq.value = '游子课'; sq.dispatchEvent(new w.Event('input')); await new Promise(r => setTimeout(r, 300));
+  ok([...D.querySelectorAll('#sres .refg')].some(g => g.textContent === '格局'), '搜「游子课」能搜到格局');
+  // 首页精简后入口还都找得到
+  H.show('train', 'menu'); await new Promise(r => setTimeout(r, 30));
+  ok(!!$('#trainBody [data-t="drill"]'), '综合训练里有「手填三传」（原起课练习）');
+  H.show('course'); await new Promise(r => setTimeout(r, 30));
+  ok(!!$('#toOutline'), '课程列表顶上有学习路线');
   console.log(fail ? `✗ 失败 ${fail} 项（通过 ${pass}）` : `✓ 综合训练全部通过（${pass} 项）`);
   process.exit(fail ? 1 : 0);
 })();

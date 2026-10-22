@@ -469,7 +469,7 @@ def main():
         sys.exit('✗ 这几课没写进总目录的计划表：%s' % extra)
     counts['planned'] = len(plan) or TOTAL_PLANNED
 
-    meta = {'name': '六壬课程', 'built': time.strftime('%Y-%m-%d %H:%M'),
+    meta = {'name': '六壬神课', 'built': time.strftime('%Y-%m-%d %H:%M'),
             'counts': counts, 'outline': outline, 'plan': plan,
             'list': [{'id': l['id'], 'num': l['num'], 'short': l['short'],
                       'line': l['line']} for l in lessons]}

@@ -116,7 +116,7 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 14, `入口 14 项一个不少（实得 ${items.length}）`);
+  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}；2026-10-22 精简：起课练习进综合训练、学习路线进课程列表、源流进附篇）`);
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
   let seen = 0, orphan = 0;
@@ -141,7 +141,7 @@ console.log('\n== 附篇 ==');
     .replace(/^[\s\S]*?DATA_EXTRA\s*=/, '').replace(/;\s*$/, ''));
   // 2026-10-22 起另有 80–91「六壬神课 App 存档」12 篇，id＝x+编号
   ok(E.length === 14, `附篇 14 篇＝源流·八要素＋App 存档 12（实得 ${E.length}）`);
-  ok(E.filter(x => /^x\d\d$/.test(x.id)).every(x => /迁自「六壬神课」App/.test(x.text) && x.line),
+  ok(E.filter(x => /^x\d\d$/.test(x.id)).every(x => /迁自旧版「六壬神课」App/.test(x.text) && x.line),
      'App 存档每篇都注明迁自 App，且有一句话简介');
   ok(E.every(x => x.id && x.title && x.html), '每篇都有 id/标题/正文');
   const ids = E.map(x => x.id).filter(i => !/^x/.test(i)).sort().join(',');
@@ -152,7 +152,7 @@ console.log('\n== 附篇 ==');
   const ly = E.filter(x => x.id === 'liuyuan')[0];
   ok(ly && !/四大断则|起课流程/.test(ly.text), '源流篇没有混入重复的总纲摘要');
   ok(!!$('#s-extra'), '附篇屏在 index.html 里');
-  ok($$('[data-go="extra"]').length === 2, '首页两个附篇入口');
+  ok($$('[data-go="extra"]').length === 1 && $$('[data-go="xarch"]').length === 1, '首页：八要素单列＋附篇列表一个入口');
   ok($$('[data-go="extra"]').every(b => b.dataset.id), '入口都带 data-id');
 })();
 
@@ -376,11 +376,12 @@ async function typeSearch(kw) {
   await typeSearch('月将');
   ok($$('#sres .sr').length > 0, '单词搜到结果');
   // ⚠️ 课号会超过 9（现在有 25 课），这里必须 \d+ —— 写死一位数会在第 10 课上线时假红
-  ok($$('#sres .sr').every(b => /第\d+课/.test(b.querySelector('b').textContent)), '结果标出课号');
+  ok($$('#sres .sr[data-id]').length > 0 && $$('#sres .sr[data-id]').every(b => /第\d+课/.test(b.querySelector('b').textContent)), '课文结果标出课号');
+  ok($$('#sres .refg').length >= 1, '结果按来源分组（课文/附篇/格局…）');
   ok($$('#sres .sr').some(b => /<em>/.test(b.querySelector('span').innerHTML)), '命中词在片段里高亮');
 
   await typeSearch('月将 中气');
-  const multi = $$('#sres .sr');
+  const multi = $$('#sres .sr[data-id]');
   ok(multi.length > 0, '空格分隔的多词搜索有结果');
   ok(multi.every(b => {
     const l = C.find(x => x.id === b.dataset.id);
@@ -481,7 +482,7 @@ async function typeSearch(kw) {
   console.log('\n== 起课练习 ==');
   {
     ok(!!window.LiurenEngine, '引擎已加载');
-    $$('.mi[data-go="drill"]')[0].onclick();
+    window.__go('drill');
     await sleep(20);
     const body = $('#drillBody');
     ok(/日/.test($('.drillhd').textContent), '出题给出日干支·月将·占时');
@@ -665,7 +666,7 @@ async function typeSearch(kw) {
     $('#jsq').oninput();
     await sleep(200);
     // 练习判分后要有那条链接，点过去 id＝「天地」两字直接定位到那一格
-    $$('.mi[data-go="drill"]')[0].onclick();
+    window.__go('drill');
     await sleep(10);
     {
       const E2 = window.LiurenEngine;

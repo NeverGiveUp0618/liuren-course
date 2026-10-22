@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>六壬课程</title>
+<title>六壬神课</title>
 <meta name="theme-color" content="#F3F0F9">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon180.png">
@@ -35,7 +35,7 @@
 <body>
 <header class="top">
   <button class="back" id="btnBack" aria-label="返回">‹ 返回</button>
-  <h1 id="ttl">六壬课程</h1>
+  <h1 id="ttl">六壬神课</h1>
   <div class="acts">
     <button class="act" id="btnSearch" aria-label="搜索">索</button>
     <button class="act theme-tog" id="btnTheme" aria-label="配色">朱雀红</button>
@@ -46,7 +46,7 @@
   <!-- 首页 -->
   <section class="screen active" id="s-home">
     <div class="hero">
-      <div class="hero-t">大六壬<em>课程</em></div>
+      <div class="hero-t">六壬<em>神课</em></div>
       <p class="hero-s">按知识依赖顺序重排的自学教程 · 一课一课往下读</p>
       <div class="stats">
         <div><b id="hLesson">—</b><span>课已成</span></div>
@@ -63,11 +63,9 @@
     <div class="menu">
       <div class="mgrp">学 · 一课一课往下读</div>
       <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
-      <button class="mi" data-go="outline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>
 
       <div class="mgrp">练 · 自己动手</div>
-      <button class="mi" data-go="train" data-id="menu"><b>综合训练</b><span>十三类客观题 · 今日挑战、错题本、掌握度</span></button>
-      <button class="mi" data-go="drill"><b>起课练习</b><span>给你一张盘，自己起三传 · 当场判对错</span></button>
+      <button class="mi" data-go="train" data-id="menu"><b>综合训练</b><span>十三类客观题＋手填三传 · 今日挑战、错题本、掌握度</span></button>
       <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将、占时、日干支 · 全盘四课三传＋格局毕法初判</span></button>
       <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
 
@@ -80,8 +78,7 @@
       <button class="mi" data-go="extra" data-id="bayao"><b>课式八要素</b><span>排盘前的检查单 · 太岁月建日辰占时月将空亡本命行年</span></button>
 
       <div class="mgrp">读 · 不读也不影响起课</div>
-      <button class="mi" data-go="extra" data-id="liuyuan"><b>源流与背景</b><span>六壬从哪来 · 三式里的位置 · 汉代式盘实证</span></button>
-      <button class="mi" data-go="xarch"><b>六壬神课存档</b><span>原 App 的全部内容 · 白话入门、口诀、天时、八煞九宝…</span></button>
+      <button class="mi" data-go="xarch"><b>附篇</b><span>源流与背景 · 天时晴雨 · 口诀合集 · 八煞九宝详解 · 旧版 App 资料</span></button>
     </div>
     <div class="card" id="progCard">
       <button class="proghd" id="progTog" aria-expanded="false">
@@ -155,7 +152,7 @@
 
   <!-- 搜索 -->
   <section class="screen" id="s-search">
-    <div class="sbox"><input id="q" type="search" placeholder="搜全部课文，如：月将 中气" autocomplete="off"></div>
+    <div class="sbox"><input id="q" type="search" placeholder="搜全站：课文、附篇、格局、毕法、课例、象法" autocomplete="off"></div>
     <div id="sres"></div>
   </section>
   <!-- 速查 -->
@@ -181,7 +178,6 @@
 
 <script src="data/data-meta.js"></script>
 <script src="engine.js"></script>
-<script src="train-core.js"></script>
 <script src="app.js"></script>
 <script src="train.js"></script>
 </body>

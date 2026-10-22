@@ -1,4 +1,4 @@
-/* 六壬课程 · 路由 / 渲染 / 起盘台 / 搜索 / 阅读位置
+/* 六壬神课（原名六壬课程，2026-10-22 改名）· 路由 / 渲染 / 起盘台 / 搜索 / 阅读位置
    ⚠️ 内容全在 data/*.js（由 build.py 从 content/*.md 生成），本文件不放内容。 */
 'use strict';
 var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -166,11 +166,11 @@ function lessonById(id) {
    所以：前进 pushState，回到栈上已有的屏用 history.go(-n) 折叠，
    popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
-var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学习路线',
+var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
                gelist: '格局详解', ge: '格局',
-               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: 'App 存档', train: '综合训练',
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇', train: '综合训练',
                jinsuo: '金锁玉匙' };
 var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
@@ -184,7 +184,7 @@ function _apply(scr, id) {
   $$('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === scr); });
   $('#fabToc').classList.toggle('on', scr === 'lesson');
   $('#tocMask').classList.remove('on');
-  $('#ttl').textContent = TITLES[scr] || '六壬课程';
+  $('#ttl').textContent = TITLES[scr] || '六壬神课';
   RENDER[scr] && RENDER[scr](id);
   if (scr !== 'search') save(K.last, { scr: scr, id: id });
   if (scr !== 'lesson') window.scrollTo(0, 0);
@@ -531,10 +531,14 @@ RENDER.xarch = function () {
   var box = $('#xarchList');
   box.innerHTML = '<div class="muted center">载入中…</div>';
   needExtra().then(function (E) {
-    var xs = (E || []).filter(function (x) { return /^x\d\d$/.test(x.id); });
-    box.innerHTML = '<p class="muted">原「六壬神课」App 的内容都在这里。与课文重复的地方，以课文为准。</p>' +
+    // 附篇＝源流＋旧版 App 资料（八要素在「查」组单列，不重复放）
+    var xs = (E || []).filter(function (x) { return /^x\d\d$/.test(x.id) || x.id === 'liuyuan'; })
+      .sort(function (a, b) { return (a.id === 'liuyuan' ? -1 : 0) - (b.id === 'liuyuan' ? -1 : 0) || a.num - b.num; });
+    box.innerHTML = '<p class="muted">不读也不影响起课断课。标「旧版」的来自旧版六壬神课 App，与课文重复的地方以课文为准。</p>' +
       xs.map(function (x) {
-        return '<button class="mi" data-x="' + x.id + '"><b>' + esc(x.title) + '</b><span>' + esc(x.line) + '</span></button>';
+        var t = x.title.replace(/^大六壬\s*·\s*/, '');
+        return '<button class="mi" data-x="' + x.id + '"><b>' + esc(t) + (/^x/.test(x.id) ? ' <em class="old">旧版</em>' : '') +
+          '</b><span>' + esc(x.line.replace(/\*\*/g, '')) + '</span></button>';
       }).join('');
     $$('[data-x]', box).forEach(function (b) { b.onclick = function () { show('extra', b.dataset.x); }; });
   });
@@ -875,7 +879,9 @@ RENDER.course = function () {
         '</span></span><span class="mark">待写</span></div>';
     }
   });
-  $('#courseList').innerHTML = html;
+  // 学习路线原是首页单独一项，2026-10-22 并到课程列表顶上（首页入口精简）
+  $('#courseList').innerHTML = '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
+  $('#toOutline').onclick = function () { show('outline'); };
   $$('#courseList .li[data-id]').forEach(function (b) {
     b.onclick = function () { show('lesson', b.dataset.id); };
   });
@@ -1114,20 +1120,45 @@ RENDER.search = function () {
   var t = null;
   box.oninput = function () { clearTimeout(t); t = setTimeout(runSearch, 160); };
 };
+/* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
+   此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
+   ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
+var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '象法'], _srcStarted = false;
+/* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
+function startSources(onMore) {
+  if (_srcStarted) return; _srcStarted = true;
+  var add = function (fn) { return function (d) { if (d) { fn(d); onMore(); } }; };
+  var put = function (g, x) { (SRC[g] = SRC[g] || []).push(x); };
+  needCourse().then(add(function (r) { SRC['课文'] = []; r.forEach(function (l) { put('课文', { g: '课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['lesson', l.id], body: '#lessonBody' }); }); })).catch(function () {});
+  needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
+  needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
+  needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
+  needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
+  needXf().then(add(function (r) { (r.items || []).forEach(function (x) { put('象法', { g: '象法', t: x.name, text: x.name + '　' + x.text, go: ['xflist', null], xf: x.name }); }); })).catch(function () {});
+}
+function srcList() {
+  var out = [];
+  SRC_ORDER.forEach(function (g) { out = out.concat(SRC[g] || []); });
+  return out;
+}
 function runSearch() {
   var kw = $('#q').value.trim();
   var out = $('#sres');
   if (kw.length < 1) { out.innerHTML = ''; return; }
+  startSources(function () { if ($('#q').value.trim()) paintSearch(srcList(), $('#q').value.trim().split(/\s+/).filter(Boolean)); });
   var words = kw.split(/\s+/).filter(Boolean);
-  if (window.DATA_COURSE) { paintSearch(window.DATA_COURSE, words); return; }
-  out.innerHTML = '<p class="muted">正在取课文…</p>';
-  needCourse().then(function (all) { paintSearch(all, words); });
+  if (!srcList().length) { out.innerHTML = '<p class="muted">正在取全站内容…</p>'; return; }
+  paintSearch(srcList(), words);
 }
 function paintSearch(all, words) {
-  var out = $('#sres'), html = '';
-  (all || []).forEach(function (l) {
-    var txt = l.text || '';
+  var out = $('#sres'), html = '', g = '', nDoc = 0, cnt = {};
+  (all || []).forEach(function (d) {
+    var txt = d.text || '';
     if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+    cnt[d.g] = (cnt[d.g] || 0) + 1;
+    if (cnt[d.g] > 30) return;                       // 每类最多列 30 篇，别把页面撑爆
+    nDoc++;
+    if (d.g !== g) { g = d.g; html += '<div class="refg">' + esc(g) + '</div>'; }
     var w0 = words[0], idx = [], p = txt.indexOf(w0);
     while (p >= 0 && idx.length < 40) { idx.push(p); p = txt.indexOf(w0, p + w0.length); }
     var order = idx.slice();
@@ -1135,24 +1166,39 @@ function paintSearch(all, words) {
     if (words.length > 1) {
       order.sort(function (a, b) { return near(txt, b, words) - near(txt, a, words); });
     }
-    order.slice(0, 4).forEach(function (at) {
+    var per = d.g === '课文' ? 4 : 2;
+    order.slice(0, per).forEach(function (at) {
       var s = Math.max(0, at - 26), frag = txt.slice(s, at + 44);
       words.forEach(function (w) { frag = frag.split(w).join('\x01' + w + '\x02'); });
       frag = frag.replace(/[<>&]/g, function (c) {
         return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c];
       }).split('\x01').join('<em>').split('\x02').join('</em>');
-      html += '<button class="sr" data-id="' + l.id + '" data-kw="' + w0 +
-        '" data-occ="' + idx.indexOf(at) + '"><b>第' + l.num + '课 · ' + l.short +
-        '</b><span>…' + frag + '…</span></button>';
+      html += '<button class="sr" data-k="' + all.indexOf(d) + '"' + (d.go[0] === 'lesson' ? ' data-id="' + d.go[1] + '"' : '') + ' data-kw="' + esc(w0) +
+        '" data-occ="' + idx.indexOf(at) + '"><b>' + esc(d.t) + '</b><span>…' + frag + '…</span></button>';
     });
-    if (idx.length > 4) html += '<p class="muted">本课另有 ' + (idx.length - 4) + ' 处</p>';
+    if (idx.length > per) html += '<p class="muted">这里另有 ' + (idx.length - per) + ' 处</p>';
   });
   out.innerHTML = html || '<p class="muted">没找到。换个词试试，或用空格分成两个词。</p>';
   $$('.sr', out).forEach(function (b) {
     b.onclick = function () {
-      show('lesson', b.dataset.id, { kw: b.dataset.kw, occ: +b.dataset.occ });
+      var d = all[+b.dataset.k], find = { kw: b.dataset.kw, occ: +b.dataset.occ };
+      if (d.go[0] === 'lesson') { show('lesson', d.go[1], find); return; }
+      if (d.xf) {                                    // 象法屏自带筛选框：直接把条目名填进去
+        show('xflist'); var q = $('#xq'); if (q) { q.value = d.xf; paintXf(); }
+        return;
+      }
+      show(d.go[0], d.go[1]);
+      locateWhenReady(d.body, find);
     };
   });
+}
+/* 附篇、格局、毕法、课例这几屏是异步铺内容的：等正文里出现关键词再定位。 */
+function locateWhenReady(sel, find) {
+  var n = 0, iv = setInterval(function () {
+    var el = $(sel);
+    if (el && el.textContent.indexOf(find.kw) >= 0) { clearInterval(iv); locate(el, find); }
+    else if (++n > 40) clearInterval(iv);
+  }, 50);
 }
 function near(txt, at, words) {
   var s = txt.slice(Math.max(0, at - 60), at + 60), n = 0;
@@ -1259,3 +1305,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(function () {});
   });
 }
+
+// 测试钩子（smoke.js 用）：首页不再有「起课练习」入口（并进综合训练），测试直接走路由
+window.__go = function (scr, id) { show(scr, id || null); };
