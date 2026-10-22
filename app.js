@@ -49,13 +49,17 @@ var QOLD = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,186,187,189,22
    ⚠️ 必须带 ?v=：微信 X5 会无视 query 按路径缓存，但其余浏览器靠它拿到新内容；
    只 bump sw 版本救不了这个按需加载的大文件。 */
 var VER = encodeURIComponent(M.built || '0');
+/* ⚠️ 2026-10-22：微信 X5 无视 ?v=、按**路径**缓存，用户在微信里整页都是旧版（截图为证）。
+   所以 build.py 把静态文件复制进 b/<内容哈希>/，index.html 改指向那里，并在页面里设 window.ASSET。
+   按需加载的文件也得走这个前缀，否则数据包照样被 X5 钉在旧版。本地直接开源文件时 ASSET 为空。 */
+var ASSET = window.ASSET || '';
 var _loading = null;
 function needCourse() {
   if (window.DATA_COURSE) return Promise.resolve(window.DATA_COURSE);
   if (_loading) return _loading;
   _loading = new Promise(function (res, rej) {
     var s = document.createElement('script');
-    s.src = 'data/data-course.js?v=' + VER;
+    s.src = ASSET + 'data/data-course.js?v=' + VER;
     s.onload = function () { res(window.DATA_COURSE); };
     s.onerror = function () { _loading = null; rej(new Error('课文加载失败')); };
     document.head.appendChild(s);
@@ -68,7 +72,7 @@ function needRef() {
   if (_refLoading) return _refLoading;
   _refLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-ref.js?v=' + VER;      // ⚠️ 同 data-course.js，按需加载必须带 ?v=
+    el.src = ASSET + 'data/data-ref.js?v=' + VER;      // ⚠️ 同 data-course.js，按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_REF); };
     el.onerror = function () { _refLoading = null; rej(new Error('速查表加载失败')); };
     document.head.appendChild(el);
@@ -81,7 +85,7 @@ function needGe() {
   if (_geLoading) return _geLoading;
   _geLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-ge.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.src = ASSET + 'data/data-ge.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_GE); };
     el.onerror = function () { _geLoading = null; rej(new Error('格局详解加载失败')); };
     document.head.appendChild(el);
@@ -94,7 +98,7 @@ function needExtra() {
   if (_extraLoading) return _extraLoading;
   _extraLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-extra.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.src = ASSET + 'data/data-extra.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_EXTRA); };
     el.onerror = function () { _extraLoading = null; rej(new Error('附篇加载失败')); };
     document.head.appendChild(el);
@@ -107,7 +111,7 @@ function needXf() {
   if (_xfLoading) return _xfLoading;
   _xfLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-xf.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.src = ASSET + 'data/data-xf.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_XF); };
     el.onerror = function () { _xfLoading = null; rej(new Error('象法速查加载失败')); };
     document.head.appendChild(el);
@@ -120,7 +124,7 @@ function needBifa() {
   if (_bifaLoading) return _bifaLoading;
   _bifaLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-bifa.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=（1.4MB，别进首屏）
+    el.src = ASSET + 'data/data-bifa.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=（1.4MB，别进首屏）
     el.onload = function () { res(window.DATA_BIFA); };
     el.onerror = function () { _bifaLoading = null; rej(new Error('毕法赋加载失败')); };
     document.head.appendChild(el);
@@ -133,7 +137,7 @@ function needJinsuo() {
   if (_jsLoading) return _jsLoading;
   _jsLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-jinsuo.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.src = ASSET + 'data/data-jinsuo.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_JINSUO); };
     el.onerror = function () { _jsLoading = null; rej(new Error('金锁玉匙加载失败')); };
     document.head.appendChild(el);
@@ -146,7 +150,7 @@ function needQuiz() {
   if (_quizLoading) return _quizLoading;
   _quizLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'data/data-quiz.js?v=' + VER;    // ⚠️ 同上，按需加载的大文件必须带 ?v=
+    el.src = ASSET + 'data/data-quiz.js?v=' + VER;    // ⚠️ 同上，按需加载的大文件必须带 ?v=
     el.onload = function () { res(window.DATA_QUIZ); };
     el.onerror = function () { _quizLoading = null; rej(new Error('课例加载失败')); };
     document.head.appendChild(el);
@@ -812,7 +816,7 @@ function needDetect() {
   if (_pdLoading) return _pdLoading;
   _pdLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
-    el.src = 'pan-detect.js?v=' + VER;
+    el.src = ASSET + 'pan-detect.js?v=' + VER;
     el.onload = function () { PD = window.PanDetect; res(PD); };
     el.onerror = function () { _pdLoading = null; rej(new Error('判定脚本加载失败')); };
     document.head.appendChild(el);

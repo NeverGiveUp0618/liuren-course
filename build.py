@@ -430,6 +430,40 @@ def build_quiz():
     return cats, items
 
 
+def stamp_assets():
+    """⚠️ 2026-10-22：微信 X5 无视 ?v=、按路径缓存——用户在微信里看到的整页都是旧版。
+    把样式、脚本、数据包复制进 b/<内容哈希>/，index.html 改指过去：内容一变路径就变，X5 只能拿新的。
+    ⚠️ 源文件仍是根目录的 style.css / app.js / data/*.js，**别去改 b/ 里的**（每次构建都重写、旧目录删掉）。
+    git 按内容去重，没变的文件换了路径也不会多占仓库。"""
+    import hashlib, shutil
+    files = ['style.css', 'engine.js', 'app.js', 'pan-detect.js'] + \
+            ['data/' + f for f in sorted(os.listdir(os.path.join(HERE, 'data'))) if f.endswith('.js')]
+    h = hashlib.md5()
+    for f in files:
+        h.update(f.encode()); h.update(open(os.path.join(HERE, f), 'rb').read())
+    tag = h.hexdigest()[:10]
+    bdir = os.path.join(HERE, 'b')
+    if os.path.isdir(bdir):
+        for d in os.listdir(bdir):
+            if d != tag:
+                shutil.rmtree(os.path.join(bdir, d))
+    dst = os.path.join(bdir, tag)
+    for f in files:
+        os.makedirs(os.path.dirname(os.path.join(dst, f)), exist_ok=True)
+        shutil.copyfile(os.path.join(HERE, f), os.path.join(dst, f))
+    pre = 'b/%s/' % tag
+    ip = os.path.join(HERE, 'index.html')
+    html = read(ip)
+    html = re.sub(r'<!--ASSET-CSS-->.*?<!--/ASSET-CSS-->',
+                  '<!--ASSET-CSS--><link rel="stylesheet" href="%sstyle.css"><!--/ASSET-CSS-->' % pre, html, flags=re.S)
+    html = re.sub(r'<!--ASSET-JS-->.*?<!--/ASSET-JS-->',
+                  ('<!--ASSET-JS--><script>window.ASSET=\'%s\'</script>\n<script src="%sdata/data-meta.js"></script>\n'
+                   '<script src="%sengine.js"></script>\n<script src="%sapp.js"></script><!--/ASSET-JS-->') % (pre, pre, pre, pre),
+                  html, flags=re.S)
+    open(ip, 'w', encoding='utf-8').write(html)
+    return tag
+
+
 def main():
     if not os.path.isdir(SRC):
         sys.exit('找不到内容源目录：%s' % SRC)
@@ -517,6 +551,7 @@ def main():
     print('  data-xf.js     %7.1f KB（象法 %d 条 / %s）'
           % (s7 / 1024, counts['xf'],
              '＋'.join('%s%d' % (x['name'], x['n']) for x in xflibs)))
+    print('  静态文件路径版本 b/%s/（防微信 X5 按路径缓存）' % stamp_assets())
     print('\n✓ 自检通过')
 
 

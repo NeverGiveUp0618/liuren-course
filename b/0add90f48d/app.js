@@ -1,0 +1,1200 @@
+/* 六壬神课（原名六壬课程，2026-10-22 改名）· 路由 / 渲染 / 起盘台 / 搜索 / 阅读位置
+   ⚠️ 内容全在 data/*.js（由 build.py 从 content/*.md 生成），本文件不放内容。 */
+'use strict';
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+var M = window.DATA_META || { counts: {}, plan: [], list: [] };
+
+var K = {
+  read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
+  counts: 'liuren_course_counts', theme: 'liuren_course_theme',
+  progopen: 'liuren_course_progopen',
+  qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen'
+};
+// ⚠️ 这个项目原本没有 esc——课例的标题/占类是从 md 抄来的纯文本，
+//    但插进 innerHTML 前照样得转义，别图省事直接拼。
+function esc(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+/* ── 课例编号迁移（一次性）────────────────────────────────
+   2026-08-25 把课例号按占类重排成每类连续（求财 1-24、求官 25-46…），
+   ⚠️ qseen/qopen 是**按例号存的**，不迁移的话「看过/展开过」的记录会全部错位。
+   OLD[i] ＝ 新号 i+1 对应的旧号；跑过一次就打上 K.qnum 标记，不再重复。
+   以后再重排，把 QNUM 往上抬一版并换掉 OLD 即可。 */
+K.qnum = 'liuren_course_qnum';
+var QNUM = 'v2';
+var QOLD = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,186,187,189,22,23,24,25,26,27,28,29,30,31,32,33,34,155,161,162,163,164,169,170,171,183,35,36,37,38,39,40,41,42,43,44,45,46,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,179,180,181,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,145,146,150,151,152,153,92,93,94,95,96,97,98,99,100,101,182,184,185,102,103,104,105,106,107,144,147,148,149,108,109,110,111,112,113,114,115,116,117,174,175,176,118,119,120,121,122,123,124,125,126,188,154,156,157,158,159,160,165,166,167,168,172,173,177,178];
+(function migrateQuizNums() {
+  try {
+    if (localStorage.getItem(K.qnum) === QNUM) return;
+    var o2n = {};
+    for (var i = 0; i < QOLD.length; i++) o2n[QOLD[i]] = i + 1;
+    [K.qseen, K.qopen].forEach(function (k) {
+      var v = load(k, null);
+      if (!v) return;
+      var out = {};
+      Object.keys(v).forEach(function (n) { var nn = o2n[+n]; if (nn) out[nn] = v[n]; });
+      save(k, out);
+    });
+    localStorage.setItem(K.qnum, QNUM);
+  } catch (e) {}
+})();
+
+/* ── 按需加载 data-course.js ───────────────────────────────
+   ⚠️ 必须带 ?v=：微信 X5 会无视 query 按路径缓存，但其余浏览器靠它拿到新内容；
+   只 bump sw 版本救不了这个按需加载的大文件。 */
+var VER = encodeURIComponent(M.built || '0');
+/* ⚠️ 2026-10-22：微信 X5 无视 ?v=、按**路径**缓存，用户在微信里整页都是旧版（截图为证）。
+   所以 build.py 把静态文件复制进 b/<内容哈希>/，index.html 改指向那里，并在页面里设 window.ASSET。
+   按需加载的文件也得走这个前缀，否则数据包照样被 X5 钉在旧版。本地直接开源文件时 ASSET 为空。 */
+var ASSET = window.ASSET || '';
+var _loading = null;
+function needCourse() {
+  if (window.DATA_COURSE) return Promise.resolve(window.DATA_COURSE);
+  if (_loading) return _loading;
+  _loading = new Promise(function (res, rej) {
+    var s = document.createElement('script');
+    s.src = ASSET + 'data/data-course.js?v=' + VER;
+    s.onload = function () { res(window.DATA_COURSE); };
+    s.onerror = function () { _loading = null; rej(new Error('课文加载失败')); };
+    document.head.appendChild(s);
+  });
+  return _loading;
+}
+var _refLoading = null;
+function needRef() {
+  if (window.DATA_REF) return Promise.resolve(window.DATA_REF);
+  if (_refLoading) return _refLoading;
+  _refLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-ref.js?v=' + VER;      // ⚠️ 同 data-course.js，按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_REF); };
+    el.onerror = function () { _refLoading = null; rej(new Error('速查表加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _refLoading;
+}
+var _geLoading = null;
+function needGe() {
+  if (window.DATA_GE) return Promise.resolve(window.DATA_GE);
+  if (_geLoading) return _geLoading;
+  _geLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-ge.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_GE); };
+    el.onerror = function () { _geLoading = null; rej(new Error('格局详解加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _geLoading;
+}
+var _extraLoading = null;
+function needExtra() {
+  if (window.DATA_EXTRA) return Promise.resolve(window.DATA_EXTRA);
+  if (_extraLoading) return _extraLoading;
+  _extraLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-extra.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_EXTRA); };
+    el.onerror = function () { _extraLoading = null; rej(new Error('附篇加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _extraLoading;
+}
+var _xfLoading = null;
+function needXf() {
+  if (window.DATA_XF) return Promise.resolve(window.DATA_XF);
+  if (_xfLoading) return _xfLoading;
+  _xfLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-xf.js?v=' + VER;      // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_XF); };
+    el.onerror = function () { _xfLoading = null; rej(new Error('象法速查加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _xfLoading;
+}
+var _bifaLoading = null;
+function needBifa() {
+  if (window.DATA_BIFA) return Promise.resolve(window.DATA_BIFA);
+  if (_bifaLoading) return _bifaLoading;
+  _bifaLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-bifa.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=（1.4MB，别进首屏）
+    el.onload = function () { res(window.DATA_BIFA); };
+    el.onerror = function () { _bifaLoading = null; rej(new Error('毕法赋加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _bifaLoading;
+}
+var _jsLoading = null;
+function needJinsuo() {
+  if (window.DATA_JINSUO) return Promise.resolve(window.DATA_JINSUO);
+  if (_jsLoading) return _jsLoading;
+  _jsLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-jinsuo.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+    el.onload = function () { res(window.DATA_JINSUO); };
+    el.onerror = function () { _jsLoading = null; rej(new Error('金锁玉匙加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _jsLoading;
+}
+var _quizLoading = null;
+function needQuiz() {
+  if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
+  if (_quizLoading) return _quizLoading;
+  _quizLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-quiz.js?v=' + VER;    // ⚠️ 同上，按需加载的大文件必须带 ?v=
+    el.onload = function () { res(window.DATA_QUIZ); };
+    el.onerror = function () { _quizLoading = null; rej(new Error('课例加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _quizLoading;
+}
+function lessonById(id) {
+  var a = window.DATA_COURSE || [];
+  for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
+  return null;
+}
+
+/* ── 路由 ───────────────────────────────────────────────
+   套壳 view.html 的 iframe 与顶层共享同一条 session history。若本站不碰
+   history，读到课文深处一次侧滑会直接退出整个 App 回导航首页。
+   所以：前进 pushState，回到栈上已有的屏用 history.go(-n) 折叠，
+   popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
+var stack = [], pos = 0, cur = { scr: 'home', id: null };
+var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学习路线',
+               lab: '起盘台', search: '搜索', ref: '速查',
+               qlist: '课例题库', quiz: '课例',
+               gelist: '格局详解', ge: '格局',
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
+               jinsuo: '金锁玉匙' };
+var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
+var pendingFind = null;
+
+function _apply(scr, id) {
+  cur = { scr: scr, id: id };
+  $$('.screen').forEach(function (el) { el.classList.remove('active'); });
+  var el = $('#s-' + scr);
+  if (el) el.classList.add('active');
+  $('#btnBack').classList.toggle('on', !ROOTS[scr]);
+  $$('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === scr); });
+  $('#fabToc').classList.toggle('on', scr === 'lesson');
+  $('#tocMask').classList.remove('on');
+  $('#ttl').textContent = TITLES[scr] || '六壬神课';
+  RENDER[scr] && RENDER[scr](id);
+  if (scr !== 'search') save(K.last, { scr: scr, id: id });
+  if (scr !== 'lesson') window.scrollTo(0, 0);
+}
+function show(scr, id, find) {
+  pendingFind = find || null;
+  if (scr === cur.scr && id === cur.id) { if (find) _apply(scr, id); return; }
+  for (var k = 0; k <= pos && k < stack.length; k++) {
+    if (stack[k].scr === scr && stack[k].id === id) {
+      if (k < pos) { history.go(k - pos); return; }
+      break;
+    }
+  }
+  stack = stack.slice(0, pos + 1);
+  stack.push({ scr: scr, id: id });
+  pos = stack.length - 1;
+  history.pushState({ i: pos }, '', '');
+  _apply(scr, id);
+}
+window.addEventListener('popstate', function (e) {
+  var i = (e.state && typeof e.state.i === 'number') ? e.state.i : 0;
+  if (i >= stack.length) i = stack.length - 1;
+  if (i < 0) i = 0;
+  pos = i;
+  var t = stack[i] || { scr: 'home', id: null };
+  _apply(t.scr, t.id);
+});
+
+/* ── 起盘台引擎（第2、3课的两个动作） ───────────────────── */
+var Z = '子丑寅卯辰巳午未申酉戌亥'.split('');
+var TJN = ['贵', '蛇', '朱', '合', '勾', '青', '空', '虎', '常', '玄', '阴', '后'];
+var TJFULL = { 贵: '天乙贵人', 蛇: '螣蛇', 朱: '朱雀', 合: '六合', 勾: '勾陈', 青: '青龙',
+               空: '天空', 虎: '白虎', 常: '太常', 玄: '玄武', 阴: '太阴', 后: '天后' };
+var GR_D = { 甲: '丑', 戊: '丑', 庚: '丑', 乙: '子', 己: '子', 丙: '亥', 丁: '亥', 辛: '午', 壬: '巳', 癸: '巳' };
+var GR_N = { 甲: '未', 戊: '未', 庚: '未', 乙: '申', 己: '申', 丙: '酉', 丁: '酉', 辛: '寅', 壬: '卯', 癸: '卯' };
+var ZHOU = '卯辰巳午未申';          // 昼：卯到申用昼贵〔通解上 p23〕
+var SHUN = '亥子丑寅卯辰';          // 贵人临此六位顺行（亥天门、巳地户）
+var SHEN = { 子: '神后', 丑: '大吉', 寅: '功曹', 卯: '太冲', 辰: '天罡', 巳: '太乙',
+             午: '胜光', 未: '小吉', 申: '传送', 酉: '从魁', 戌: '河魁', 亥: '登明' };
+var YJM = { 亥: '正月·雨水后', 戌: '二月·春分后', 酉: '三月·谷雨后', 申: '四月·小满后',
+            未: '五月·夏至后', 午: '六月·大暑后', 巳: '七月·处暑后', 辰: '八月·秋分后',
+            卯: '九月·霜降后', 寅: '十月·小雪后', 丑: '十一月·冬至后', 子: '十二月·大寒后' };
+var CELLS = [['巳',1,1],['午',1,2],['未',1,3],['申',1,4],['酉',2,4],['戌',3,4],
+             ['亥',4,4],['子',4,3],['丑',4,2],['寅',4,1],['卯',3,1],['辰',2,1]];
+function tianpan(yj, zs) {
+  var off = (Z.indexOf(yj) - Z.indexOf(zs) + 12) % 12, m = {};
+  Z.forEach(function (d) { m[d] = Z[(Z.indexOf(d) + off) % 12]; });
+  return m;
+}
+function tianjiang(gan, shi, tp) {
+  var gr = ZHOU.indexOf(shi) >= 0 ? GR_D[gan] : GR_N[gan];
+  var dp = Z.filter(function (d) { return tp[d] === gr; })[0];
+  var shun = SHUN.indexOf(dp) >= 0, out = {};
+  TJN.forEach(function (n, i) {
+    var z = Z[((Z.indexOf(gr) + (shun ? i : -i)) % 12 + 12) % 12];
+    out[Z.filter(function (k) { return tp[k] === z; })[0]] = n;
+  });
+  return { tj: out, gr: gr, dp: dp, shun: shun };
+}
+function panHTML(tp, tj, mid) {
+  return '<div class="panwrap"><div class="pan">' + CELLS.map(function (c) {
+    return '<div class="gong" style="grid-row:' + c[1] + ';grid-column:' + c[2] + '">' +
+      '<span class="tj">' + (tj[c[0]] || '') + '</span>' +
+      '<span class="tp">' + (tp[c[0]] || '') + '</span>' +
+      '<span class="dp">' + c[0] + '</span></div>';
+  }).join('') + '<div class="panmid">' + (mid || '') + '</div></div></div>';
+}
+
+/* ── 各屏渲染 ─────────────────────────────────────────── */
+var RENDER = {};
+
+RENDER.home = function () {
+  var c = M.counts || {};
+  $('#hLesson').textContent = c.lesson || 0;
+  $('#hPlan').textContent = c.planned || 0;
+  $('#hPan').textContent = c.pan || 0;
+  $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
+  var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
+  var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
+  var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
+  var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
+  var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
+  var mj = $('#mJs'); if (mj) mj.textContent = c.jinsuo ? (c.jinsuo + '＋' + (c.jinsuob || 0)) : '—';
+  var read = load(K.read, {}), done = 0;
+  (M.list || []).forEach(function (l) { if ((read[l.id] || 0) >= 90) done++; });
+  var total = (M.list || []).length || 1;
+  $('#progPct').textContent = done + ' / ' + total + ' 课已读完';
+  $('#progBar').style.width = Math.round(done / total * 100) + '%';
+  // 25 个课号 chip 占掉大半屏，默认折起来；进度条和"x/25 已读完"照常露在外面
+  var pc = $('#progCard'), pt = $('#progTog');
+  if (pt && !pt._bound) {
+    pt._bound = 1;
+    pt.onclick = function () {
+      var on = !pc.classList.contains('open');
+      pc.classList.toggle('open', on);
+      pt.setAttribute('aria-expanded', on ? 'true' : 'false');
+      save(K.progopen, on ? 1 : 0);
+    };
+  }
+  if (pc) {
+    var on = !!load(K.progopen, 0);
+    pc.classList.toggle('open', on);
+    if (pt) pt.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+  $('#progChips').innerHTML = (M.list || []).map(function (l) {
+    var p = read[l.id] || 0;
+    return '<span class="chip' + (p >= 90 ? ' done' : '') + '">第' + l.num + '课 ' +
+      (p >= 90 ? '已读' : p > 0 ? p + '%' : '未读') + '</span>';
+  }).join('');
+  var last = load(K.last, null);
+  var box = $('#resume');
+  if (last && last.scr === 'lesson' && last.id) {
+    var it = (M.list || []).filter(function (x) { return x.id === last.id; })[0];
+    box.innerHTML = it ? '<button class="mi" id="btnResume"><b>继续读 · 第' + it.num +
+      '课</b><span>' + it.short + '</span></button>' : '';
+    var b = $('#btnResume');
+    if (b) b.onclick = function () { show('lesson', last.id); };
+  } else box.innerHTML = '';
+  save(K.counts, { lesson: c.lesson, planned: c.planned, done: done,
+                   quiz: c.quiz || 0, qseen: Object.keys(load(K.qseen, {})).length });
+};
+
+
+/* ── 格局详解（中册二十五格）───────────────────────────
+   定完课体来查断意。列表一屏放得下，不做折叠也不做筛选。 */
+
+RENDER.gelist = function () {
+  needGe().then(paintGe);
+  if (window.DATA_GE) paintGe(window.DATA_GE);
+};
+function paintGe(G) {
+  $('#geRows').innerHTML = G.map(function (g) {
+    return '<div class="gerow" data-ge="' + g.n + '">' +
+      '<span class="gn">' + g.n + '</span>' +
+      '<span class="gt">' + esc(g.name) + '</span>' +
+      '<span class="gl">' + esc(g.line) + '</span></div>';
+  }).join('');
+  $$('[data-ge]', $('#geRows')).forEach(function (el) {
+    el.onclick = function () { show('ge', +el.dataset.ge); };
+  });
+}
+RENDER.ge = function (n) {
+  needGe().then(function (G) { paintGeOne(G, n); });
+  if (window.DATA_GE) paintGeOne(window.DATA_GE, n);
+};
+function paintGeOne(G, n) {
+  var it = G.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = it.name;
+  var prev = G[n - 2], next = G[n];
+  $('#geBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="gePrev">‹ ' + esc(prev.name) + '</button>' : '') +
+    (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
+  if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
+  if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+}
+
+/* ── 附篇（源流 / 八要素）──────────────────────────────
+   整篇一条，直接铺 html。两篇都不是课，也没有自测。
+   ⚠️ 内容源 content/94-*.md、95-*.md。 */
+RENDER.extra = function (id) {
+  needExtra().then(function (E) { paintExtra(E, id); });
+  if (window.DATA_EXTRA) paintExtra(window.DATA_EXTRA, id);
+};
+function paintExtra(E, id) {
+  var it = (E || []).filter(function (x) { return x.id === id; })[0];
+  if (!it) return;
+  $('#ttl').textContent = it.title.replace(/^大六壬\s*·\s*/, '');
+  $('#extraBody').innerHTML = it.html;
+}
+
+/* ── App 存档（80–92）列表 ─────────────────────────────
+   「六壬神课」App 2026-10-22 退役，还没进课程的屏与数据整体收成附篇。
+   ⚠️ 多与课文重复——每篇开头写了与哪几课重复、以课文为准。 */
+RENDER.xarch = function () {
+  var box = $('#xarchList');
+  box.innerHTML = '<div class="muted center">载入中…</div>';
+  needExtra().then(function (E) {
+    // 附篇＝源流＋旧版 App 资料（八要素在「查」组单列，不重复放）
+    var xs = (E || []).filter(function (x) { return /^x\d\d$/.test(x.id) || x.id === 'liuyuan'; })
+      .sort(function (a, b) { return (a.id === 'liuyuan' ? -1 : 0) - (b.id === 'liuyuan' ? -1 : 0) || a.num - b.num; });
+    box.innerHTML = '<p class="muted">不读也不影响起课断课。标「旧版」的来自旧版六壬神课 App，与课文重复的地方以课文为准。</p>' +
+      xs.map(function (x) {
+        var t = x.title.replace(/^大六壬\s*·\s*/, '');
+        return '<button class="mi" data-x="' + x.id + '"><b>' + esc(t) + (/^x/.test(x.id) ? ' <em class="old">旧版</em>' : '') +
+          '</b><span>' + esc(x.line.replace(/\*\*/g, '')) + '</span></button>';
+      }).join('');
+    $$('[data-x]', box).forEach(function (b) { b.onclick = function () { show('extra', b.dataset.x); }; });
+  });
+};
+
+/* ── 象法速查 ──────────────────────────────────────────
+   265 条断法规则，三库：取象法则 / 分类类神 / 百章歌断诀。
+   ⚠️ 内容源 content/96-象法速查.md。
+   ⚠️ 刻意**不并进「速查」屏**——那屏按第几课分组、每条带「到第 N 课看讲解」，
+      象法条目不属于任何一课，塞进去要到处特判。 */
+var xfLib = '';
+RENDER.xflist = function () {
+  var box = $('#xq');
+  if (box && !box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintXf, 160); };
+  }
+  paintXf();
+};
+function paintXf() {
+  if (window.DATA_XF) { renderXf(window.DATA_XF); return; }
+  $('#xfList').innerHTML = '<p class="muted">正在取象法…</p>';
+  needXf().then(renderXf).catch(function () {
+    $('#xfList').innerHTML = '<p class="muted">象法加载失败，检查网络后重试。</p>';
+  });
+}
+function renderXf(D) {
+  var libs = D.libs || [], all = D.items || [];
+  $('#xfFilters').innerHTML = ['<button class="chip' + (xfLib ? '' : ' on') +
+    '" data-lib="">全部 ' + all.length + '</button>']
+    .concat(libs.map(function (l) {
+      return '<button class="chip' + (xfLib === l.name ? ' on' : '') +
+        '" data-lib="' + esc(l.name) + '">' + esc(l.name) + ' ' + l.n + '</button>';
+    })).join('');
+  $$('[data-lib]', $('#xfFilters')).forEach(function (b) {
+    b.onclick = function () { xfLib = b.dataset.lib; renderXf(D); };
+  });
+
+  var kw = ($('#xq').value || '').trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = all.filter(function (r) {
+    if (xfLib && r.lib !== xfLib) return false;
+    return words.every(function (w) {
+      return (r.name + r.grp + r.lib + r.text + r.src).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) {
+    $('#xfList').innerHTML = '<p class="muted">没找到。换个词试试。</p>';
+    return;
+  }
+  var html = '', cur2 = '';
+  hit.forEach(function (r) {
+    var g = r.lib + ' · ' + r.grp;
+    if (g !== cur2) { cur2 = g; html += '<div class="refg">' + esc(g) + '</div>'; }
+    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
+      '</b></button><div class="refb">' + r.html +
+      '<p class="src">〔出处〕' + esc(r.src) + '</p></div></div>';
+  });
+  $('#xfList').innerHTML = html;
+  $$('.refi', $('#xfList')).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+  });
+}
+
+/* ── 金锁玉匙（初传查表）──────────────────────────────
+   《通解》下册外编第一节的发用简断：只看初传天盘字加在地盘哪个字上，查一首诗。
+   两排 12 个字点选（上排＝初传，下排＝所临地盘），当场出诗；下面是全表可搜可翻。
+   ⚠️ 内容源 content/93-金锁玉匙.md；格子由 build.py 算（每格主条＋又见），这里只画。
+   ⚠️ 不并进「速查」屏（那屏按课分组）；id 传「天地」两字可直接定位一格（起课练习用）。 */
+var jsSel = { a: '', b: '' }, jsTab = 'a';
+RENDER.jinsuo = function (id) {
+  if (id && /^[子丑寅卯辰巳午未申酉戌亥]{2}$/.test(id)) { jsSel = { a: id[0], b: id[1] }; jsTab = 'a'; }
+  var box = $('#jsq');
+  if (box && !box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintJs, 160); };
+  }
+  paintJs();
+};
+function paintJs() {
+  if (window.DATA_JINSUO) { renderJs(window.DATA_JINSUO); return; }
+  $('#jsList').innerHTML = '<p class="muted">正在取诗诀…</p>';
+  needJinsuo().then(renderJs).catch(function () {
+    $('#jsList').innerHTML = '<p class="muted">金锁玉匙加载失败，检查网络后重试。</p>';
+  });
+}
+function jsPoem(p) {
+  // 诗按句号断行，读起来才像诗；原文里逗号不动
+  return esc(p).split('。').filter(Boolean).map(function (x) { return x + '。'; }).join('<br>');
+}
+function jsEntryHTML(D, e, open) {
+  var pairs = e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
+  var also = e.also.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
+  return '<div class="refi jse' + (open ? ' open' : '') + '" data-js="' + e.n + '">' +
+    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' + esc(pairs || '—') + '</span></button>' +
+    '<div class="refb">' +
+    (pairs ? '<p class="jsk">相加：' + esc(pairs) + '</p>' : '') +
+    (also ? '<p class="jsk">又见：' + esc(also) + '</p>' : '') +
+    (e.gua ? '<p class="jsk">卦：' + esc(e.gua) + '</p>' : '') +
+    '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
+    (e.note ? '<p class="jsnote">备注：' + esc(e.note) + '</p>' : '') +
+    '<details class="jsq"><summary>原文</summary>' + e.quote + '</details>' +
+    '</div></div>';
+}
+function jsEntryBHTML(e, open) {
+  return '<div class="refi jse' + (open ? ' open' : '') + '" data-jsb="' + e.n + '">' +
+    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' +
+    esc(e.cond.split(/[，。（]/)[0]) + '</span></button>' +
+    '<div class="refb">' +
+    '<p class="jsk">条件：' + esc(e.cond) + '</p>' +
+    '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
+    (e.note ? '<p class="jsnote">备注：' + esc(e.note) + '</p>' : '') +
+    '<details class="jsq"><summary>原文</summary>' + e.quote + '</details>' +
+    '</div></div>';
+}
+function renderJs(D) {
+  var A = D.a || [], B = D.b || [], grid = D.grid || {};
+  function byN(n) { return A.filter(function (x) { return x.n === n; })[0]; }
+  // 两排字
+  $('#jsPick').innerHTML = [['a', '初传'], ['b', '临于']].map(function (r) {
+    return '<div class="jsrow"><span class="jsl">' + r[1] + '</span><div class="jsz">' +
+      Z.map(function (z) {
+        return '<button class="jz' + (jsSel[r[0]] === z ? ' on' : '') + '" data-r="' + r[0] +
+          '" data-z="' + z + '">' + z + '</button>';
+      }).join('') + '</div></div>';
+  }).join('');
+  $$('.jz', $('#jsPick')).forEach(function (b) {
+    b.onclick = function () {
+      jsSel[b.dataset.r] = (jsSel[b.dataset.r] === b.dataset.z) ? '' : b.dataset.z;
+      renderJs(D);
+    };
+  });
+  // 命中格
+  var hit = $('#jsHit'), h = '';
+  if (jsSel.a && jsSel.b) {
+    var c = jsSel.a + jsSel.b, g = grid[c];
+    h += '<div class="jshit"><div class="jshk">' + jsSel.a + ' 加 ' + jsSel.b +
+      '<span class="muted">（初传 ' + jsSel.a + ' 临地盘 ' + jsSel.b + '）</span></div>';
+    if (!g) {
+      h += '<p class="muted">原书未列这一格（多为正规课式里排不出的相加）。</p>';
+    } else if (g.n === -1) {
+      h += '<p class="muted">原书明说这一格「无发用无课，并无类诗」。</p>';
+    } else if (g.n === -2) {
+      h += '<p class="muted">玄胎课象——原书注「无诗」（' + esc((D.xuantai || {}).gua || '') +
+        '）。玄胎课的断意见第 18 课。</p>' + ((D.xuantai || {}).quote || '');
+    } else {
+      var main = g.n > 0 ? byN(g.n) : null;
+      if (main) h += jsEntryHTML(D, main, true);
+      (g.alt || []).forEach(function (n) {
+        var e = byN(n);
+        if (!e) return;
+        h += '<p class="muted jsalt">又见（原书两处说法不一，理由在备注）：</p>' + jsEntryHTML(D, e, false);
+      });
+    }
+    h += '</div>';
+  } else {
+    h += '<p class="muted center">上排点初传的字，下排点它所临的地盘字。</p>';
+  }
+  hit.innerHTML = h;
+  // 页签
+  $('#jsTabs').innerHTML = [['a', '象类 ' + A.length], ['b', '神将神煞 ' + B.length], ['i', '怎么用']]
+    .map(function (t) {
+      return '<button class="chip' + (jsTab === t[0] ? ' sel' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>';
+    }).join('');
+  $$('[data-tab]', $('#jsTabs')).forEach(function (b) {
+    b.onclick = function () { jsTab = b.dataset.tab; renderJs(D); };
+  });
+  // 列表
+  var kw = ($('#jsq').value || '').trim(), words = kw.split(/\s+/).filter(Boolean);
+  var list = $('#jsList'), out = '';
+  if (jsTab === 'i') {
+    out = '<div class="doc">' + (D.intro || '') + (D.xref || '') + '</div>';
+  } else if (jsTab === 'a') {
+    A.forEach(function (e) {
+      var txt = e.name + e.p.join(' ') + e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' ') + e.poem + e.gua + e.note;
+      if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+      out += jsEntryHTML(D, e, false);
+    });
+  } else {
+    B.forEach(function (e) {
+      var txt = e.name + e.cond + e.poem + e.note;
+      if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+      out += jsEntryBHTML(e, false);
+    });
+  }
+  list.innerHTML = out || '<p class="muted">没找到。换个词试试。</p>';
+  $$('.jse', $('#s-jinsuo')).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+  });
+}
+
+/* ── 毕法赋详解 ────────────────────────────────────────
+   100 法、356 格。列表按「法」列，一法一行带它辖下的格名，
+   点进去是整条法（含全部格的原文·白话·课盘）。
+   ⚠️ 内容源是 content/97-毕法赋详解.md，这里只负责画。
+   ⚠️ data-bifa.js 有 1.4MB，只在进这两屏时才加载——别搬进首屏。 */
+RENDER.bflist = function () {
+  needBifa().then(paintBf);
+  if (window.DATA_BIFA) paintBf(window.DATA_BIFA);
+};
+function paintBf(B) {
+  $('#bfRows').innerHTML = B.map(function (f) {
+    return '<div class="gerow" data-bf="' + f.n + '">' +
+      '<span class="gn">' + f.n + '</span>' +
+      '<span class="gt">' + esc(f.ju) + '</span>' +
+      '<span class="gl">' + esc(f.pian) +
+      (f.ge.length ? '　· ' + esc(f.ge.join('／')) : '') + '</span></div>';
+  }).join('');
+  $$('[data-bf]', $('#bfRows')).forEach(function (el) {
+    el.onclick = function () { show('bifa', +el.dataset.bf); };
+  });
+}
+RENDER.bifa = function (n) {
+  needBifa().then(function (B) { paintBfOne(B, n); });
+  if (window.DATA_BIFA) paintBfOne(window.DATA_BIFA, n);
+};
+function paintBfOne(B, n) {
+  var it = B.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '第 ' + it.n + ' 法 · ' + it.pian;
+  var prev = B[n - 2], next = B[n];
+  $('#bfBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="bfPrev">‹ 第 ' + prev.n + ' 法</button>' : '') +
+    (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
+  if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
+  if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
+}
+
+/* ── 课例题库 ──────────────────────────────────────────
+   按占类折叠。126 例平铺要滚很久，找不到自己想练的那一类。
+   ⚠️ 分组口径在 build.py 的 build_quiz（＝md 里的 ## 分类），这里只负责画。 */
+var qFilter = { tag: '', star: false };
+RENDER.qlist = function () {
+  var box = $('#qRows');
+  if (!window.DATA_QUIZ) box.innerHTML = '<p class="muted" style="padding:16px">载入课例…</p>';
+  needQuiz().then(function (Q) { paintQ(Q); });
+  if (window.DATA_QUIZ) paintQ(window.DATA_QUIZ);   // 已加载就同步画，别等 then（测试要断言 DOM）
+};
+function paintQ(Q) {
+  var seen = load(K.qseen, {});
+  var tags = {};
+  Q.items.forEach(function (it) { (it.tags || []).forEach(function (t) { tags[t] = (tags[t] || 0) + 1; }); });
+  var chips = [['', '全部 ' + Q.items.length], ['★', '入门精选 ' +
+    Q.items.filter(function (x) { return x.star; }).length]];
+  Object.keys(tags).sort(function (a, b) { return tags[b] - tags[a]; })
+    .forEach(function (t) { chips.push([t, t + ' ' + tags[t]]); });
+  var selv = qFilter.star ? '★' : qFilter.tag;
+  $('#qFilters').innerHTML = chips.map(function (c) {
+    return '<span class="chip' + (selv === c[0] ? ' sel' : '') + '" data-qf="' + esc(c[0]) + '">' +
+      esc(c[1]) + '</span>';
+  }).join('');
+  $$('[data-qf]').forEach(function (el) {
+    el.onclick = function () {
+      var v = el.dataset.qf;
+      qFilter = { tag: v === '★' ? '' : v, star: v === '★' };
+      paintQ(Q);
+    };
+  });
+
+  var list = Q.items.filter(function (it) {
+    if (qFilter.star) return it.star;
+    if (qFilter.tag) return (it.tags || []).indexOf(qFilter.tag) >= 0;
+    return true;
+  });
+  var filtering = !!(qFilter.tag || qFilter.star);
+  var open = load(K.qopen, {});
+  var byCat = {};
+  list.forEach(function (it) { (byCat[it.cat] = byCat[it.cat] || []).push(it); });
+  $('#qRows').innerHTML = (Q.topics || []).map(function (tp) {
+    var its = byCat[tp.name] || [];
+    if (!its.length) return '';
+    // ⚠️ 一旦筛了考点，全部展开——否则筛出来的结果藏在折叠里，等于没筛
+    var isOpen = filtering || !!open[tp.name];
+    var done = its.filter(function (it) { return seen[it.n]; }).length;
+    return '<div class="qgrp' + (isOpen ? ' open' : '') + '" data-g="' + esc(tp.name) + '">' +
+      '<button class="qgh"><span class="qi">' + esc(tp.name.charAt(0)) + '</span><span class="nm">' + esc(tp.name) + '</span>' +
+      '<span class="ct">' + (done ? done + '/' : '') + its.length + '</span><span class="ar">›</span></button>' +
+      '<div class="qgb">' + its.map(function (it) {
+        return '<div class="qrow" data-q="' + it.n + '">' +
+          '<span class="qn">' + it.n + '</span>' +
+          '<span class="t">' + (it.star ? '⭐ ' : '') + esc(it.title) + '</span>' +
+          '<span class="s"><i class="dot ' + (seen[it.n] ? 'ok' : 'new') + '"></i></span></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  $$('.qgh', $('#qRows')).forEach(function (b) {
+    b.onclick = function () {
+      var g = b.parentNode, nm = g.dataset.g;
+      g.classList.toggle('open');
+      var o = load(K.qopen, {});
+      if (g.classList.contains('open')) o[nm] = 1; else delete o[nm];
+      save(K.qopen, o);
+    };
+  });
+  $$('[data-q]', $('#qRows')).forEach(function (el) {
+    el.onclick = function () { show('quiz', +el.dataset.q); };
+  });
+}
+
+RENDER.quiz = function (n) {
+  needQuiz().then(function (Q) { paintQuiz(Q, n); });
+  if (window.DATA_QUIZ) paintQuiz(window.DATA_QUIZ, n);
+};
+function paintQuiz(Q, n) {
+  var it = Q.items.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '课例 ' + it.n;
+  var seen = load(K.qseen, {}); seen[it.n] = 1; save(K.qseen, seen);
+  var idx = Q.items.map(function (x) { return x.n; }).indexOf(n);
+  var prev = Q.items[idx - 1], next = Q.items[idx + 1];
+  $('#quizBody').innerHTML = it.html +
+    '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+    (prev ? '<button class="btn" id="qPrev">‹ 上一例</button>' : '') +
+    (next ? '<button class="btn" id="qNext">下一例 ›</button>' : '') + '</div>';
+  if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
+  if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
+  buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+}
+
+RENDER.course = function () {
+  var read = load(K.read, {});
+  var byId = {}; (M.list || []).forEach(function (l) { byId[l.num] = l; });
+  var html = '', part = '', pk = 0;
+  // 每部分已读几课，写在部分标题右侧（2026-10-22 界面优化）
+  var partN = {}, partDone = {};
+  (M.plan || []).forEach(function (p) {
+    partN[p.part] = (partN[p.part] || 0) + 1;
+    var l = byId[p.num]; if (l && (read[l.id] || 0) >= 90) partDone[p.part] = (partDone[p.part] || 0) + 1;
+  });
+  (M.plan || []).forEach(function (p) {
+    if (p.part !== part) {
+      part = p.part; pk++;
+      var m = /^第(.)部分\s*[·・]?\s*(.*)$/.exec(part);
+      html += '<div class="part"><i>' + (m ? m[1] : pk) + '</i><span>' + esc(m ? m[2] : part) + '</span>' +
+        '<em>' + (partDone[part] || 0) + ' / ' + partN[part] + '</em></div>';
+    }
+    var l = byId[p.num];
+    if (l) {
+      var pct = read[l.id] || 0;
+      html += '<button class="li' + (pct >= 90 ? ' read' : pct > 0 ? ' doing' : '') + '" data-id="' + l.id + '"><span class="n">' + p.num +
+        '</span><span class="t"><b>' + l.short + '</b><span>' + (l.line || p.line) +
+        '</span></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') +
+        '</span></button>';
+    } else {
+      html += '<div class="li todo"><span class="n">' + p.num +
+        '</span><span class="t"><b>' + p.title + '</b><span>' + p.line +
+        '</span></span><span class="mark">待写</span></div>';
+    }
+  });
+  // 学习路线原是首页单独一项，2026-10-22 并到课程列表顶上（首页入口精简）
+  $('#courseList').innerHTML = '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
+  $('#toOutline').onclick = function () { show('outline'); };
+  $$('#courseList .li[data-id]').forEach(function (b) {
+    b.onclick = function () { show('lesson', b.dataset.id); };
+  });
+};
+
+RENDER.lesson = function (id) {
+  var body = $('#lessonBody');
+  // 数据已在手 → 同步画，别让读者看见一帧空白（测试也才验得到真渲染）
+  if (lessonById(id)) { paintLesson(id); return; }
+  body.innerHTML = '<p class="muted">正在取课文…</p>';
+  needCourse().then(function () {
+    if (cur.scr === 'lesson' && cur.id === id) paintLesson(id);
+  }).catch(function () {
+    body.innerHTML = '<p class="muted">课文加载失败，检查网络后重试。</p>';
+  });
+};
+function paintLesson(id) {
+  var body = $('#lessonBody'), l = lessonById(id);
+  if (!l) { body.innerHTML = '<p class="muted">这一课还没写。</p>'; return; }
+  $('#ttl').textContent = '第' + l.num + '课';
+  body.innerHTML = l.html;
+  bindDoc(body);
+  buildStickyPan(body);
+  buildToc(l);
+  var list = M.list || [], k = -1;
+  list.forEach(function (x, i) { if (x.id === id) k = i; });
+  $('#prevL').disabled = k <= 0;
+  $('#nextL').disabled = k < 0 || k >= list.length - 1;
+  $('#prevL').onclick = function () { if (k > 0) show('lesson', list[k - 1].id); };
+  $('#nextL').onclick = function () { if (k < list.length - 1) show('lesson', list[k + 1].id); };
+  // 定位：搜索跳转优先，否则回到上次读到的位置（读完过的不再跳回）
+  if (pendingFind) { locate(body, pendingFind); pendingFind = null; }
+  else {
+    var ps = load(K.pos, {})[id] || 0;
+    window.scrollTo(0, (load(K.read, {})[id] || 0) >= 95 ? 0 : ps);
+  }
+}
+
+RENDER.outline = function () {
+  $('#outlineBody').innerHTML = M.outline || '';
+  bindDoc($('#outlineBody'));
+};
+
+RENDER.lab = function () {
+  if ($('#s-yj').options.length) { labUpdate(); return; }
+  Z.forEach(function (z) {
+    $('#s-yj').add(new Option(z + '将（' + SHEN[z] + '）· ' + YJM[z], z));
+    $('#s-zs').add(new Option(z + '时', z));
+  });
+  '甲乙丙丁戊己庚辛壬癸'.split('').forEach(function (g) { $('#s-gan').add(new Option(g + '日', g)); });
+  $('#s-yj').value = '未'; $('#s-zs').value = '巳'; $('#s-gan').value = '丙';
+  labZhiOpts();
+  // ⚠️ 用 onchange 属性不用 addEventListener：smoke.js 直接调 .onchange() 驱动
+  ['#s-yj', '#s-zs', '#s-zhi'].forEach(function (s) { $(s).onchange = labUpdate; });
+  $('#s-gan').onchange = function () { labZhiOpts(); labUpdate(); };
+  labUpdate();
+};
+// 日支只给与日干同阴阳的六个（六十甲子里没有阴阳错配的日子）
+function labZhiOpts() {
+  var g = $('#s-gan').value, gi = '甲乙丙丁戊己庚辛壬癸'.indexOf(g), old = $('#s-zhi').value;
+  $('#s-zhi').innerHTML = '';
+  Z.forEach(function (z, i) { if (i % 2 === gi % 2) $('#s-zhi').add(new Option(z, z)); });
+  if (old && Z.indexOf(old) % 2 === gi % 2) $('#s-zhi').value = old;
+}
+function labUpdate() {
+  var yj = $('#s-yj').value, zs = $('#s-zs').value, gan = $('#s-gan').value;
+  var tp = tianpan(yj, zs), r = tianjiang(gan, zs, tp);
+  $('#labPan').innerHTML = panHTML(tp, r.tj, gan + '日 ' + zs + '时<br>' + yj + '将');
+  var off = (Z.indexOf(yj) - Z.indexOf(zs) + 12) % 12;
+  var zhou = ZHOU.indexOf(zs) >= 0;
+  $('#labRead').innerHTML =
+    '<b>' + yj + '将加' + zs + '时</b>：' +
+    (off ? '天盘整体转了 <b>' + off + '</b> 位。' : '月将与占时同支，天地盘重合＝<b>伏吟</b>。') +
+    '<br>' + gan + '日 ' + zs + '时属<b>' + (zhou ? '昼' : '夜') + '</b>（' +
+    (zhou ? '卯至申' : '酉至寅') + '）→ 用' + (zhou ? '昼' : '夜') + '贵 <b>' + r.gr + '</b>；' +
+    '天盘' + r.gr + '临地盘 <b>' + r.dp + '</b> → 天将<b>' + (r.shun ? '顺行' : '逆行') + '</b>。';
+  bindPan($('#labPan'));
+  if (typeof window.labFullRender === 'function') window.labFullRender(gan + $('#s-zhi').value, yj, zs);   // 四课三传与成格／毕法初判，见下面 labFullRender
+}
+
+/* 起盘台的成格／毕法判定在 pan-detect.js（40 KB，_tools/_mk_detect.py 生成），只在起盘台用——按需加载，带 ?v=。 */
+var PD = window.PanDetect || null, _pdLoading = null;
+function needDetect() {
+  if (PD) return Promise.resolve(PD);
+  if (_pdLoading) return _pdLoading;
+  _pdLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'pan-detect.js?v=' + VER;
+    el.onload = function () { PD = window.PanDetect; res(PD); };
+    el.onerror = function () { _pdLoading = null; rej(new Error('判定脚本加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _pdLoading;
+}
+/* ── 起盘台下半：四课三传＋课体＋格局＋毕法／八煞九宝初判 ──
+   旧版六壬神课 App 的「自选起课器」并入。⚠️ 只列程序能判准的条目（App 原则：绝不含糊断）；
+   有些格还要年命、太岁才判得全，这里没输入这些，命中的也只是「盘面条件成立」。 */
+window.labFullRender = function (rgz, yj, zs) {
+  var box = $('#labFull'); if (!box) return;
+  if (!PD) { needDetect().then(function () { window.labFullRender(rgz, yj, zs); }); return; }
+  var st = PD.makeState(rgz, yj, zs);
+  if (!st) { box.innerHTML = ''; return; }
+  var h = '<div class="card"><div class="dke"><em>四课</em><table><tr>' + st.sk.slice().reverse().map(function (c, i) {
+    return '<td><span class="n">第' + '四三二一'.charAt(i) + '课</span><b>' + c.s + '</b><i>' + c.x + '</i></td>';
+  }).join('') + '</tr></table></div>' +
+    '<p style="margin:10px 0 4px"><b>三传</b>　初 <b>' + st.cc + '</b> → 中 <b>' + st.zc + '</b> → 末 <b>' + st.mc + '</b>　<span class="muted">' + esc(st.mt) + '</span></p>' +
+    '<p class="muted" style="margin:0">旬空：' + st.xi.xun + ' ' + st.xi.k.join('') + '</p></div>';
+  var hits = PD.k64Detect(st);
+  h += '<div class="card"><b>本盘成格</b>（六十四课经，程序初判）<div class="chips" style="margin-top:6px">' +
+    (hits.length ? hits.map(function (n) { return '<span class="chip">' + esc(n) + '</span>'; }).join('') : '<span class="muted">无</span>') + '</div></div>';
+  var bf = PD.bfDetect(st);
+  h += '<div class="card"><b>可程序判定的毕法</b>' + (bf.length ? bf.map(function (r) {
+    return '<p style="margin:6px 0"><b>' + esc(r[0]) + '</b>　' + esc(r[1]) + '</p>';
+  }).join('') : '<p class="muted">本课没有命中能程序判定的毕法格局，到「毕法赋」按课体逐条对照。</p>') + '</div>';
+  var bj = PD.bjDetect(st);
+  if (bj && (bj.sha.length || bj.bao.length)) {
+    h += '<div class="card"><b>八煞九宝</b>' +
+      (bj.sha.length ? '<p style="margin:6px 0"><span class="muted">八煞：</span>' + bj.sha.map(function (x) { return esc(x.n + '·' + x.d); }).join('；') + '</p>' : '') +
+      (bj.bao.length ? '<p style="margin:6px 0"><span class="muted">九宝：</span>' + bj.bao.map(function (x) { return esc(x.n + '·' + x.d); }).join('；') + '</p>' : '') + '</div>';
+  }
+  box.innerHTML = h;
+};
+
+/* ── 吸顶盘 ───────────────────────────────────────────
+   八字四柱压成一条钉在顶栏下就行，六壬方盘 330px 见方，照搬会吃掉半屏。
+   所以吸顶的是**四课＋三传**——讲解里指代的几乎都是这些（发用／支上神／日上神／中传），
+   天地盘反而查得少；要看全盘点一下这条就弹出来。
+   ⚠️ 纯 CSS position:sticky，**绝不加"滚过才显示"的开关**：IntersectionObserver
+      在套壳 iframe 里时灵时不灵，scroll 事件在 iframe 内编程滚动压根不触发，而 sticky 一直是好的。 */
+function buildStickyPan(body) {
+  var old = $('#stickyPan'); if (old) old.remove();
+  var ke = body.querySelector('.sike'), sc = body.querySelector('.sanchuan'),
+      pan = body.querySelector('.pan');
+  if (!ke && !sc) return;
+  var box = document.createElement('div');
+  box.id = 'stickyPan';
+  box.className = 'stickypan';
+  var h = '';
+  if (ke) {
+    var cells = [].slice.call(ke.querySelectorAll('.ke')).map(function (k) {
+      var t = k.querySelector('.tj'), u = k.querySelector('.up'), d = k.querySelector('.dn');
+      return '<i>' + (t ? t.textContent : '') + '</i>' +
+        (u ? u.outerHTML : '') + '<s>' + (d ? d.textContent : '') + '</s>';
+    });
+    h += '<div class="sp-ke"><em>四课</em>' +
+      cells.map(function (c, i) {
+        return '<span class="spc' + (i === 3 ? ' day' : '') + '">' + c + '</span>';
+      }).join('') + '</div>';
+  }
+  if (sc) {
+    var zs = [].slice.call(sc.querySelectorAll('.cr .z')).map(function (z) { return z.outerHTML; });
+    h += '<div class="sp-sc"><em>三传</em>' + zs.join('<b>›</b>') + '</div>';
+  }
+  h += '<span class="sp-more">' + (pan ? '全盘' : '') + '</span>';
+  box.innerHTML = h;
+  body.insertBefore(box, body.firstChild.nextSibling || body.firstChild);
+  box.onclick = function () { showPanSheet(body); };
+}
+function showPanSheet(body) {
+  var mask = $('#tocMask'), box = $('.tocbox', mask);
+  var parts = ['<div class="toch">本课课盘</div>'];
+  [].slice.call(body.querySelectorAll('.panwrap, .sike, .sanchuan')).forEach(function (el) {
+    parts.push(el.outerHTML);
+  });
+  box.innerHTML = parts.join('');
+  mask.classList.add('on');
+  bindPan(box);
+}
+
+/* 课内目录：一课上万字，没这个只能靠搜 */
+function buildToc(l) {
+  // ⚠️ 目录与「全盘」共用这一个浮层，各自重建整块内容——
+  //    早先目录容器是写死在 html 里的，点过全盘后它就被覆盖掉，再点目录直接崩。
+  var box = $('.tocbox');
+  var hs = (l.heads || []);
+  box.innerHTML = '<div class="toch">本课目录</div><div id="tocList">' + (hs.length
+    ? hs.map(function (h) { return '<button class="toci" data-a="' + h.a + '">' + h.t + '</button>'; }).join('')
+    : '<p class="muted">本课没有分节。</p>') + '</div>';
+  $$('.toci', box).forEach(function (b) {
+    b.onclick = function () {
+      $('#tocMask').classList.remove('on');
+      var el = document.getElementById(b.dataset.a);
+      if (el) el.scrollIntoView({ block: 'start' });
+    };
+  });
+}
+
+/* 正文里的式盘：点一格，中间说出这一格怎么读 */
+function bindPan(root) {
+  $$('.pan .gong', root).forEach(function (g) {
+    g.onclick = function () {
+      var p = g.closest('.pan'), mid = $('.panmid', p);
+      $$('.gong', p).forEach(function (x) { x.classList.remove('hi'); });
+      g.classList.add('hi');
+      if (!mid) return;
+      if (!mid.dataset.orig) mid.dataset.orig = mid.innerHTML;
+      var tp = $('.tp', g).textContent, dp = $('.dp', g).textContent, tj = $('.tj', g).textContent;
+      mid.innerHTML = tp ? ('<b style="color:var(--ink)">' + tp + ' 加 ' + dp + '</b>' +
+        (tj ? '<br>乘 ' + (TJFULL[tj] || tj) : '')) : mid.dataset.orig;
+    };
+  });
+}
+function bindDoc(root) {
+  bindPan(root);
+  // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
+  //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
+  var EXTRA_ROUTE = { '93': ['jinsuo', null], '94': ['extra', 'liuyuan'], '95': ['extra', 'bayao'],
+                      '96': ['xflist', null], '97': ['bflist', null],
+                      '98': ['gelist', null], '99': ['qlist', null] };
+  $$('a.wiki', root).forEach(function (a) {
+    a.onclick = function () {
+      var t = a.dataset.wiki || '', m = t.match(/^(\d\d)-/);
+      if (!m) return;
+      var r = EXTRA_ROUTE[m[1]];
+      if (!r && /^(8\d|9[0-2])$/.test(m[1])) r = ['extra', 'x' + m[1]];   // App 存档 80–92
+      if (r) { show(r[0], r[1]); return; }
+      var id = 'L' + m[1];
+      if ((M.list || []).some(function (x) { return x.id === id; })) show('lesson', id);
+    };
+  });
+}
+
+RENDER.ref = function () {
+  var box = $('#rq');
+  if (!box._bound) {
+    box._bound = true;
+    var t = null;
+    box.oninput = function () { clearTimeout(t); t = setTimeout(paintRef, 160); };
+  }
+  paintRef();
+};
+function paintRef() {
+  // 数据已在手就同步画，别让读者看见一帧空白（与课文、搜索的处理一致）
+  if (window.DATA_REF) { renderRef(window.DATA_REF); return; }
+  $('#refList').innerHTML = '<p class="muted">正在取速查表…</p>';
+  needRef().then(renderRef).catch(function () {
+    $('#refList').innerHTML = '<p class="muted">速查表加载失败，检查网络后重试。</p>';
+  });
+}
+function renderRef(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) {
+      return (r.name + r.sec + r.lesson + r.text).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) { out.innerHTML = '<p class="muted">没找到这张表。换个词试试。</p>'; return; }
+  var html = '', cur2 = -1;
+  hit.forEach(function (r) {
+    if (r.num !== cur2) {
+      cur2 = r.num;
+      html += '<div class="refg"><i>' + r.num + '</i><span>' + r.lesson + '</span></div>';
+    }
+    html += '<div class="refi"><button class="refh"><b>' + r.name +
+      '</b><span>' + r.sec + '</span></button><div class="refb">' + r.html +
+      '<button class="refj" data-id="L' + ('0' + r.num).slice(-2) + '">到第 ' + r.num + ' 课看讲解 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  $$('.refi', out).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () {
+      d.classList.toggle('open');
+      if (d.classList.contains('open')) bindPan(d);
+    };
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show('lesson', j.dataset.id); };
+  });
+}
+
+/* ── 搜索 ─────────────────────────────────────────────
+   1) 一课里的每一处都列出（上限 4 条），多的标「另有 N 处」
+   2) 点结果滚到那一处并高亮，不是回到课文顶部
+   3) 空格分隔＝多个词都要出现 */
+RENDER.search = function () {
+  var box = $('#q');
+  setTimeout(function () { box.focus(); }, 60);
+  if (box._bound) return;
+  box._bound = true;
+  var t = null;
+  box.oninput = function () { clearTimeout(t); t = setTimeout(runSearch, 160); };
+};
+/* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
+   此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
+   ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
+var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '象法'], _srcStarted = false;
+/* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
+function startSources(onMore) {
+  if (_srcStarted) return; _srcStarted = true;
+  var add = function (fn) { return function (d) { if (d) { fn(d); onMore(); } }; };
+  var put = function (g, x) { (SRC[g] = SRC[g] || []).push(x); };
+  needCourse().then(add(function (r) { SRC['课文'] = []; r.forEach(function (l) { put('课文', { g: '课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['lesson', l.id], body: '#lessonBody' }); }); })).catch(function () {});
+  needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
+  needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
+  needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
+  needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
+  needXf().then(add(function (r) { (r.items || []).forEach(function (x) { put('象法', { g: '象法', t: x.name, text: x.name + '　' + x.text, go: ['xflist', null], xf: x.name }); }); })).catch(function () {});
+}
+function srcList() {
+  var out = [];
+  SRC_ORDER.forEach(function (g) { out = out.concat(SRC[g] || []); });
+  return out;
+}
+function runSearch() {
+  var kw = $('#q').value.trim();
+  var out = $('#sres');
+  if (kw.length < 1) { out.innerHTML = ''; return; }
+  startSources(function () { if ($('#q').value.trim()) paintSearch(srcList(), $('#q').value.trim().split(/\s+/).filter(Boolean)); });
+  var words = kw.split(/\s+/).filter(Boolean);
+  if (!srcList().length) { out.innerHTML = '<p class="muted">正在取全站内容…</p>'; return; }
+  paintSearch(srcList(), words);
+}
+function paintSearch(all, words) {
+  var out = $('#sres'), html = '', g = '', nDoc = 0, cnt = {};
+  (all || []).forEach(function (d) {
+    var txt = d.text || '';
+    if (!words.every(function (w) { return txt.indexOf(w) >= 0; })) return;
+    cnt[d.g] = (cnt[d.g] || 0) + 1;
+    if (cnt[d.g] > 30) return;                       // 每类最多列 30 篇，别把页面撑爆
+    nDoc++;
+    if (d.g !== g) { g = d.g; html += '<div class="refg">' + esc(g) + '</div>'; }
+    var w0 = words[0], idx = [], p = txt.indexOf(w0);
+    while (p >= 0 && idx.length < 40) { idx.push(p); p = txt.indexOf(w0, p + w0.length); }
+    var order = idx.slice();
+    // 多词时优先显示其他词也在附近的那几处，否则只看得见第一个词、看不出关联
+    if (words.length > 1) {
+      order.sort(function (a, b) { return near(txt, b, words) - near(txt, a, words); });
+    }
+    var per = d.g === '课文' ? 4 : 2;
+    order.slice(0, per).forEach(function (at) {
+      var s = Math.max(0, at - 26), frag = txt.slice(s, at + 44);
+      words.forEach(function (w) { frag = frag.split(w).join('\x01' + w + '\x02'); });
+      frag = frag.replace(/[<>&]/g, function (c) {
+        return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c];
+      }).split('\x01').join('<em>').split('\x02').join('</em>');
+      html += '<button class="sr" data-k="' + all.indexOf(d) + '"' + (d.go[0] === 'lesson' ? ' data-id="' + d.go[1] + '"' : '') + ' data-kw="' + esc(w0) +
+        '" data-occ="' + idx.indexOf(at) + '"><b>' + esc(d.t) + '</b><span>…' + frag + '…</span></button>';
+    });
+    if (idx.length > per) html += '<p class="muted">这里另有 ' + (idx.length - per) + ' 处</p>';
+  });
+  out.innerHTML = html || '<p class="muted">没找到。换个词试试，或用空格分成两个词。</p>';
+  $$('.sr', out).forEach(function (b) {
+    b.onclick = function () {
+      var d = all[+b.dataset.k], find = { kw: b.dataset.kw, occ: +b.dataset.occ };
+      if (d.go[0] === 'lesson') { show('lesson', d.go[1], find); return; }
+      if (d.xf) {                                    // 象法屏自带筛选框：直接把条目名填进去
+        show('xflist'); var q = $('#xq'); if (q) { q.value = d.xf; paintXf(); }
+        return;
+      }
+      show(d.go[0], d.go[1]);
+      locateWhenReady(d.body, find);
+    };
+  });
+}
+/* 附篇、格局、毕法、课例这几屏是异步铺内容的：等正文里出现关键词再定位。 */
+function locateWhenReady(sel, find) {
+  var n = 0, iv = setInterval(function () {
+    var el = $(sel);
+    if (el && el.textContent.indexOf(find.kw) >= 0) { clearInterval(iv); locate(el, find); }
+    else if (++n > 40) clearInterval(iv);
+  }, 50);
+}
+function near(txt, at, words) {
+  var s = txt.slice(Math.max(0, at - 60), at + 60), n = 0;
+  words.forEach(function (w) { if (s.indexOf(w) >= 0) n++; });
+  return n;
+}
+/* 把关键词第 occ 次出现的地方滚到视野中并高亮。
+   关键词常被行内标签劈开（如 巳<strong>申</strong>合），所以先把文本节点
+   拼成一条串定位，再用 Range 映射回 DOM。 */
+function locate(root, find) {
+  var kw = find.kw, occ = find.occ || 0;
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  var nodes = [], full = '', n;
+  while ((n = walker.nextNode())) { nodes.push({ n: n, at: full.length }); full += n.nodeValue; }
+  var p = -1;
+  for (var k = 0; k <= occ; k++) p = full.indexOf(kw, p + 1);
+  if (p < 0) { window.scrollTo(0, 0); return; }
+  var start = null, end = null;
+  nodes.forEach(function (it) {
+    var a = it.at, b = it.at + it.n.nodeValue.length;
+    if (start === null && p >= a && p < b) start = { node: it.n, off: p - a };
+    if (end === null && p + kw.length > a && p + kw.length <= b) end = { node: it.n, off: p + kw.length - a };
+  });
+  if (!start) { window.scrollTo(0, 0); return; }
+  try {
+    var r = document.createRange();
+    r.setStart(start.node, start.off);
+    r.setEnd(end ? end.node : start.node, end ? end.off : start.node.nodeValue.length);
+    var mk = document.createElement('mark');
+    mk.className = 'hit';
+    r.surroundContents(mk);   // 跨节点会抛错 → 退化成滚到该段
+    mk.scrollIntoView({ block: 'center' });
+  } catch (e) {
+    var el = start.node.parentElement;
+    if (el) el.scrollIntoView({ block: 'center' });
+  }
+}
+
+/* ── 阅读进度 ─────────────────────────────────────────── */
+var _tick = null;
+window.addEventListener('scroll', function () {
+  if (cur.scr !== 'lesson' || !cur.id) return;
+  clearTimeout(_tick);
+  _tick = setTimeout(function () {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = h > 0 ? Math.min(100, Math.round(window.scrollY / h * 100)) : 100;
+    var r = load(K.read, {});
+    if (pct > (r[cur.id] || 0)) { r[cur.id] = pct; save(K.read, r); }
+    var ps = load(K.pos, {}); ps[cur.id] = window.scrollY; save(K.pos, ps);
+  }, 220);
+}, { passive: true });
+
+/* ── 主题 ─────────────────────────────────────────────── */
+// 两套主题照「六壬神课」App：薰衣草（默认）／朱雀红，按钮显示的是「点了会切到哪套」
+var TNAME = { lav: '薰衣草', red: '朱雀红' };
+function applyTheme(t) {
+  t = t === 'red' ? 'red' : 'lav';
+  document.documentElement.setAttribute('data-theme', t);
+  var other = t === 'red' ? 'lav' : 'red';
+  $('#btnTheme').textContent = TNAME[other];
+  $('#btnTheme').setAttribute('aria-label', '配色：现在是' + TNAME[t] + '，点击切到' + TNAME[other]);
+  var mc = document.querySelector('meta[name="theme-color"]');
+  if (mc) mc.setAttribute('content', t === 'red' ? '#F5F0E6' : '#F3F0F9');
+}
+$('#btnTheme').onclick = function () {
+  var next = load(K.theme, null) === 'red' ? 'lav' : 'red';
+  save(K.theme, next);
+  applyTheme(next);
+};
+applyTheme(load(K.theme, null));
+
+/* ── 起动 ─────────────────────────────────────────────── */
+$('#btnBack').onclick = function () { history.back(); };
+$('#btnSearch').onclick = function () { show('search', null); };
+$('#fabToc').onclick = function () {
+  var body = $('#lessonBody'), l = lessonById(cur.id);
+  if (l) buildToc(l);
+  $('#tocMask').classList.add('on');
+};
+$('#tocMask').onclick = function (e) { if (e.target === $('#tocMask')) $('#tocMask').classList.remove('on'); };
+$$('.mi[data-go]').forEach(function (b) {
+  // data-id 供「附篇」用——同一个 extra 屏要靠 id 分辨是源流还是八要素
+  b.onclick = function () { show(b.dataset.go, b.dataset.id || null); };
+});
+/* 底栏：四个 tab 都是根屏。再点当前 tab＝回到顶部；跨 tab 切换把历史栈压回栈底，
+   免得来回切堆出一长串历史（与命理精讲同一做法）。 */
+$$('.tabbar button').forEach(function (b) {
+  b.onclick = function () {
+    var t = b.dataset.tab;
+    if (t === cur.scr) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    stack = [{ scr: t, id: null }];
+    pos = 0;
+    history.replaceState({ i: 0 }, '', '');
+    _apply(t, null);
+  };
+});
+if (window.self !== window.top) document.documentElement.classList.add('wst-frame-guard');
+history.replaceState({ i: 0 }, '', '');
+stack = [{ scr: 'home', id: null }];
+pos = 0;
+_apply('home', null);
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+
+// 测试钩子（smoke.js 用）：首页不再有「起课练习」入口（并进综合训练），测试直接走路由
+window.__go = function (scr, id) { show(scr, id || null); };
