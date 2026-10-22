@@ -369,3 +369,15 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 /* 主题切换按钮：照 App 的胶囊样式，字是「点了会切到哪套」 */
 .act.theme-tog{width:auto;height:24px;padding:0 10px;border-radius:12px;border:1px solid var(--line);
   font-size:11px;letter-spacing:1px;color:var(--ink3);white-space:nowrap}
+/* 综合训练（2026-10-22 自六壬神课 App 迁入） */
+.tq{font-size:16px;font-weight:600;margin:12px 0 10px;line-height:1.7}
+.topts{display:grid;gap:8px}
+.topt{all:unset;cursor:pointer;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);line-height:1.6;font-size:15px}
+.topt.y{border-color:var(--green);background:rgba(46,125,90,.1)}
+.topt.n{border-color:var(--red);background:var(--red-s)}
+.ttab{width:100%;border-collapse:collapse}.ttab td,.ttab th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.big{font-size:32px;font-family:var(--f-disp);color:var(--blue)}
+#tCats .chip.sel{background:var(--gold-s);color:var(--gold);border-color:var(--gold)}
+#tCats .chip{cursor:pointer}
+#tCats,#labFull .chips{display:flex;flex-wrap:wrap;gap:6px}
+#tCats .chip,#labFull .chip{white-space:nowrap;padding:3px 10px}

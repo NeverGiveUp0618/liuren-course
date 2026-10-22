@@ -66,8 +66,9 @@
       <button class="mi" data-go="outline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>
 
       <div class="mgrp">练 · 自己动手</div>
+      <button class="mi" data-go="train" data-id="menu"><b>综合训练</b><span>十三类客观题 · 今日挑战、错题本、掌握度</span></button>
       <button class="mi" data-go="drill"><b>起课练习</b><span>给你一张盘，自己起三传 · 当场判对错</span></button>
-      <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将与占时，天盘实时转</span></button>
+      <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将、占时、日干支 · 全盘四课三传＋格局毕法初判</span></button>
       <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
 
       <div class="mgrp">查 · 断课时随用随翻</div>
@@ -132,21 +133,24 @@
   </section>
   <section class="screen" id="s-bifa"><div id="bfBody" class="doc"></div></section>
   <section class="screen" id="s-ge"><div id="geBody" class="doc"></div></section>
+  <section class="screen" id="s-train"><div id="trainBody"></div></section>
   <section class="screen" id="s-drill"><div id="drillBody"></div></section>
 
   <section class="screen" id="s-outline"><div id="outlineBody" class="doc"></div></section>
 
   <!-- 起盘台 -->
   <section class="screen" id="s-lab">
-    <p class="lead">第 2、3 课的两个动作——<b>月将加时</b>起天盘、<b>贵人落点定顺逆</b>排天将——在这里可以直接拨着看。</p>
+    <p class="lead">拨月将、占时、日干支，天盘天将实时转，下面接着排出四课三传、课体与可判的格局（原「六壬神课」自选起课器并入）。</p>
     <div class="ctrl">
       <div class="fld"><label for="s-yj">月将</label><select id="s-yj"></select></div>
       <div class="fld"><label for="s-zs">占时</label><select id="s-zs"></select></div>
       <div class="fld"><label for="s-gan">日干</label><select id="s-gan"></select></div>
+      <div class="fld"><label for="s-zhi">日支</label><select id="s-zhi"></select></div>
     </div>
     <div id="labPan"></div>
     <div class="readout" id="labRead"></div>
-    <blockquote class="warn">⚠️ 只做天盘与天将两步，<b>不起四课三传</b>——那两步是第 4 课和第 5、6 课的内容。</blockquote>
+    <div id="labFull"></div>
+    <blockquote class="warn">⚠️ 四课三传按《通解》发用取上神（第 5、6 课）；格局与毕法只列程序能判准的，详断仍查「格局」「毕法赋」。还没学到第 4–6 课的，先只看上面的天盘天将。</blockquote>
   </section>
 
   <!-- 搜索 -->
@@ -177,6 +181,8 @@
 
 <script src="data/data-meta.js"></script>
 <script src="engine.js"></script>
+<script src="train-core.js"></script>
 <script src="app.js"></script>
+<script src="train.js"></script>
 </body>
 </html>

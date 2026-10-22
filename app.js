@@ -170,7 +170,7 @@ var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
                gelist: '格局详解', ge: '格局',
-               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: 'App 存档',
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: 'App 存档', train: '综合训练',
                jinsuo: '金锁玉匙' };
 var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
@@ -927,9 +927,19 @@ RENDER.lab = function () {
   });
   '甲乙丙丁戊己庚辛壬癸'.split('').forEach(function (g) { $('#s-gan').add(new Option(g + '日', g)); });
   $('#s-yj').value = '未'; $('#s-zs').value = '巳'; $('#s-gan').value = '丙';
-  ['#s-yj', '#s-zs', '#s-gan'].forEach(function (s) { $(s).onchange = labUpdate; });
+  labZhiOpts();
+  // ⚠️ 用 onchange 属性不用 addEventListener：smoke.js 直接调 .onchange() 驱动
+  ['#s-yj', '#s-zs', '#s-zhi'].forEach(function (s) { $(s).onchange = labUpdate; });
+  $('#s-gan').onchange = function () { labZhiOpts(); labUpdate(); };
   labUpdate();
 };
+// 日支只给与日干同阴阳的六个（六十甲子里没有阴阳错配的日子）
+function labZhiOpts() {
+  var g = $('#s-gan').value, gi = '甲乙丙丁戊己庚辛壬癸'.indexOf(g), old = $('#s-zhi').value;
+  $('#s-zhi').innerHTML = '';
+  Z.forEach(function (z, i) { if (i % 2 === gi % 2) $('#s-zhi').add(new Option(z, z)); });
+  if (old && Z.indexOf(old) % 2 === gi % 2) $('#s-zhi').value = old;
+}
 function labUpdate() {
   var yj = $('#s-yj').value, zs = $('#s-zs').value, gan = $('#s-gan').value;
   var tp = tianpan(yj, zs), r = tianjiang(gan, zs, tp);
@@ -943,6 +953,7 @@ function labUpdate() {
     (zhou ? '卯至申' : '酉至寅') + '）→ 用' + (zhou ? '昼' : '夜') + '贵 <b>' + r.gr + '</b>；' +
     '天盘' + r.gr + '临地盘 <b>' + r.dp + '</b> → 天将<b>' + (r.shun ? '顺行' : '逆行') + '</b>。';
   bindPan($('#labPan'));
+  if (typeof window.labFullRender === 'function') window.labFullRender(gan + $('#s-zhi').value, yj, zs);   // 四课三传与初判，见 train.js
 }
 
 /* ── 吸顶盘 ───────────────────────────────────────────

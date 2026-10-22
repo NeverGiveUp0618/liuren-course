@@ -116,7 +116,7 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 13, `入口 13 项一个不少（实得 ${items.length}）`);
+  ok(items.length === 14, `入口 14 项一个不少（实得 ${items.length}）`);
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
   let seen = 0, orphan = 0;
