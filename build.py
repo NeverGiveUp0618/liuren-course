@@ -271,8 +271,8 @@ def build_xf():
                               'src': em.group(3).strip()})
                 cnt += 1
         libs.append({'name': lib, 'n': cnt})
-    if len(items) != 289:
-        sys.exit('✗ 象法条目数 %d，应为 289（106+113+46+12+12）——解析器可能吞了条目'
+    if len(items) != 295:
+        sys.exit('✗ 象法条目数 %d，应为 295（106+113+46+12+12＋天时6，2026-10-22 并入）——解析器可能吞了条目'
                  % len(items))
     return libs, items
 

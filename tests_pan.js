@@ -39,7 +39,9 @@ const sleep = n => new Promise(r => setTimeout(r, n));
   // 全站搜
   w.__go('search'); const q = $('#q');
   q.value = '晴雨'; q.dispatchEvent(new w.Event('input')); await sleep(400);
-  ok($$('#sres .refg').some(x => /附篇|旧版/.test(x.textContent)), '搜「晴雨」能搜到附篇');
+  ok($$('#sres .refg').some(x => x.textContent === '象法'), '搜「晴雨」能搜到象法里并入的天时晴雨');
+  q.value = '口诀'; q.dispatchEvent(new w.Event('input')); await sleep(300);
+  ok($$('#sres .refg').some(x => /旧版/.test(x.textContent)), '附篇（旧版资料）也搜得到');
   q.value = '游子课'; q.dispatchEvent(new w.Event('input')); await sleep(300);
   ok($$('#sres .refg').some(x => x.textContent === '格局'), '搜「游子课」能搜到格局');
   w.__go('course'); await sleep(30);

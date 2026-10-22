@@ -47,8 +47,8 @@ console.log('\n== 象法速查 ==');
   //    不是对象字面量（DATA_BIFA 是数组，所以那边不加也没事）。
   const X = eval('(' + fs.readFileSync(xp, 'utf8')
     .replace(/^[\s\S]*?DATA_XF\s*=/, '').replace(/;\s*$/, '') + ')');
-  ok(X.items.length === 289, `象法 289 条（实得 ${X.items.length}）`);
-  ok(X.libs.length === 5, '五库');
+  ok(X.items.length === 295, `象法 295 条（含 2026-10-22 并入的天时 6 条）（实得 ${X.items.length}）`);
+  ok(X.libs.length === 6, '六库（2026-10-22 并入天时晴雨）');
   const byLib = {}; X.items.forEach(i => byLib[i.lib] = (byLib[i.lib] || 0) + 1);
   ok(byLib['取象法则'] === 106 && byLib['分类类神'] === 113
      && byLib['百章歌断诀'] === 46, '前三库 106/113/46');
@@ -58,7 +58,7 @@ console.log('\n== 象法速查 ==');
      '两套白话类象各 12 条（08/09 课指向的那份清单）');
   ok(X.libs.every(l => l.n === byLib[l.name]), '库计数与实际条数一致');
   ok(X.items.every(i => i.name && i.grp && i.html && i.src), '每条都有名/组/正文/出处');
-  ok(M.counts.xf === 289, 'meta.counts.xf = 289（首页菜单的分母）');
+  ok(M.counts.xf === 295, 'meta.counts.xf = 295（首页菜单的分母）');
   // ⚠️ FX_CATS 是练习入口（fn:startZM 这类函数引用），不是内容——不该被迁进来
   ok(!/startZM|startSC|startZL/.test(fs.readFileSync(xp, 'utf8')),
      '没有把练习入口函数当内容迁进来');
@@ -142,7 +142,7 @@ console.log('\n== 附篇 ==');
   const E = eval(fs.readFileSync(ep, 'utf8')
     .replace(/^[\s\S]*?DATA_EXTRA\s*=/, '').replace(/;\s*$/, ''));
   // 2026-10-22 起另有 80–91「六壬神课 App 存档」12 篇，id＝x+编号
-  ok(E.length === 14, `附篇 14 篇＝源流·八要素＋App 存档 12（实得 ${E.length}）`);
+  ok(E.length === 6, `附篇 6 篇＝源流·八要素＋旧版 4（入门与原理、速查合编、口诀、八煞九宝；其余已并进象法/毕法，实得 ${E.length}）`);
   ok(E.filter(x => /^x\d\d$/.test(x.id)).every(x => /迁自旧版「六壬神课」App/.test(x.text) && x.line),
      'App 存档每篇都注明迁自 App，且有一句话简介');
   ok(E.every(x => x.id && x.title && x.html), '每篇都有 id/标题/正文');

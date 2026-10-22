@@ -16,7 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 GAME = os.path.join(os.path.dirname(ROOT), 'liuren-game', 'index.html')
 OUTD = os.path.join(ROOT, 'content')
-G = open(GAME, encoding='utf-8').read()
+# 旧版 App 已删（2026-10-22），源码从 liuren-game 的 git 历史里取
+G = subprocess.run(['git', '-C', os.path.dirname(GAME), 'show', '0b3b228~1:legacy.html'],
+                   capture_output=True, text=True, check=True).stdout
 
 
 # ── 屏的起止 ──────────────────────────────────────────────
