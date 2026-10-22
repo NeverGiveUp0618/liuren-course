@@ -116,7 +116,7 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}）`);
+  ok(items.length === 13, `入口 13 项一个不少（实得 ${items.length}）`);
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
   let seen = 0, orphan = 0;
@@ -139,9 +139,12 @@ console.log('\n== 附篇 ==');
   if (!fs.existsSync(ep)) return;
   const E = eval(fs.readFileSync(ep, 'utf8')
     .replace(/^[\s\S]*?DATA_EXTRA\s*=/, '').replace(/;\s*$/, ''));
-  ok(E.length === 2, `附篇 2 篇（实得 ${E.length}）`);
+  // 2026-10-22 起另有 80–91「六壬神课 App 存档」12 篇，id＝x+编号
+  ok(E.length === 14, `附篇 14 篇＝源流·八要素＋App 存档 12（实得 ${E.length}）`);
+  ok(E.filter(x => /^x\d\d$/.test(x.id)).every(x => /迁自「六壬神课」App/.test(x.text) && x.line),
+     'App 存档每篇都注明迁自 App，且有一句话简介');
   ok(E.every(x => x.id && x.title && x.html), '每篇都有 id/标题/正文');
-  const ids = E.map(x => x.id).sort().join(',');
+  const ids = E.map(x => x.id).filter(i => !/^x/.test(i)).sort().join(',');
   ok(ids === 'bayao,liuyuan', `id 为 bayao,liuyuan（实得 ${ids}）`);
   const bay = E.filter(x => x.id === 'bayao')[0];
   ok(bay && bay.heads.length === 8, '课式八要素正好 8 项');
@@ -180,12 +183,12 @@ console.log('\n== 毕法赋 ==');
 })();
 
 console.log('\n== 数据与内容源一致 ==');
-// ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 90 的都是附篇。
+// ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 80 的都是附篇（2026-10-22 从 90 放宽）。
 //    与 build.py 的 build_lessons 同一条规则——这样以后加 95- 之类不必两边改。
 //    （先前写死成 (00|98|99) 的清单，加一次附篇就红一次。）
 const mdFiles = fs.readdirSync(path.join(dir, 'content'))
   .filter(f => /^\d\d-/.test(f))
-  .filter(f => { const n = +f.slice(0, 2); return n !== 0 && n < 90; });
+  .filter(f => { const n = +f.slice(0, 2); return n !== 0 && n < 80; });
 ok(C.length === mdFiles.length, `课数与 content/ 的 md 数一致（${C.length}）`);
 ok(M.counts.lesson === C.length, 'meta 的课数与课文数一致');
 ok(M.plan.length >= C.length, `总目录计划表 ${M.plan.length} 课 ≥ 已成 ${C.length} 课`);

@@ -170,7 +170,7 @@ var TITLES = { home: '六壬课程', course: '课程', lesson: '', outline: '学
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例', drill: '起课练习',
                gelist: '格局详解', ge: '格局',
-               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇',
+               bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: 'App 存档',
                jinsuo: '金锁玉匙' };
 var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
@@ -523,6 +523,22 @@ function paintExtra(E, id) {
   $('#ttl').textContent = it.title.replace(/^大六壬\s*·\s*/, '');
   $('#extraBody').innerHTML = it.html;
 }
+
+/* ── App 存档（80–92）列表 ─────────────────────────────
+   「六壬神课」App 2026-10-22 退役，还没进课程的屏与数据整体收成附篇。
+   ⚠️ 多与课文重复——每篇开头写了与哪几课重复、以课文为准。 */
+RENDER.xarch = function () {
+  var box = $('#xarchList');
+  box.innerHTML = '<div class="muted center">载入中…</div>';
+  needExtra().then(function (E) {
+    var xs = (E || []).filter(function (x) { return /^x\d\d$/.test(x.id); });
+    box.innerHTML = '<p class="muted">原「六壬神课」App 的内容都在这里。与课文重复的地方，以课文为准。</p>' +
+      xs.map(function (x) {
+        return '<button class="mi" data-x="' + x.id + '"><b>' + esc(x.title) + '</b><span>' + esc(x.line) + '</span></button>';
+      }).join('');
+    $$('[data-x]', box).forEach(function (b) { b.onclick = function () { show('extra', b.dataset.x); }; });
+  });
+};
 
 /* ── 象法速查 ──────────────────────────────────────────
    265 条断法规则，三库：取象法则 / 分类类神 / 百章歌断诀。
@@ -1020,6 +1036,7 @@ function bindDoc(root) {
       var t = a.dataset.wiki || '', m = t.match(/^(\d\d)-/);
       if (!m) return;
       var r = EXTRA_ROUTE[m[1]];
+      if (!r && /^(8\d|9[0-2])$/.test(m[1])) r = ['extra', 'x' + m[1]];   // App 存档 80–92
       if (r) { show(r[0], r[1]); return; }
       var id = 'L' + m[1];
       if ((M.list || []).some(function (x) { return x.id === id; })) show('lesson', id);

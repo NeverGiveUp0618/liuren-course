@@ -72,13 +72,14 @@ def parse_plan(md):
 def build_lessons(collect_md=None):
     out = []
     for fn in sorted(os.listdir(SRC)):
-        # ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 90 的都是附篇
+        # ⭐ 附篇的判定是**规则不是清单**：00 是总目录，编号 ≥ 80 的都是附篇
+        #   （2026-10-22 从 90 放宽到 80：App 退役，80–91 收「六壬神课」存档）
         #   （96 象法速查、97 毕法赋详解、98 格局详解、99 课例题库）。
         #   ⚠️ smoke.js 里有同一条规则，加附篇时两边都不用改——但改规则要一起改。
         if not fn.endswith('.md'):
             continue
         mnum = re.match(r'(\d\d)-', fn)
-        if not mnum or mnum.group(1) == '00' or int(mnum.group(1)) >= 90:
+        if not mnum or mnum.group(1) == '00' or int(mnum.group(1)) >= 80:
             continue
         m = re.match(r'^(\d\d)-(.+)\.md$', fn)
         if not m:
@@ -218,13 +219,19 @@ def build_extra():
        95 出 BYS_DATA（工具 _mk95.py）。
     """
     out = []
-    for fn, key in (('94-六壬源流.md', 'liuyuan'), ('95-课式八要素.md', 'bayao')):
+    pairs = [('94-六壬源流.md', 'liuyuan'), ('95-课式八要素.md', 'bayao')]
+    # 80–92：「六壬神课」App 退役时整体收入的存档（2026-10-22，工具 _tools/_mk_app.py）
+    pairs += [(fn, 'x' + fn[:2]) for fn in sorted(os.listdir(SRC))
+              if re.match(r'^(8\d|9[0-2])-.+\.md$', fn)]
+    for fn, key in pairs:
         fp = os.path.join(SRC, fn)
         if not os.path.exists(fp):
             continue
         md = read(fp)
         m = re.match(r'#\s*(.+)', md)
-        out.append({'id': key, 'file': fn, 'title': (m.group(1) if m else fn).strip(),
+        w = re.search(r'\*\*这是什么\*\*：(.+)', md)
+        out.append({'id': key, 'num': int(fn[:2]), 'file': fn, 'title': (m.group(1) if m else fn).strip(),
+                    'line': (w.group(1).strip() if w else ''),
                     'heads': re.findall(r'^##\s+(.+)$', md, re.M),
                     'html': mdlite.md2html(md), 'text': mdlite.strip_md(md)})
     return out
