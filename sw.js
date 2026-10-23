@@ -1,7 +1,7 @@
 /* 网络优先。⚠️ 微信 X5 内核缓存极顽固，会无视 URL 的 ?query 按路径缓存，
    缓存优先会让改完的内容长期看不到——其余几个 App 都因此改成网络优先。
    内容更新只需重跑 build.py 并 push，不必每次 bump 这里。 */
-var CACHE = 'liuren-course-v27-pathver';
+var CACHE = 'liuren-course-v28-slim';
 // 样式脚本数据都在 b/<内容哈希>/ 下（build.py 生成，防 X5 按路径缓存），路径每次构建都变，
 // 不写进预缓存——首次访问时网络优先顺手存下，离线照样能开。
 var CORE = ['./', './index.html', './manifest.json'];

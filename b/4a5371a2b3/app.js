@@ -144,6 +144,24 @@ function needJinsuo() {
   });
   return _jsLoading;
 }
+var _bodyLoading = {};
+/* ⭐ 2026-10-23：课例、毕法赋的正文按块拆进 data/q/、data/bf/，点开哪条才加载哪块。
+   列表文件里只有标题和检索文字，所以首次进列表快得多。 */
+function withBody(kind, it, cb) {
+  var B = window.BODY || {}, k = kind + it.n;
+  if (it.html || B[k]) { cb(it.html || B[k]); return; }
+  var key = kind + '/' + it.c;
+  if (!_bodyLoading[key]) {
+    _bodyLoading[key] = new Promise(function (res, rej) {
+      var el = document.createElement('script');
+      el.src = ASSET + 'data/' + key + '.js?v=' + VER;   // ⚠️ 按需加载必须带 ?v=
+      el.onload = res;
+      el.onerror = function () { _bodyLoading[key] = null; rej(new Error('正文加载失败')); };
+      document.head.appendChild(el);
+    });
+  }
+  _bodyLoading[key].then(function () { cb((window.BODY || {})[k] || ''); });
+}
 var _quizLoading = null;
 function needQuiz() {
   if (window.DATA_QUIZ) return Promise.resolve(window.DATA_QUIZ);
@@ -598,12 +616,14 @@ function paintBfOne(B, n) {
   if (!it) return;
   $('#ttl').textContent = '第 ' + it.n + ' 法 · ' + it.pian;
   var prev = B[n - 2], next = B[n];
-  $('#bfBody').innerHTML = it.html +
+  withBody('bf', it, function (html) {
+  $('#bfBody').innerHTML = html +
     '<div class="row" style="gap:8px;margin:18px 0 8px">' +
     (prev ? '<button class="btn" id="bfPrev">‹ 第 ' + prev.n + ' 法</button>' : '') +
     (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
   if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
   if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
+  });
 }
 
 /* ── 课例题库 ──────────────────────────────────────────
@@ -687,13 +707,15 @@ function paintQuiz(Q, n) {
   var seen = load(K.qseen, {}); seen[it.n] = 1; save(K.qseen, seen);
   var idx = Q.items.map(function (x) { return x.n; }).indexOf(n);
   var prev = Q.items[idx - 1], next = Q.items[idx + 1];
-  $('#quizBody').innerHTML = it.html +
+  withBody('q', it, function (html) {
+  $('#quizBody').innerHTML = html +
     '<div class="row" style="gap:8px;margin:18px 0 8px">' +
     (prev ? '<button class="btn" id="qPrev">‹ 上一例</button>' : '') +
     (next ? '<button class="btn" id="qNext">下一例 ›</button>' : '') + '</div>';
   if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
   if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
   buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+  });
 }
 
 RENDER.course = function () {
@@ -702,30 +724,43 @@ RENDER.course = function () {
   var html = '', part = '', pk = 0;
   // 每部分已读几课，写在部分标题右侧（2026-10-22 界面优化）
   var partN = {}, partDone = {};
-  (M.plan || []).forEach(function (p) {
+  // ⭐ 2026-10-23 主修／查阅分层：18 九宗门断意、19 六十四课经、20 神煞、24 毕法赋用法
+  //    是「定完课体再查」的，不在第一遍的学习路线上——收进列表底部的「进阶与查阅」，默认折起。
+  //    ⚠️ 口径写在 00 总目录「主修与查阅」那段，改这里先改那里。
+  var REF_NUMS = { 18: 1, 19: 1, 20: 1, 24: 1 };
+  var plan = (M.plan || []).filter(function (p) { return !REF_NUMS[p.num]; });
+  var refPlan = (M.plan || []).filter(function (p) { return REF_NUMS[p.num]; });
+  plan.forEach(function (p) {
     partN[p.part] = (partN[p.part] || 0) + 1;
     var l = byId[p.num]; if (l && (read[l.id] || 0) >= 90) partDone[p.part] = (partDone[p.part] || 0) + 1;
   });
-  (M.plan || []).forEach(function (p) {
+  function item(p) {
+    var l = byId[p.num];
+    if (l) {
+      var pct = read[l.id] || 0;
+      return '<button class="li' + (pct >= 90 ? ' read' : pct > 0 ? ' doing' : '') + '" data-id="' + l.id + '"><span class="n">' + p.num +
+        '</span><span class="t"><b>' + l.short + '</b><span>' + (l.line || p.line) +
+        '</span></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') +
+        '</span></button>';
+    }
+    return '<div class="li todo"><span class="n">' + p.num +
+      '</span><span class="t"><b>' + p.title + '</b><span>' + p.line +
+      '</span></span><span class="mark">待写</span></div>';
+  }
+  plan.forEach(function (p) {
     if (p.part !== part) {
       part = p.part; pk++;
       var m = /^第(.)部分\s*[·・]?\s*(.*)$/.exec(part);
       html += '<div class="part"><i>' + (m ? m[1] : pk) + '</i><span>' + esc(m ? m[2] : part) + '</span>' +
         '<em>' + (partDone[part] || 0) + ' / ' + partN[part] + '</em></div>';
     }
-    var l = byId[p.num];
-    if (l) {
-      var pct = read[l.id] || 0;
-      html += '<button class="li' + (pct >= 90 ? ' read' : pct > 0 ? ' doing' : '') + '" data-id="' + l.id + '"><span class="n">' + p.num +
-        '</span><span class="t"><b>' + l.short + '</b><span>' + (l.line || p.line) +
-        '</span></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') +
-        '</span></button>';
-    } else {
-      html += '<div class="li todo"><span class="n">' + p.num +
-        '</span><span class="t"><b>' + p.title + '</b><span>' + p.line +
-        '</span></span><span class="mark">待写</span></div>';
-    }
+    html += item(p);
   });
+  if (refPlan.length) {
+    var rd = refPlan.filter(function (p) { var l = byId[p.num]; return l && (read[l.id] || 0) >= 90; }).length;
+    html += '<details class="refgrp"><summary class="part"><i>查</i><span>进阶与查阅 · 定完课体再翻</span>' +
+      '<em>' + rd + ' / ' + refPlan.length + '</em></summary>' + refPlan.map(item).join('') + '</details>';
+  }
   // 学习路线原是首页单独一项，2026-10-22 并到课程列表顶上（首页入口精简）
   $('#courseList').innerHTML = '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
   $('#toOutline').onclick = function () { show('outline'); };
@@ -942,6 +977,8 @@ function bindDoc(root) {
     a.onclick = function () {
       var t = a.dataset.wiki || '', m = t.match(/^(\d\d)-/);
       if (!m) return;
+      var hn = t.match(/#(\d+)$/);   // 97-#12／98-#5：直达那一法、那一格
+      if (hn && (m[1] === '97' || m[1] === '98')) { show(m[1] === '97' ? 'bifa' : 'ge', +hn[1]); return; }
       var r = EXTRA_ROUTE[m[1]];
       if (!r && /^(8\d|9[0-2])$/.test(m[1])) r = ['extra', 'x' + m[1]];   // App 存档 80–92
       if (r) { show(r[0], r[1]); return; }

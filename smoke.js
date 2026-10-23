@@ -30,6 +30,9 @@ run('engine.js');            // 起课引擎（起盘台要用）
 run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按需加载，这里预置）
 run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
+// ⭐ 2026-10-23 正文拆块：课例、毕法赋的 html 在 data/q/、data/bf/，点开才加载；这里全部预置
+['q', 'bf'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
+const BODY = () => window.BODY || {};
 run('data/data-ge.js');
 run('app.js');
 const $ = s => doc.querySelector(s);
@@ -142,7 +145,9 @@ console.log('\n== 附篇 ==');
   const E = eval(fs.readFileSync(ep, 'utf8')
     .replace(/^[\s\S]*?DATA_EXTRA\s*=/, '').replace(/;\s*$/, ''));
   // 2026-10-22 起另有 80–91「六壬神课 App 存档」12 篇，id＝x+编号
-  ok(E.length === 6, `附篇 6 篇＝源流·八要素＋旧版 4（入门与原理、速查合编、口诀、八煞九宝；其余已并进象法/毕法，实得 ${E.length}）`);
+  ok(E.length === 5, `附篇 5 篇＝源流·八要素＋旧版 3（入门与原理、速查合编、口诀；八煞九宝 2026-10-23 并进第 11 课，实得 ${E.length}）`);
+  ok(/附、八煞九宝逐项详解/.test(C.find(l => l.id === "L11").html), "八煞九宝详解已并进第 11 课");
+  ok(/data-wiki="97-#12"/.test(C.find(l => l.id === "L24").html) && /data-wiki="98-#\d+"/.test(C.find(l => l.id === "L18").html), "第 24 课链到毕法、第 18 课链到格局");
   ok(E.filter(x => /^x\d\d$/.test(x.id)).every(x => /迁自旧版「六壬神课」App/.test(x.text) && x.line),
      'App 存档每篇都注明迁自 App，且有一句话简介');
   ok(E.every(x => x.id && x.title && x.html), '每篇都有 id/标题/正文');
@@ -172,7 +177,8 @@ console.log('\n== 毕法赋 ==');
   ok(B.every((f, i) => f.n === i + 1), '法号 1–100 连续');
   const ge = B.reduce((a, f) => a + f.ge.length, 0);
   ok(ge === 356, `格 356（实得 ${ge}）`);
-  ok(B.every(f => f.html && f.ju && f.pian), '每法都有 ju/pian/html');
+  ok(B.every(f => !f.html && BODY()['bf' + f.n] && f.ju && f.pian), '每法都有 ju/pian，正文在 data/bf/ 分块里');
+  ok(src.length < 700 * 1024, `毕法赋列表瘦身到 700KB 以内（实得 ${(src.length / 1024) | 0}KB）`);
   // ⚠️ 首屏 data-meta 必须带上分母，否则首页菜单显示「—」
   ok(M.counts.bifa === 100, 'meta.counts.bifa = 100（首页菜单的分母）');
   // ⭐ 口径：统一《通解》。md 里凡与原数据不符的都留了〔订正〕，别把注抹掉
@@ -519,11 +525,12 @@ async function typeSearch(kw) {
     ok(ns.every((v, i) => v === i + 1), `例号 1…${ns.length} 连续不跳号`);
     ok(Q.items.filter(x => x.star).length === M.counts.quizstar &&
        M.counts.quizstar >= 44, `入门精选 ${M.counts.quizstar} 例`);
-    ok(Q.items.every(x => x.html && x.cat && x.title), '每例都有 html／占类／标题');
+    ok(Q.items.every(x => !x.html && BODY()['q' + x.n] && x.cat && x.title), '每例都有占类／标题，正文在 data/q/ 分块里');
+    ok(fs.statSync(path.join(dir, 'data', 'data-quiz.js')).size < 900 * 1024, '课例列表瘦身到 900KB 以内');
     // ⚠️ 盘是复算的，每例都该有式盘；没有就是 md 的表格写歪了、mdlite 没认出来
-    const nopan = Q.items.filter(x => !/class="pan"/.test(x.html));
+    const nopan = Q.items.filter(x => !/class="pan"/.test(BODY()['q' + x.n]));
     ok(!nopan.length, `每例都渲染出式盘（缺 ${nopan.length} 例）`);
-    ok(Q.items.every(x => /四课/.test(x.html) && /三传/.test(x.html)), '四课与三传都在');
+    ok(Q.items.every(x => /四课/.test(BODY()['q' + x.n]) && /三传/.test(BODY()['q' + x.n])), '四课与三传都在');
     // 标签：不能出现"每例都有"的废标签（那种筛了等于没筛）
     const tc = {};
     Q.items.forEach(x => (x.tags || []).forEach(t => tc[t] = (tc[t] || 0) + 1));

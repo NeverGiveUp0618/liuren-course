@@ -424,3 +424,9 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .qbar .chip.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sbox input{border-radius:12px}
 #courseList .mi{display:block;width:100%;box-sizing:border-box}
+
+/* 2026-10-23 课程列表底部「进阶与查阅」折叠组 */
+#courseList .refgrp summary{list-style:none;cursor:pointer}
+#courseList .refgrp summary::-webkit-details-marker{display:none}
+#courseList .refgrp summary em::after{content:' ›';display:inline-block;transition:transform .2s}
+#courseList .refgrp[open] summary em::after{transform:rotate(90deg)}

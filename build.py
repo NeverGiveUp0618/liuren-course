@@ -181,7 +181,7 @@ def build_ref(lessons_md):
     for (num, name), group in seen.items():
         if len(group) > 1:
             for k, r in enumerate(group, 1):
-                r['name'] = '%s %s' % (name, '①②③④⑤⑥⑦⑧⑨'[k - 1])
+                r['name'] = '%s %s' % (name, '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳'[k - 1] if k <= 20 else str(k))
     return out
 
 
@@ -209,6 +209,67 @@ def build_ge():
     if ns != list(range(1, len(ns) + 1)):
         sys.exit('✗ 格局序号不连续：%s' % ns)
     return out
+
+
+_CN = {c: i for i, c in enumerate('〇一二三四五六七八九')}
+
+
+def _cn2n(t):
+    """一百以内的中文数：五十二、一百、十、二十"""
+    if t == '一百':
+        return 100
+    if '十' in t:
+        a, b = t.split('十')
+        return (_CN[a] if a else 1) * 10 + (_CN[b] if b else 0)
+    return _CN.get(t, 0)
+
+
+def deep_link(html, ge):
+    """课文里的「第N法」→ 毕法赋那一法；格局名（98 的条目名，带「课」字）→ 那一格。
+    ⭐ 2026-10-23：课讲用法、97/98 当查表——两边不再各讲一遍，课里点一下就到详解。
+    ⚠️ 只替换标签外的正文，不碰属性和已有链接；格名每课只链第一次出现，免得满屏是链接。"""
+    names = []
+    for g in ge:
+        for part in re.split(r'\s*/\s*', g['name']):
+            if part.endswith('课') and len(part) >= 3:
+                names.append((part, g['n']))
+    names.sort(key=lambda x: -len(x[0]))
+    pat_ge = re.compile('|'.join(re.escape(n) for n, _ in names)) if names else None
+    num = dict(names)
+    done = set()
+    out, depth = [], 0
+    for seg in re.split(r'(<[^>]+>)', html):
+        if seg.startswith('<'):
+            if re.match(r'<a[\s>]', seg):
+                depth += 1
+            elif seg.startswith('</a'):
+                depth -= 1
+            out.append(seg)
+            continue
+        if depth or not seg:
+            out.append(seg)
+            continue
+        def fa(m):
+            n = _cn2n(m.group(1))
+            if not 1 <= n <= 100:
+                return m.group(0)
+            return '<a class="wiki" data-wiki="97-#%d">%s</a>' % (n, m.group(0))
+        seg = re.sub(r'第([一二三四五六七八九十百]{1,4})法', fa, seg)
+        if pat_ge:
+            # 先把已生成的毕法链接切开，只在纯文字段里找格名
+            parts = re.split(r'(<a [^>]+>[^<]*</a>)', seg)
+            for i, t in enumerate(parts):
+                if t.startswith('<a '):
+                    continue
+                def gm(m):
+                    if m.group(0) in done:
+                        return m.group(0)
+                    done.add(m.group(0))
+                    return '<a class="wiki" data-wiki="98-#%d">%s</a>' % (num[m.group(0)], m.group(0))
+                parts[i] = pat_ge.sub(gm, t)
+            seg = ''.join(parts)
+        out.append(seg)
+    return ''.join(out)
 
 
 def build_extra():
@@ -430,6 +491,30 @@ def build_quiz():
     return cats, items
 
 
+def write_bodies(kind, items, key, chunk_of):
+    """⭐ 2026-10-23 大文件拆分：正文 html 从列表里拿出来，按块写进 data/<kind>/<块>.js，
+    点开哪条才加载哪块。列表里留标题、标签和 text（全站搜索要用）。
+    每条记下块号 c；页面里按 BODY[kind + 编号] 取正文。"""
+    d = os.path.join(OUT, kind)
+    if os.path.isdir(d):
+        for f in os.listdir(d):
+            os.remove(os.path.join(d, f))
+    os.makedirs(d, exist_ok=True)
+    chunks = {}
+    for it in items:
+        c = chunk_of(it)
+        it['c'] = c
+        chunks.setdefault(c, {})[kind + str(it[key])] = it.pop('html')
+    total = 0
+    for c, body in chunks.items():
+        p = os.path.join(d, '%s.js' % c)
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write('/* 本文件由 build.py 生成，勿手改。源：content/ */\n')
+            f.write('Object.assign(window.BODY=window.BODY||{},%s);' % json.dumps(body, ensure_ascii=False))
+        total += os.path.getsize(p)
+    return len(chunks), total
+
+
 def stamp_assets():
     """⚠️ 2026-10-22：微信 X5 无视 ?v=、按路径缓存——用户在微信里看到的整页都是旧版。
     把样式、脚本、数据包复制进 b/<内容哈希>/，index.html 改指过去：内容一变路径就变，X5 只能拿新的。
@@ -437,7 +522,8 @@ def stamp_assets():
     git 按内容去重，没变的文件换了路径也不会多占仓库。"""
     import hashlib, shutil
     files = ['style.css', 'engine.js', 'app.js', 'pan-detect.js'] + \
-            ['data/' + f for f in sorted(os.listdir(os.path.join(HERE, 'data'))) if f.endswith('.js')]
+            ['data/' + os.path.relpath(os.path.join(r, f), os.path.join(HERE, 'data'))
+             for r, _, fs in sorted(os.walk(os.path.join(HERE, 'data'))) for f in sorted(fs) if f.endswith('.js')]
     h = hashlib.md5()
     for f in files:
         h.update(f.encode()); h.update(open(os.path.join(HERE, f), 'rb').read())
@@ -512,6 +598,8 @@ def main():
     counts['ref'] = len(ref)
     ge = build_ge()
     counts['ge'] = len(ge)
+    for l in lessons:
+        l['html'] = deep_link(l['html'], ge)
     extra = build_extra()
     counts['extra'] = len(extra)
     xflibs, xfitems = build_xf()
@@ -526,6 +614,9 @@ def main():
     counts['quiz'] = len(qitems)
     counts['quizstar'] = sum(x['star'] for x in qitems)
     meta['counts'] = counts
+    qnames = [c['name'] for c in qcats]
+    nq, sq = write_bodies('q', qitems, 'n', lambda it: qnames.index(it['cat']))
+    nb, sb = write_bodies('bf', bifa, 'n', lambda it: (it['n'] - 1) // 10)
     s1 = write_js('data-course.js', 'DATA_COURSE', lessons)
     s2 = write_js('data-meta.js', 'DATA_META', meta)
     s3 = write_js('data-ref.js', 'DATA_REF', ref)
@@ -542,6 +633,7 @@ def main():
     print('  data-ref.js    %7.1f KB（速查：%d 张表）' % (s3 / 1024, len(ref)))
     print('  data-quiz.js   %7.1f KB（课例 %d，其中入门精选 %d，%d 个占类）'
           % (s4 / 1024, counts['quiz'], counts['quizstar'], len(qcats)))
+    print('  正文分块：课例 %d 块 %.1f KB／毕法 %d 块 %.1f KB（点开才加载）' % (nq, sq / 1024, nb, sb / 1024))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))
