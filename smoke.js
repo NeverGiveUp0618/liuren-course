@@ -27,6 +27,7 @@ window.Element.prototype.scrollIntoView = function () { scrolls.push('into'); };
 const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\s*/, ''));
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
+run('data/data-basic-course.js');
 run('engine.js');            // 起课引擎（起盘台要用）
 run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按需加载，这里预置）
 run('data/data-ref.js');
@@ -41,7 +42,7 @@ run('data/data-ge.js');
 run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
-const M = window.DATA_META, C = window.DATA_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
+const M = window.DATA_META, C = window.DATA_COURSE, BC = window.DATA_BASIC_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
 
 
 // ── 象法速查（2026-08-30 从 liuren-game 的 XF_FA/XF_LEI/XF_BZG 迁入）──
@@ -130,7 +131,7 @@ console.log('\n== 首页分组 ==');
   homeFolds[0].querySelector('summary').click();
   ok(!homeFolds[0].open, '首页再次点击最大标题可以收起');
   const items = $$('.menu .mi');
-  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}；含王牧夫与通解两个案例库）`);
+  ok(items.length === 13, `入口 13 项一个不少（实得 ${items.length}；含两套课程与两个案例库）`);
   ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const orphan = items.filter(el => !el.closest('details.navgrp')).length;
@@ -232,8 +233,30 @@ ok(courseFolds.length >= 5 && courseFolds.every(x => !x.open), '课程列表按�
 courseFolds[0].querySelector('summary').click();
 ok(courseFolds[0].open, '点击课程大标题可以展开该部分');
 
-console.log('\n== 课文 ==');
+console.log('\n== 双课程入口与大六壬初中级课程 ==');
+ok($$('.mi[data-go="course"]').length >= 1 && $$('.mi[data-go="basiccourse"]').length === 1,
+   '首页分成大六壬通解课程与大六壬初中级课程两个入口');
+ok(BC.length === 20 && M.basicList.length === 20 && M.counts.basicLesson === 20,
+   '初中级课程共 20 课，数据与首页计数一致');
+ok(BC.reduce((n, x) => n + x.sources, 0) === 332, '17 份 Word 的 332 个原小节全部入课');
+ok(BC.reduce((n, x) => n + x.pan_pending, 0) === 25, '识别出并合并为 25 组需要补视频盘面的独立案例');
+const basicText = BC.map(x => x.text).join('\n');
+ok(/凡入传者，必观之/.test(basicText) && /类象必须服从逻辑/.test(basicText) && /预测风险与现实分寸/.test(basicText),
+   '老师的案例判断、类象逻辑与实战边界细节均保留');
+$$('.mi[data-go="basiccourse"]')[0].onclick();
+ok($('#s-basiccourse').classList.contains('active'), '初中级入口进入独立课程列表');
+const basicFolds = $$('#basicCourseList details.coursegrp');
+ok(basicFolds.length === 6 && basicFolds.every(x => !x.open), '初中级 20 课按六部分折叠');
+ok($$('#basicCourseList .li[data-basic-id]').length === 20, '初中级列表完整显示 20 课');
+$$('#basicCourseList .li[data-basic-id]')[0].onclick();
+ok($('#s-basiclesson').classList.contains('active') && /初中级第1课/.test($('#ttl').textContent), '可以打开初中级课文');
+ok($('#basicLessonBody').querySelectorAll('h2').length > 10 && /来源/.test($('#basicLessonBody').textContent),
+   '重组课按原小节展开并逐节标明来源');
+ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
+$('#toTongjieCourse').onclick();
 $$('#courseList .li[data-id]')[0].onclick();
+
+console.log('\n== 课文 ==');
 const body = $('#lessonBody');
 ok(/第1课/.test($('#ttl').textContent), '顶栏显示课号');
 ok(body.querySelectorAll('h2').length >= 5, '正文分节渲染');
@@ -436,9 +459,13 @@ async function typeSearch(kw) {
   const multi = $$('#sres .sr[data-id]');
   ok(multi.length > 0, '空格分隔的多词搜索有结果');
   ok(multi.every(b => {
-    const l = C.find(x => x.id === b.dataset.id);
+    const l = C.concat(BC).find(x => x.id === b.dataset.id);
     return l.text.includes('月将') && l.text.includes('中气');
   }), '多词结果里两个词都出现');
+
+  await typeSearch('凡入传者，必观之');
+  ok($$('#sres .refg').some(x => x.textContent === '初中级课文') && $$('#sres .sr[data-id="B18"]').length > 0,
+     '全站搜索能找到初中级课程里的实战原话');
 
   await typeSearch('这个词肯定不存在xyz');
   ok(/没找到/.test($('#sres').textContent), '搜不到时给提示');

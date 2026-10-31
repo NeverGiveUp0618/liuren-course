@@ -7,6 +7,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
+  basicread: 'liuren_basic_course_read', basicpos: 'liuren_basic_course_pos',
   counts: 'liuren_course_counts', theme: 'liuren_course_theme',
   progopen: 'liuren_course_progopen',
   qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen',
@@ -79,6 +80,19 @@ function needCourse() {
     document.head.appendChild(s);
   });
   return _loading;
+}
+var _basicLoading = null;
+function needBasicCourse() {
+  if (window.DATA_BASIC_COURSE) return Promise.resolve(window.DATA_BASIC_COURSE);
+  if (_basicLoading) return _basicLoading;
+  _basicLoading = new Promise(function (res, rej) {
+    var s = document.createElement('script');
+    s.src = ASSET + 'data/data-basic-course.js?v=' + VER;
+    s.onload = function () { res(window.DATA_BASIC_COURSE); };
+    s.onerror = function () { _basicLoading = null; rej(new Error('初中级课文加载失败')); };
+    document.head.appendChild(s);
+  });
+  return _basicLoading;
 }
 var _refLoading = null;
 function needRef() {
@@ -233,6 +247,11 @@ function lessonById(id) {
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
   return null;
 }
+function basicLessonById(id) {
+  var a = window.DATA_BASIC_COURSE || [];
+  for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
+  return null;
+}
 
 /* ── 路由 ───────────────────────────────────────────────
    套壳 view.html 的 iframe 与顶层共享同一条 session history。若本站不碰
@@ -240,7 +259,8 @@ function lessonById(id) {
    所以：前进 pushState，回到栈上已有的屏用 history.go(-n) 折叠，
    popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
-var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学习路线',
+var TITLES = { home: '六壬神课', course: '大六壬通解课程', lesson: '',
+               basiccourse: '大六壬初中级课程', basiclesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例',
                mflist: '王牧夫入门案例', mufu: '王牧夫案例',
@@ -248,7 +268,7 @@ var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
-var ROOTS = { home: 1, course: 1, qlist: 1, ref: 1 };
+var ROOTS = { home: 1, course: 1, basiccourse: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -258,12 +278,12 @@ function _apply(scr, id) {
   if (el) el.classList.add('active');
   $('#btnBack').classList.toggle('on', !ROOTS[scr]);
   $$('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === scr); });
-  $('#fabToc').classList.toggle('on', scr === 'lesson');
+  $('#fabToc').classList.toggle('on', scr === 'lesson' || scr === 'basiclesson');
   $('#tocMask').classList.remove('on');
   $('#ttl').textContent = TITLES[scr] || '六壬神课';
   RENDER[scr] && RENDER[scr](id);
   if (scr !== 'search') save(K.last, { scr: scr, id: id });
-  if (scr !== 'lesson') window.scrollTo(0, 0);
+  if (scr !== 'lesson' && scr !== 'basiclesson') window.scrollTo(0, 0);
 }
 function show(scr, id, find) {
   pendingFind = find || null;
@@ -342,6 +362,8 @@ RENDER.home = function () {
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
+  var mtc = $('#mTongjieCourse'); if (mtc) mtc.textContent = c.lesson || '—';
+  var mbc = $('#mBasicCourse'); if (mbc) mbc.textContent = c.basicLesson || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
   var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
   var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
@@ -928,12 +950,67 @@ RENDER.course = function () {
       '<em>' + rd + ' / ' + refPlan.length + '</em></summary>' + refPlan.map(item).join('') + '</details>';
   }
   // 学习路线原是首页单独一项，2026-10-22 并到课程列表顶上（首页入口精简）
-  $('#courseList').innerHTML = '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
+  $('#courseList').innerHTML = '<div class="course-switch"><b>当前：大六壬通解课程</b>' +
+    '<button class="mi" id="toBasicCourse"><b>切换到大六壬初中级课程</b><span>公开课与中级校对稿 · 20课</span></button></div>' +
+    '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
+  $('#toBasicCourse').onclick = function () { show('basiccourse'); };
   $('#toOutline').onclick = function () { show('outline'); };
   $$('#courseList .li[data-id]').forEach(function (b) {
     b.onclick = function () { show('lesson', b.dataset.id); };
   });
 };
+
+RENDER.basiccourse = function () {
+  var list = M.basicList || [], read = load(K.basicread, {}), html = '', part = '';
+  list.forEach(function (l) {
+    if (l.part !== part) {
+      if (part) html += '</details>';
+      part = l.part;
+      var all = list.filter(function (x) { return x.part === part; });
+      var done = all.filter(function (x) { return (read[x.id] || 0) >= 90; }).length;
+      html += '<details class="coursegrp"><summary class="part"><i>' + esc(part.replace(/部分.*$/, '').replace('第', '')) +
+        '</i><span>' + esc(part.replace(/^第.部分\s*[·・]?\s*/, '')) + '</span><em>' + done + ' / ' + all.length + '</em></summary>';
+    }
+    var pct = read[l.id] || 0;
+    html += '<button class="li' + (pct >= 90 ? ' read' : pct > 0 ? ' doing' : '') + '" data-basic-id="' + l.id + '">' +
+      '<span class="n">' + l.num + '</span><span class="t"><b>' + esc(l.short) + '</b><span>' + esc(l.line) +
+      '</span><small>汇集原稿 ' + l.sources + ' 节' + (l.pan_pending ? ' · 待补盘面 ' + l.pan_pending + ' 处' : '') +
+      '</small></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') + '</span></button>';
+  });
+  if (part) html += '</details>';
+  $('#basicCourseList').innerHTML = '<div class="course-switch"><b>当前：大六壬初中级课程</b>' +
+    '<p class="muted">公开课与中级校对稿按知识点跨课重组；原小节全文保留，案例缺盘处已逐一标记。</p>' +
+    '<button class="mi" id="toTongjieCourse"><b>切换到大六壬通解课程</b><span>原有 25 课</span></button></div>' + html;
+  $('#toTongjieCourse').onclick = function () { show('course'); };
+  $$('[data-basic-id]', $('#basicCourseList')).forEach(function (b) {
+    b.onclick = function () { show('basiclesson', b.dataset.basicId); };
+  });
+};
+
+RENDER.basiclesson = function (id) {
+  var body = $('#basicLessonBody');
+  if (basicLessonById(id)) { paintBasicLesson(id); return; }
+  body.innerHTML = '<p class="muted">正在取初中级课文…</p>';
+  needBasicCourse().then(function () {
+    if (cur.scr === 'basiclesson' && cur.id === id) paintBasicLesson(id);
+  }).catch(function () { body.innerHTML = '<p class="muted">课文加载失败，检查网络后重试。</p>'; });
+};
+function paintBasicLesson(id) {
+  var body = $('#basicLessonBody'), l = basicLessonById(id), list = M.basicList || [], k = -1;
+  if (!l) { body.innerHTML = '<p class="muted">这一课还没写。</p>'; return; }
+  $('#ttl').textContent = '初中级第' + l.num + '课';
+  body.innerHTML = l.html;
+  bindDoc(body); foldLessonSections(body); buildStickyPan(body); buildToc(l);
+  list.forEach(function (x, i) { if (x.id === id) k = i; });
+  $('#prevB').disabled = k <= 0; $('#nextB').disabled = k < 0 || k >= list.length - 1;
+  $('#prevB').onclick = function () { if (k > 0) show('basiclesson', list[k - 1].id); };
+  $('#nextB').onclick = function () { if (k < list.length - 1) show('basiclesson', list[k + 1].id); };
+  if (pendingFind) { locate(body, pendingFind); pendingFind = null; }
+  else {
+    var ps = load(K.basicpos, {})[id] || 0;
+    window.scrollTo(0, (load(K.basicread, {})[id] || 0) >= 95 ? 0 : ps);
+  }
+}
 
 RENDER.lesson = function (id) {
   var body = $('#lessonBody');
@@ -1417,13 +1494,14 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
   var add = function (fn) { return function (d) { if (d) { fn(d); onMore(); } }; };
   var put = function (g, x) { (SRC[g] = SRC[g] || []).push(x); };
-  needCourse().then(add(function (r) { SRC['课文'] = []; r.forEach(function (l) { put('课文', { g: '课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['lesson', l.id], body: '#lessonBody' }); }); })).catch(function () {});
+  needCourse().then(add(function (r) { SRC['通解课文'] = []; r.forEach(function (l) { put('通解课文', { g: '通解课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['lesson', l.id], body: '#lessonBody' }); }); })).catch(function () {});
+  needBasicCourse().then(add(function (r) { SRC['初中级课文'] = []; r.forEach(function (l) { put('初中级课文', { g: '初中级课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['basiclesson', l.id], body: '#basicLessonBody' }); }); })).catch(function () {});
   needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
   needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
   needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
@@ -1465,14 +1543,14 @@ function paintSearch(all, words) {
     if (words.length > 1) {
       order.sort(function (a, b) { return near(txt, b, words) - near(txt, a, words); });
     }
-    var per = d.g === '课文' ? 4 : 2;
+    var per = /课文$/.test(d.g) ? 4 : 2;
     order.slice(0, per).forEach(function (at) {
       var s = Math.max(0, at - 26), frag = txt.slice(s, at + 44);
       words.forEach(function (w) { frag = frag.split(w).join('\x01' + w + '\x02'); });
       frag = frag.replace(/[<>&]/g, function (c) {
         return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c];
       }).split('\x01').join('<em>').split('\x02').join('</em>');
-      html += '<button class="sr" data-k="' + all.indexOf(d) + '"' + (d.go[0] === 'lesson' ? ' data-id="' + d.go[1] + '"' : '') + ' data-kw="' + esc(w0) +
+      html += '<button class="sr" data-k="' + all.indexOf(d) + '"' + (/lesson$/.test(d.go[0]) ? ' data-id="' + d.go[1] + '"' : '') + ' data-kw="' + esc(w0) +
         '" data-occ="' + idx.indexOf(at) + '"><b>' + esc(d.t) + '</b><span>…' + frag + '…</span></button>';
     });
     if (idx.length > per) html += '<p class="muted">这里另有 ' + (idx.length - per) + ' 处</p>';
@@ -1481,7 +1559,7 @@ function paintSearch(all, words) {
   $$('.sr', out).forEach(function (b) {
     b.onclick = function () {
       var d = all[+b.dataset.k], find = { kw: b.dataset.kw, occ: +b.dataset.occ };
-      if (d.go[0] === 'lesson') { show('lesson', d.go[1], find); return; }
+      if (d.go[0] === 'lesson' || d.go[0] === 'basiclesson') { show(d.go[0], d.go[1], find); return; }
       if (d.xf) {                                    // 象法屏自带筛选框：直接把条目名填进去
         show('xflist'); var q = $('#xq'); if (q) { q.value = d.xf; paintXf(); }
         return;
@@ -1540,14 +1618,16 @@ function locate(root, find) {
 /* ── 阅读进度 ─────────────────────────────────────────── */
 var _tick = null;
 window.addEventListener('scroll', function () {
-  if (cur.scr !== 'lesson' || !cur.id) return;
+  if ((cur.scr !== 'lesson' && cur.scr !== 'basiclesson') || !cur.id) return;
   clearTimeout(_tick);
   _tick = setTimeout(function () {
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var pct = h > 0 ? Math.min(100, Math.round(window.scrollY / h * 100)) : 100;
-    var r = load(K.read, {});
-    if (pct > (r[cur.id] || 0)) { r[cur.id] = pct; save(K.read, r); }
-    var ps = load(K.pos, {}); ps[cur.id] = window.scrollY; save(K.pos, ps);
+    var rk = cur.scr === 'basiclesson' ? K.basicread : K.read;
+    var pk = cur.scr === 'basiclesson' ? K.basicpos : K.pos;
+    var r = load(rk, {});
+    if (pct > (r[cur.id] || 0)) { r[cur.id] = pct; save(rk, r); }
+    var ps = load(pk, {}); ps[cur.id] = window.scrollY; save(pk, ps);
   }, 220);
 }, { passive: true });
 
@@ -1574,7 +1654,9 @@ applyTheme(load(K.theme, null));
 $('#btnBack').onclick = function () { history.back(); };
 $('#btnSearch').onclick = function () { show('search', null); };
 $('#fabToc').onclick = function () {
-  var body = $('#lessonBody'), l = lessonById(cur.id);
+  var basic = cur.scr === 'basiclesson';
+  var body = basic ? $('#basicLessonBody') : $('#lessonBody');
+  var l = basic ? basicLessonById(cur.id) : lessonById(cur.id);
   if (l) buildToc(l);
   $('#tocMask').classList.add('on');
 };

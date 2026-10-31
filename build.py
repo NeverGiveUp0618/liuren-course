@@ -17,6 +17,7 @@ import mdlite
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, 'content')
+BASIC_SRC = os.path.join(HERE, 'content-basic')
 OUT = os.path.join(HERE, 'data')
 
 BASE_LESSONS = 25      # 已成课数下限
@@ -103,6 +104,37 @@ def build_lessons(collect_md=None):
             'heads': [{'l': l, 't': t, 'a': a} for l, t, a in heads if l == 2],
             'text': mdlite.strip_md(md),
         })
+    return out
+
+
+def build_basic_lessons():
+    """公开课＋中级校对稿重组课。B01… 与《通解》L01… 分轨存放。"""
+    out = []
+    if not os.path.isdir(BASIC_SRC):
+        return out
+    for fn in sorted(os.listdir(BASIC_SRC)):
+        m = re.match(r'^B(\d\d)-(.+)\.md$', fn)
+        if not m:
+            continue
+        md = read(os.path.join(BASIC_SRC, fn))
+        heads = []
+        html = mdlite.md2html(md, collect_headings=heads)
+        title = re.search(r'^# (.+)$', md, re.M).group(1).strip()
+        short = title.split('·', 1)[-1].strip()
+        part = re.search(r'^> \*\*课程分部\*\*：(.+)$', md, re.M)
+        out.append({
+            'id': 'B' + m.group(1), 'num': int(m.group(1)), 'title': title,
+            'short': short, 'line': one_line(md),
+            'part': part.group(1).strip() if part else '初中级课程',
+            'html': html,
+            'heads': [{'l': l, 't': t, 'a': a} for l, t, a in heads if l == 2],
+            'text': mdlite.strip_md(md),
+            'sources': len(re.findall(r'^\*\*来源\*\*：', md, re.M)),
+            'pan_pending': len(re.findall(r'盘面待补', md)),
+        })
+    ns = [x['num'] for x in out]
+    if ns != list(range(1, len(out) + 1)):
+        sys.exit('✗ 初中级课程编号不连续：%s' % ns)
     return out
 
 
@@ -716,7 +748,8 @@ def main():
     if nocite:
         sys.exit('✗ 这些课一条出处都没有：%s' % nocite)
 
-    counts = {'lesson': len(lessons), 'planned': TOTAL_PLANNED,
+    basic_lessons = build_basic_lessons()
+    counts = {'lesson': len(lessons), 'basicLesson': len(basic_lessons), 'planned': TOTAL_PLANNED,
               'pan': sum(l['html'].count('class="pan"') for l in lessons),
               'cite': sum(l['html'].count('class="src"') for l in lessons)}
     plan = parse_plan(outline_md)
@@ -732,7 +765,10 @@ def main():
     meta = {'name': '六壬神课', 'built': time.strftime('%Y-%m-%d %H:%M'),
             'counts': counts, 'outline': outline, 'plan': plan,
             'list': [{'id': l['id'], 'num': l['num'], 'short': l['short'],
-                      'line': l['line']} for l in lessons]}
+                      'line': l['line']} for l in lessons],
+            'basicList': [{'id': l['id'], 'num': l['num'], 'short': l['short'],
+                           'line': l['line'], 'part': l['part'], 'sources': l['sources'],
+                           'pan_pending': l['pan_pending']} for l in basic_lessons]}
 
     ref = build_ref(lessons_md)
     counts['ref'] = len(ref)
@@ -776,6 +812,7 @@ def main():
     s10 = write_js('data-mufu.js', 'DATA_MUFU', mfitems)
     s11 = write_js('data-tongjie.js', 'DATA_TONGJIE', tjitems)
     s12 = write_js('data-tongjie-search.js', 'DATA_TONGJIE_SEARCH', tjsearch)
+    s13 = write_js('data-basic-course.js', 'DATA_BASIC_COURSE', basic_lessons)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -789,6 +826,7 @@ def main():
     print('  data-tongjie.js %5.1f KB（通解案例 %d；正文 %d 块 %.1f KB）'
           % (s11 / 1024, len(tjitems), ntj, stj / 1024))
     print('  data-tongjie-search.js %.1f KB（只在全站搜索时加载）' % (s12 / 1024))
+    print('  data-basic-course.js %.1f KB（初中级课程 %d 课）' % (s13 / 1024, len(basic_lessons)))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))

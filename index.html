@@ -30,7 +30,7 @@
   .stats div{flex:1;text-align:center}
   .stats b{display:block}
 </style>
-<!--ASSET-CSS--><link rel="stylesheet" href="b/f122bb7ae1/style.css"><!--/ASSET-CSS-->
+<!--ASSET-CSS--><link rel="stylesheet" href="b/e490dd07a8/style.css"><!--/ASSET-CSS-->
 </head>
 <body>
 <header class="top">
@@ -70,7 +70,8 @@
          ⚠️ 分组口径＝00 总目录里那句「依赖驱动 vs 查阅式」，改这里先回去看那句。 -->
     <div class="menu">
       <details class="navgrp"><summary class="mgrp g1"><i>学</i><s class="sep"> · </s><span>一课一课往下读</span></summary>
-      <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
+      <button class="mi" data-go="course"><b>大六壬通解课程</b><span><b id="mTongjieCourse">—</b> 课 · 从《大六壬通解》重排的原课程</span></button>
+      <button class="mi" data-go="basiccourse"><b>大六壬初中级课程</b><span><b id="mBasicCourse">—</b> 课 · 公开课与中级校对稿跨课重组</span></button>
       </details>
 
       <details class="navgrp"><summary class="mgrp g2"><i>练</i><s class="sep"> · </s><span>自己动手</span></summary>
@@ -95,7 +96,7 @@
     </div>
     <div class="card" id="progCard">
       <button class="proghd" id="progTog" aria-expanded="false">
-        <span class="ar">›</span><b>学习进度</b><span class="muted" id="progPct">—</span>
+        <span class="ar">›</span><b>通解课程进度</b><span class="muted" id="progPct">—</span>
       </button>
       <div class="bar"><i id="progBar" style="width:0"></i></div>
       <div class="row wrap" id="progChips"></div>
@@ -105,6 +106,16 @@
 
   <!-- 课程列表 -->
   <section class="screen" id="s-course"><div id="courseList"></div></section>
+
+  <!-- 公开课＋中级校对稿重组课程 -->
+  <section class="screen" id="s-basiccourse"><div id="basicCourseList"></div></section>
+  <section class="screen" id="s-basiclesson">
+    <div id="basicLessonBody" class="doc"></div>
+    <div class="pager">
+      <button class="btn" id="prevB">‹ 上一课</button>
+      <button class="btn" id="nextB">下一课 ›</button>
+    </div>
+  </section>
 
   <!-- 课文 -->
   <section class="screen" id="s-lesson">
@@ -199,9 +210,9 @@
 <button class="fab" id="fabToc" aria-label="本课目录">目</button>
 <div class="tocmask" id="tocMask"><div class="tocbox"></div></div>
 
-<!--ASSET-JS--><script>window.ASSET='b/f122bb7ae1/'</script>
-<script src="b/f122bb7ae1/data/data-meta.js"></script>
-<script src="b/f122bb7ae1/engine.js"></script>
-<script src="b/f122bb7ae1/app.js"></script><!--/ASSET-JS-->
+<!--ASSET-JS--><script>window.ASSET='b/e490dd07a8/'</script>
+<script src="b/e490dd07a8/data/data-meta.js"></script>
+<script src="b/e490dd07a8/engine.js"></script>
+<script src="b/e490dd07a8/app.js"></script><!--/ASSET-JS-->
 </body>
 </html>
