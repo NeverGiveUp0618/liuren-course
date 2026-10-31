@@ -132,6 +132,9 @@ console.log('\n== 首页分组 ==');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const orphan = items.filter(el => !el.closest('details.navgrp')).length;
   ok(!orphan, `没有落在组外的入口（${orphan} 项）`);
+  const homeCss = fs.readFileSync(path.join(dir, 'style.css'), 'utf8').replace(/\s/g, '');
+  ok(/\.navgrp>\.mi\{[^}]*width:calc\(100%-16px\)[^}]*box-sizing:border-box/.test(homeCss),
+     '首页展开后的入口卡片统一拉满、右边对齐');
   // ⚠️ 底栏那三项（课程/课例/速查）在首页也有，是有意的：首页当目录、底栏当快捷。
   //    但别让它变成「四张大卡片＋底栏四栏」那种同一件事做两遍（六壬神课踩过）。
   ok($$('.menu .mi').length > $$('.tabbar button').length * 2,

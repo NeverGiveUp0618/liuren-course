@@ -62,7 +62,7 @@ main{overflow-x:clip}
 .mgrp::after{content:"＋";margin-left:auto;color:var(--blue);font-size:17px;line-height:1}
 .navgrp[open]>.mgrp{border-bottom:1px solid var(--line);background:var(--surface)}
 .navgrp[open]>.mgrp::after{content:"－"}
-.navgrp>.mi{margin:8px}
+.navgrp>.mi{width:calc(100% - 16px);margin:8px;box-sizing:border-box}
 .mi{all:unset;cursor:pointer;display:block;padding:14px 16px;background:var(--paper);
   border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px}
 .mi:focus-visible{outline:2px solid var(--blue)}
