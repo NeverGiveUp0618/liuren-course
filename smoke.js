@@ -238,11 +238,17 @@ ok($$('.mi[data-go="course"]').length >= 1 && $$('.mi[data-go="basiccourse"]').l
    '首页分成大六壬通解课程与大六壬初中级课程两个入口');
 ok(BC.length === 20 && M.basicList.length === 20 && M.counts.basicLesson === 20,
    '初中级课程共 20 课，数据与首页计数一致');
-ok(BC.reduce((n, x) => n + x.sources, 0) === 332, '17 份 Word 的 332 个原小节全部入课');
-ok(BC.reduce((n, x) => n + x.pan_pending, 0) === 25, '识别出并合并为 25 组需要补视频盘面的独立案例');
 const basicText = BC.map(x => x.text).join('\n');
-ok(/凡入传者，必观之/.test(basicText) && /类象必须服从逻辑/.test(basicText) && /预测风险与现实分寸/.test(basicText),
-   '老师的案例判断、类象逻辑与实战边界细节均保留');
+ok(basicText.length < 140000 && basicText.length > 80000,
+   '17 份讲稿已消化重编为课程正文，不再逐字堆放转录稿');
+ok(BC.reduce((n, x) => n + x.pan_pending, 0) === 25, '识别出并合并为 25 组需要补视频盘面的独立案例');
+ok(/类象必须服从占问、位置和生克逻辑/.test(basicText) && /预测风险与现实分寸/.test(basicText) && /先定唯一，不定其二/.test(basicText),
+   '老师明确讲出的判断步骤、类象逻辑与实战边界均保留');
+ok(!BC.some(x => /公开课实战案例|中级综合案例/.test(x.title)) &&
+   /八专课断同性恋/.test(BC.find(x => x.id === 'B18').text) &&
+   /丢失的合同/.test(BC.find(x => x.id === 'B10').text) &&
+   /九宝综合课例/.test(BC.find(x => x.id === 'B14').text),
+   '案例已分散回对应知识课与分类实占课，不再堆在最后');
 $$('.mi[data-go="basiccourse"]')[0].onclick();
 ok($('#s-basiccourse').classList.contains('active'), '初中级入口进入独立课程列表');
 const basicFolds = $$('#basicCourseList details.coursegrp');
@@ -250,8 +256,8 @@ ok(basicFolds.length === 6 && basicFolds.every(x => !x.open), '初中级 20 课�
 ok($$('#basicCourseList .li[data-basic-id]').length === 20, '初中级列表完整显示 20 课');
 $$('#basicCourseList .li[data-basic-id]')[0].onclick();
 ok($('#s-basiclesson').classList.contains('active') && /初中级第1课/.test($('#ttl').textContent), '可以打开初中级课文');
-ok($('#basicLessonBody').querySelectorAll('h2').length > 10 && /来源/.test($('#basicLessonBody').textContent),
-   '重组课按原小节展开并逐节标明来源');
+ok($('#basicLessonBody').querySelectorAll('h2').length === 10 && /七个步骤/.test($('#basicLessonBody').textContent),
+   '第一课已重排成十个学习章节，不是原小节全文搬运');
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
 $('#toTongjieCourse').onclick();
 $$('#courseList .li[data-id]')[0].onclick();
@@ -463,9 +469,9 @@ async function typeSearch(kw) {
     return l.text.includes('月将') && l.text.includes('中气');
   }), '多词结果里两个词都出现');
 
-  await typeSearch('凡入传者，必观之');
-  ok($$('#sres .refg').some(x => x.textContent === '初中级课文') && $$('#sres .sr[data-id="B18"]').length > 0,
-     '全站搜索能找到初中级课程里的实战原话');
+  await typeSearch('先定唯一 不定其二');
+  ok($$('#sres .refg').some(x => x.textContent === '初中级课文') && $$('#sres .sr[data-id="B01"]').length > 0,
+     '全站搜索能找到重编课程里的老师实战心法');
 
   await typeSearch('这个词肯定不存在xyz');
   ok(/没找到/.test($('#sres').textContent), '搜不到时给提示');
