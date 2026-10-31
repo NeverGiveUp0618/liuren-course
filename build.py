@@ -503,6 +503,8 @@ def build_mufu():
     md = read(fp)
     blocks = re.split(r'^### (?=【入门例\d+】)', md, flags=re.M)
     items = []
+    gan = '甲乙丙丁戊己庚辛壬癸'
+    zhi = '子丑寅卯辰巳午未申酉戌亥'
     for blk in blocks[1:]:
         head = blk.split('\n', 1)[0]
         m = re.match(r'【入门例(\d+)】\s*(.+?)\s*(`.*)?$', head)
@@ -513,7 +515,24 @@ def build_mufu():
         title = m.group(2).strip()
         if '**古文原断**' not in blk or '**白话拆解**' not in blk:
             sys.exit('✗ 王牧夫入门例 %d 缺「古文原断」或「白话拆解」' % n)
-        items.append({'n': n, 'title': title, 'tags': tags,
+        # 吸顶条第一段只照录原案实际存下来的年月日时，不补造四柱。
+        # 月份常只有「七月／未月」而没有月干，时辰也常只有时支；
+        # 因此保留原粒度，不根据历法擅自推算月柱、时柱。
+        q = re.search(r'^\*\*占问\*\*：(.+)$', blk, flags=re.M)
+        qtext = (q.group(1) if q else '').replace('**', '')
+        g = re.search(r'^\*\*格\*\*：(.+)$', blk, flags=re.M)
+        gtext = (g.group(1) if g else '').replace('**', '')
+        source_time = qtext + ' ' + title + ' ' + gtext
+        year = re.search(r'([%s][%s])年' % (gan, zhi), qtext)
+        month = re.search(r'((?:闰)?(?:正|冬|腊|[一二三四五六七八九十%s])+月)' % zhi, qtext)
+        day = re.search(r'([%s][%s])日' % (gan, zhi), source_time)
+        hour = re.search(r'([%s])时' % zhi, source_time)
+        cal = []
+        if year: cal.append({'k': '年', 'v': year.group(1)})
+        if month: cal.append({'k': '月', 'v': month.group(1)})
+        if day: cal.append({'k': '日', 'v': day.group(1)})
+        if hour: cal.append({'k': '时', 'v': hour.group(1)})
+        items.append({'n': n, 'title': title, 'tags': tags, 'cal': cal,
                       'html': mdlite.md2html('### ' + blk),
                       'text': mdlite.strip_md(blk)})
     ns = sorted(x['n'] for x in items)

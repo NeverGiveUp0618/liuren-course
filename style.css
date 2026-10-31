@@ -259,12 +259,23 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .refb .tw{margin:6px 0 0}
 .refj{all:unset;cursor:pointer;font-size:12.5px;color:var(--blue);margin-top:8px;display:inline-block}
 .refj:focus-visible{outline:2px solid var(--blue)}
-/* ── 吸顶盘：四课＋三传压成一条（六壬方盘 330px 见方，照搬八字四柱那样吸顶会吃掉半屏） ── */
+/* ── 吸顶盘：王牧夫案例为年月日时＋四课＋三传，其余页面为四课＋三传 ── */
 .stickypan{position:sticky;top:49px;z-index:30;margin:0 -14px 16px;padding:7px 14px;
   background:var(--ground);border-bottom:1px solid var(--line);cursor:pointer;
-  display:flex;align-items:center;gap:12px;overflow-x:auto;white-space:nowrap}
+  display:flex;align-items:center;gap:12px;overflow-x:auto;white-space:nowrap;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.stickypan::-webkit-scrollbar{display:none}
 .stickypan em{font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;
   color:var(--gold);margin-right:5px}
+.sp-time,.sp-ke,.sp-sc{flex:0 0 auto}
+.sp-time{display:flex;align-items:center;gap:4px}
+.spt{display:inline-flex;flex-direction:column;align-items:center;min-width:25px;line-height:1.15;
+  padding:1px 4px;border-radius:3px;background:var(--paper);border:1px solid var(--line)}
+.spt i{font-style:normal;font-size:8.5px;color:var(--ink3);line-height:1.1}
+.spt b{display:block;min-height:14px;font-family:var(--f-disp);font-size:14px;font-weight:600;
+  color:var(--ink);line-height:1}
+.spt .pg{color:var(--gold);margin-top:2px}
+.spt .pz{margin-top:1px}
 .sp-ke{display:flex;align-items:center;gap:5px}
 .spc{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;
   padding:1px 5px;border-radius:3px;background:var(--surface)}
@@ -276,7 +287,7 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .sp-sc .z{font-family:var(--f-disp);font-size:15px;font-weight:600}
 .sp-sc b{color:var(--ink3);font-weight:400;font-size:11px}
 .sp-more{margin-left:auto;font-size:11px;color:var(--blue);flex-shrink:0}
-@media(max-width:420px){.stickypan{gap:8px}.spc{padding:1px 3px}}
+@media(max-width:420px){.stickypan{gap:8px}.spc,.spt{padding:1px 3px}}
 
 /* ── 课例题库 ───────────────────────────────────────── */
 /* ⚠️ 变量名核对过：这套皮肤没有 --bg / --topbar。底色是 --ground，

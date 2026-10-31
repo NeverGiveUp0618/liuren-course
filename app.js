@@ -770,7 +770,7 @@ function paintMufu(items, n) {
       (next ? '<button class="btn" id="mfNext">下一例 ›</button>' : '') + '</div>';
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
-    buildStickyPan($('#mfBody'));
+    buildStickyPan($('#mfBody'), it.cal);
   });
 }
 
@@ -973,11 +973,12 @@ window.labFullRender = function (rgz, yj, zs) {
 
 /* ── 吸顶盘 ───────────────────────────────────────────
    八字四柱压成一条钉在顶栏下就行，六壬方盘 330px 见方，照搬会吃掉半屏。
-   所以吸顶的是**四课＋三传**——讲解里指代的几乎都是这些（发用／支上神／日上神／中传），
+   通用课文吸顶**四课＋三传**；王牧夫案例再在最前面列原案现存的年月日时，
+   顺序固定为「年月日时 → 四课 → 三传」。讲解里指代的几乎都是这些（发用／支上神／日上神／中传），
    天地盘反而查得少；要看全盘点一下这条就弹出来。
    ⚠️ 纯 CSS position:sticky，**绝不加"滚过才显示"的开关**：IntersectionObserver
       在套壳 iframe 里时灵时不灵，scroll 事件在 iframe 内编程滚动压根不触发，而 sticky 一直是好的。 */
-function buildStickyPan(body) {
+function buildStickyPan(body, cal) {
   var old = $('#stickyPan'); if (old) old.remove();
   var ke = body.querySelector('.sike'), sc = body.querySelector('.sanchuan'),
       pan = body.querySelector('.pan');
@@ -986,6 +987,21 @@ function buildStickyPan(body) {
   box.id = 'stickyPan';
   box.className = 'stickypan';
   var h = '';
+  if (cal && cal.length) {
+    h += '<div class="sp-time"><em>四柱</em>' + cal.map(function (x) {
+      var v = x.v || '', g = '', z = v;
+      // 原文给足干支时按八字排法拆成「干在上、支在下」。
+      // 只给月名／时支时，干位留空，绝不把缺失信息硬算出来。
+      if (/^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$/.test(v)) {
+        g = v.charAt(0); z = v.charAt(1);
+      } else if (x.k === '月' && /^[子丑寅卯辰巳午未申酉戌亥]月$/.test(v)) {
+        z = v.charAt(0);
+      }
+      return '<span class="spt"><i>' + esc(x.k) + '</i>' +
+        '<b class="pg">' + (g ? esc(g) : '&nbsp;') + '</b>' +
+        '<b class="pz">' + esc(z) + '</b></span>';
+    }).join('') + '</div>';
+  }
   if (ke) {
     var cells = [].slice.call(ke.querySelectorAll('.ke')).map(function (k) {
       var t = k.querySelector('.tj'), u = k.querySelector('.up'), d = k.querySelector('.dn');
@@ -1004,7 +1020,19 @@ function buildStickyPan(body) {
   h += '<span class="sp-more">' + (pan ? '全盘' : '') + '</span>';
   box.innerHTML = h;
   body.insertBefore(box, body.firstChild.nextSibling || body.firstChild);
-  box.onclick = function () { showPanSheet(body); };
+  // 吸顶内容在手机上可横向拖动；拖动不能被误判成「点开全盘」。
+  // 只记录位移，不接管浏览器原生滚动，保证触摸惯性仍然有效。
+  var downX = 0, downY = 0, dragged = false;
+  box.addEventListener('pointerdown', function (e) {
+    downX = e.clientX; downY = e.clientY; dragged = false;
+  });
+  box.addEventListener('pointermove', function (e) {
+    if (Math.abs(e.clientX - downX) > 6 || Math.abs(e.clientY - downY) > 6) dragged = true;
+  });
+  box.onclick = function () {
+    if (dragged) { dragged = false; return; }
+    showPanSheet(body);
+  };
 }
 function showPanSheet(body) {
   var mask = $('#tocMask'), box = $('.tocbox', mask);

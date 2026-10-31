@@ -309,7 +309,7 @@ async function typeSearch(kw) {
 }
 
 (async () => {
-  console.log('\n== 吸顶盘（六壬方盘不能照搬四柱那样吸顶，吸的是四课＋三传）==');
+  console.log('\n== 吸顶盘（通用页面四课＋三传；王牧夫案例再加年月日时）==');
   // ⚠️ 回到访问过的课走的是 history.go 折叠（popstate 异步），必须等一拍再断言
   $$('#courseList .li[data-id]')[0].onclick();
   await sleep(30);
@@ -323,7 +323,14 @@ async function typeSearch(kw) {
     const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
     const m = css.match(/\.stickypan\{[^}]*\}/);
     ok(!!m && /position:\s*sticky/.test(m[0]), '吸顶靠纯 CSS sticky');
-    ok(!/new\s+IntersectionObserver/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')),
+    ok(/overflow-x:\s*auto/.test(m[0]) && /-webkit-overflow-scrolling:\s*touch/.test(m[0]),
+       '吸顶信息过长时仅条内横向触摸滑动');
+    ok(/\.sp-time,\.sp-ke,\.sp-sc\{flex:\s*0 0 auto/.test(css),
+       '年月日时、四课、三传三组不压缩不换行');
+    const appSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+    ok(/pointermove[\s\S]{0,250}dragged\s*=\s*true/.test(appSrc) && /if\s*\(dragged\)/.test(appSrc),
+       '左右拖动不会误触「全盘」弹层');
+    ok(!/new\s+IntersectionObserver/.test(appSrc),
      '没有真的调用 IntersectionObserver 做显隐（套壳 iframe 里时灵时不灵）');
   }
   sp.onclick();
@@ -588,6 +595,10 @@ async function typeSearch(kw) {
   {
     const MF = window.DATA_MUFU || [];
     ok(MF.length === 80 && M.counts.mufu === 80, '共 80 条，与 meta 计数一致');
+    ok(MF[0].cal.map(x => x.k + x.v).join('、') === '年辛巳、月七月、日乙丑、时未',
+       '原案时间按年月日时顺序入库，不补算月干与时干');
+    ok(MF[20].cal.map(x => x.k).join('') === '日时', '缺年月的案例只保留日时');
+    ok(MF[58].cal.length === 0 && MF[59].cal.length === 0, '两条遗失残案不伪造年月日时');
     ok(MF.every(x => BODY()['mf' + x.n]), '80 条正文都按需分块生成');
     ok(MF.every(x => /古文原断/.test(BODY()['mf' + x.n]) && /白话拆解/.test(BODY()['mf' + x.n])),
        '每例都有古文原断与白话拆解');
@@ -601,7 +612,19 @@ async function typeSearch(kw) {
     ok($$('#mfRows .qrow').length === 80, '列表显示 80 条');
     $$('#mfRows .qrow')[0].click();
     await sleep(10);
-    ok(!!$('#mfBody .stickypan'), '详情页沿用四课三传吸顶样式');
+    const mfSticky = $('#mfBody .stickypan');
+    ok(!!mfSticky, '详情页启用年月日时、四课、三传吸顶样式');
+    ok(mfSticky.firstElementChild.classList.contains('sp-time'), '吸顶第一部分是年月日时');
+    ok(mfSticky.children[1].classList.contains('sp-ke'), '吸顶第二部分是四课');
+    ok(mfSticky.children[2].classList.contains('sp-sc'), '吸顶最后部分是三传');
+    ok($$('.spt', mfSticky).map(x => x.textContent.replace(/\s/g, '')).join('') === '年辛巳月七月日乙丑时未',
+       '吸顶显示本例现存的年、月、日、时');
+    const pillars = $$('.spt', mfSticky);
+    ok(pillars[0].querySelector('.pg').textContent === '辛' && pillars[0].querySelector('.pz').textContent === '巳' &&
+       pillars[2].querySelector('.pg').textContent === '乙' && pillars[2].querySelector('.pz').textContent === '丑',
+       '四柱按八字样式竖排：天干在上、地支在下');
+    ok(!pillars[3].querySelector('.pg').textContent.trim() && pillars[3].querySelector('.pz').textContent === '未',
+       '原案只有时支时，天干位留空而不补造');
     ok(!!$('#mfNext'), '详情页可以进入下一例');
   }
 
