@@ -202,6 +202,19 @@ function needTongjie() {
   });
   return _tongjieLoading;
 }
+var _tongjieSearchLoading = null;
+function needTongjieSearch() {
+  if (window.DATA_TONGJIE_SEARCH) return Promise.resolve(window.DATA_TONGJIE_SEARCH);
+  if (_tongjieSearchLoading) return _tongjieSearchLoading;
+  _tongjieSearchLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-tongjie-search.js?v=' + VER;
+    el.onload = function () { res(window.DATA_TONGJIE_SEARCH); };
+    el.onerror = function () { _tongjieSearchLoading = null; rej(new Error('通解全文索引加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _tongjieSearchLoading;
+}
 function lessonById(id) {
   var a = window.DATA_COURSE || [];
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
@@ -1384,7 +1397,10 @@ function startSources(onMore) {
   needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
   needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
   needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
-  needTongjie().then(add(function (r) { (r || []).forEach(function (x) { put('通解案例', { g: '通解案例', t: x.volume + '册第' + x.n + '例 · ' + x.title, text: x.text, go: ['tongjie', x.id], body: '#tjBody' }); }); })).catch(function () {});
+  Promise.all([needTongjie(), needTongjieSearch()]).then(add(function (pair) {
+    var full = {}; (pair[1] || []).forEach(function (x) { full[x.id] = x.text; });
+    (pair[0] || []).forEach(function (x) { put('通解案例', { g: '通解案例', t: x.volume + '册第' + x.n + '例 · ' + x.title, text: full[x.id] || x.text, go: ['tongjie', x.id], body: '#tjBody' }); });
+  })).catch(function () {});
   needXf().then(add(function (r) { (r.items || []).forEach(function (x) { put('象法', { g: '象法', t: x.name, text: x.name + '　' + x.text, go: ['xflist', null], xf: x.name }); }); })).catch(function () {});
 }
 function srcList() {

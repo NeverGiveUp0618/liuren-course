@@ -563,13 +563,17 @@ def build_tongjie():
             sys.exit('✗ 通解%s册第 %d 例缺古文或现代讲解' % (volume, n))
         info = re.search(r'^\*\*原案信息\*\*：(.+)$', blk, re.M)
         cal = []
-        if info:
+        if info and not info.group(1).startswith('原文未'):
             for k, v in re.findall(r'([年月日时])([^\s·]+)', info.group(1)):
                 cal.append({'k': k, 'v': v})
+        fulltext = mdlite.strip_md(blk)
         items.append({'id': {'上': 'u', '中': 'm', '下': 'l'}[volume] + ('%03d' % n),
                       'n': n, 'volume': volume, 'title': title, 'category': category,
                       'tags': [volume + '册', category], 'cal': cal,
-                      'html': mdlite.md2html('### ' + blk), 'text': mdlite.strip_md(blk)})
+                      'html': mdlite.md2html('### ' + blk),
+                      # 列表包只留轻量检索文本；古文全文单独按需加载。
+                      'text': '%s %s册 %s %s' % (title, volume, category, (info.group(1) if info else '')),
+                      'search_text': fulltext})
     keys = [(x['volume'], x['n']) for x in items]
     if len(keys) != len(set(keys)):
         sys.exit('✗ 通解案例存在重复册别/例号')
@@ -709,6 +713,7 @@ def main():
     counts['mufu'] = len(mfitems)
     tjitems = build_tongjie()
     counts['tongjie'] = len(tjitems)
+    tjsearch = [{'id': x['id'], 'text': x.pop('search_text')} for x in tjitems]
     meta['counts'] = counts
     qnames = [c['name'] for c in qcats]
     nq, sq = write_bodies('q', qitems, 'n', lambda it: qnames.index(it['cat']))
@@ -726,6 +731,7 @@ def main():
     s9 = write_js('data-jinsuo.js', 'DATA_JINSUO', js or {})
     s10 = write_js('data-mufu.js', 'DATA_MUFU', mfitems)
     s11 = write_js('data-tongjie.js', 'DATA_TONGJIE', tjitems)
+    s12 = write_js('data-tongjie-search.js', 'DATA_TONGJIE_SEARCH', tjsearch)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -738,6 +744,7 @@ def main():
           % (s10 / 1024, len(mfitems), nmf, smf / 1024))
     print('  data-tongjie.js %5.1f KB（通解案例 %d；正文 %d 块 %.1f KB）'
           % (s11 / 1024, len(tjitems), ntj, stj / 1024))
+    print('  data-tongjie-search.js %.1f KB（只在全站搜索时加载）' % (s12 / 1024))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))

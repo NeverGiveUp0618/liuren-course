@@ -42,6 +42,9 @@ CASE_RE = re.compile(rf"^例(?P<num>[{CN_NUM}]+|\d+)\s*[：:](?P<title>.*)$")
 PAGE_RE = re.compile(r"^第\s*(\d+)\s*页$")
 GAN = "甲乙丙丁戊己庚辛壬癸"
 ZHI = "子丑寅卯辰巳午未申酉戌亥"
+TOP_CATEGORIES = ["天时", "地理", "来意", "婚姻", "胎产", "疾病", "失盗", "出行、行人", "考试",
+                  "事业前程", "官司牢狱", "出差", "信息、谋为", "战争", "躲避", "终身", "经济财物", "射覆与应侯杂占"]
+SUB_CATEGORIES = ["阴宅", "阳宅", "盗贼", "人口走失", "财物丢失", "动物走失"]
 
 
 @dataclass
@@ -74,9 +77,35 @@ def clean_body(lines: list[str]) -> str:
     return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip()
 
 
-def category_before(lines: list[str], start: int, index: int) -> str:
+def category_before(lines: list[str], start: int, index: int, volume: str) -> str:
     if index <= 2:
-        return "起课教学示例"
+        if volume == "上":
+            return "起课教学示例"
+    before = lines[:start]
+    # 第七章的 13 个编号示例是外编断法，与第六章分类占验分开。
+    last_ch7 = max((i for i, x in enumerate(before) if x.strip().startswith("第七章 ")), default=-1)
+    if volume == "下" and last_ch7 >= 10000:
+        sec = "外编"
+        for line in reversed(before[last_ch7:]):
+            m = re.match(r"^第[一二三四五六七八九十]+节\s+(.+)$", line.strip())
+            if m:
+                sec = m.group(1).strip()
+                break
+        return "第七章外编 · " + sec
+    top = ""
+    sub = ""
+    for line in before:
+        s = line.strip()
+        m = re.match(r"^[一二三四五六七八九十百]+\s+(.+)$", s)
+        if m and m.group(1).strip() in TOP_CATEGORIES:
+            top, sub = m.group(1).strip(), ""
+        elif top and m and m.group(1).strip() in SUB_CATEGORIES:
+            sub = m.group(1).strip()
+        m = re.match(r"^[一二三四五六七八九十]+、(.+)$", s)
+        if top and m and m.group(1).strip() in SUB_CATEGORIES:
+            sub = m.group(1).strip()
+    if top:
+        return top + ((" · " + sub) if sub else "")
     for line in reversed(lines[:start]):
         s = line.strip()
         m = re.match(r"^(.{1,16}?课)案例[：:]?$", s)
@@ -91,6 +120,14 @@ def trim_case_end(lines: list[str], start: int, end: int, index: int) -> int:
     for off, line in enumerate(body[1:], 1):
         s = line.strip()
         if index <= 2 and re.match(r"^[一二三四五六七八九十]+、", s):
+            return start + off
+        if s.startswith(("第六章 ", "第七章 ")):
+            return start + off
+        mcat = re.match(r"^[一二三四五六七八九十百]+\s+(.+)$", s)
+        if mcat and mcat.group(1).strip() in TOP_CATEGORIES:
+            return start + off
+        msub = re.match(r"^[一二三四五六七八九十]+、(.+)$", s)
+        if msub and msub.group(1).strip() in SUB_CATEGORIES:
             return start + off
         if off > 8 and re.match(r"^[一-鿿]{2,12}课$", s) and \
                 re.search(r"正议|案验|附议", "\n".join(body[:off])):
@@ -141,7 +178,7 @@ def parse_volume(volume: str) -> list[Case]:
             index=i,
             source_number=match.group("num"),
             title=match.group("title").strip(),
-            category=category_before(lines, start, i),
+            category=category_before(lines, start, i, volume),
             page=page,
             line_start=start + 1,
             line_end=end,
@@ -215,7 +252,7 @@ def write_site_markdown(path: Path, cases: list[Case]) -> None:
     chunks = [
         "# 大六壬通解案例库",
         "",
-        "> 上册共收入 75 个独立编号示例：起课教学 2 例，第五章格局案例 73 例。",
+        "> 三册原书共收入 842 个独立编号示例：上册 75 例、中册 197 例、下册 570 例。",
         "> 古文按 OCR 校对稿保留；“现代阅读提示”由工具先分出正议、参议、案验和附议，不替原作者加断。",
         "",
     ]
@@ -230,7 +267,7 @@ def write_site_markdown(path: Path, cases: list[Case]) -> None:
             guide = ["- **阅读顺序**：先核对年月日时与课盘，再顺着原书的取象与结论阅读。"]
         quote = "\n".join("> " + x if x else ">" for x in case.original.splitlines())
         chunks.extend([
-            f"### 【通解上册{case.index:03d}】{case.title} `{case.category}`",
+            f"### 【通解{case.volume}册{case.index:03d}】{case.title} `{case.category}`",
             "",
             f"**原案信息**：{cal}",
             "",
@@ -242,7 +279,7 @@ def write_site_markdown(path: Path, cases: list[Case]) -> None:
             "",
             *guide,
             "",
-            f"〔出处〕《大六壬通解》上册 OCR p{case.page or '未知'}；源文行 {case.line_start}—{case.line_end}。",
+            f"〔出处〕《大六壬通解》{case.volume}册 OCR p{case.page or '未知'}；源文行 {case.line_start}—{case.line_end}。",
             "",
         ])
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -32,6 +32,7 @@ run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
 run('data/data-mufu.js');
 run('data/data-tongjie.js');
+run('data/data-tongjie-search.js');
 // ⭐ 2026-10-23 正文拆块：课例、毕法赋的 html 在 data/q/、data/bf/，点开才加载；这里全部预置
 ['q', 'bf', 'mf', 'tj'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
 const BODY = () => window.BODY || {};
@@ -656,17 +657,24 @@ async function typeSearch(kw) {
   console.log('\n== 大六壬通解案例库 ==');
   {
     const TJ = window.DATA_TONGJIE || [];
-    ok(TJ.length === 75 && M.counts.tongjie === 75, '上册 75 例，与 meta 计数一致');
-    ok(TJ.map(x => x.n).join(',') === Array.from({length:75}, (_,i) => i + 1).join(','), '上册站内例号 1–75 连续');
-    ok(TJ.every(x => x.id && x.volume === '上' && x.category && x.cal.length), '每例都有稳定 ID、册别、分类和原案日历');
+    ok(TJ.length === 842 && M.counts.tongjie === 842, '三册 842 例，与 meta 计数一致');
+    const byVol = v => TJ.filter(x => x.volume === v);
+    ok(byVol('上').length === 75 && byVol('中').length === 197 && byVol('下').length === 570,
+       '上/中/下册分别为 75/197/570 例');
+    ok(['上','中','下'].every(v => byVol(v).map(x => x.n).join(',') ===
+       Array.from({length:{'上':75,'中':197,'下':570}[v]}, (_,i) => i + 1).join(',')), '三册站内例号各自连续');
+    ok(TJ.every(x => x.id && x.volume && x.category) && TJ.filter(x => x.cal.length).length === 837,
+       '每例都有稳定 ID/册别/分类；837 例识别出原案日历');
     ok(TJ.every(x => /<strong>古文原文<\/strong>/.test(BODY()['tj' + x.id]) &&
                      /<strong>现代阅读提示<\/strong>/.test(BODY()['tj' + x.id])),
        '每例同时保留古文原文与现代阅读提示');
-    ok(fs.readdirSync(path.join(dir, 'data', 'tj')).length === 8, '75 例正文拆为 8 个按需加载包');
-    ok($('#mTongjie').textContent === '75', '首页显示通解上册 75 例');
+    ok(fs.readdirSync(path.join(dir, 'data', 'tj')).length === 85, '842 例正文拆为 85 个按需加载包');
+    ok(fs.statSync(path.join(dir, 'data', 'data-tongjie.js')).size < 500 * 1024,
+       '案例列表包低于 500KB，全文索引只在搜索时加载');
+    ok($('#mTongjie').textContent === '842', '首页显示通解三册 842 例');
     $$('.mi[data-go="tjlist"]')[0].click();
     await sleep(10);
-    ok($$('#tjRows .qrow').length === 75, '列表完整显示 75 例');
+    ok($$('#tjRows .qrow').length === 842, '列表完整显示 842 例');
     ok($$('#tjRows details.qgrp').length >= 2 && $$('#tjRows details.qgrp').every(x => !x.open), '按原书课体分类且默认折叠');
     $$('#tjRows .qrow')[0].click();
     await sleep(10);

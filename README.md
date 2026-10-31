@@ -47,11 +47,12 @@ OCR 疑字、课盘和现代讲解仍须复核。
 
 ```bash
 python3 _tools/import_tongjie_cases.py --check
-python3 _tools/import_tongjie_cases.py --volume 上 --site-markdown 'content/101-大六壬通解案例库.md'
+python3 _tools/import_tongjie_cases.py --volume 全部 --site-markdown 'content/101-大六壬通解案例库.md'
 python3 build.py && node smoke.js
 ```
 
 站内列表数据生成到 `data/data-tongjie.js`，正文每 10 例一包生成到 `data/tj/`，点开案例时才加载。
+全文检索另生成 `data/data-tongjie-search.js`，只有使用全站搜索时才下载，避免 842 例拖慢列表。
 
 ### 屏
 
