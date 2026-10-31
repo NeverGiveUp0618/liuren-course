@@ -668,6 +668,14 @@ async function typeSearch(kw) {
     ok(TJ.every(x => /<strong>古文原文<\/strong>/.test(BODY()['tj' + x.id]) &&
                      /<strong>现代阅读提示<\/strong>/.test(BODY()['tj' + x.id])),
        '每例同时保留古文原文与现代阅读提示');
+    const TJP = TJ.filter(x => x.pan);
+    ok(TJP.length === 772, '可靠复排的 772 例已生成天地盘、四课、三传');
+    ok(TJP.every(x => /class="panwrap"/.test(BODY()['tj' + x.id]) &&
+                      /class="sike"/.test(BODY()['tj' + x.id]) &&
+                      /class="sanchuan"/.test(BODY()['tj' + x.id])),
+       '每个可复排案例都有三组结构化盘面');
+    ok(TJ.filter(x => !x.pan).every(x => /课盘说明/.test(BODY()['tj' + x.id])),
+       '缺参数或非六壬的 70 例明确说明不伪造课盘');
     ok(fs.readdirSync(path.join(dir, 'data', 'tj')).length === 85, '842 例正文拆为 85 个按需加载包');
     ok(fs.statSync(path.join(dir, 'data', 'data-tongjie.js')).size < 500 * 1024,
        '案例列表包低于 500KB，全文索引只在搜索时加载');

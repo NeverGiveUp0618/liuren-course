@@ -550,6 +550,12 @@ def build_tongjie():
     fp = os.path.join(SRC, '101-大六壬通解案例库.md')
     if not os.path.exists(fp):
         return []
+    # 通解 OCR 把大多数竖排课盘压成了一行普通文字。这里用已逐例审计的
+    # 日干支／月将／占时／三传重建结构化盘面；参数不足或原文内部冲突时宁缺勿造。
+    from _tools._mkquiz import build as build_pan, md_pan, md_sike, md_sanchuan
+    audit_path = os.path.join(HERE, '_audit', 'tongjie-pan-audit.json')
+    audit_rows = json.loads(read(audit_path)) if os.path.exists(audit_path) else []
+    audit = {(x['volume'], x['index']): x for x in audit_rows}
     md = read(fp)
     blocks = re.split(r'^### (?=【通解[^】]+】)', md, flags=re.M)
     items = []
@@ -567,10 +573,47 @@ def build_tongjie():
             for k, v in re.findall(r'([年月日时])([^\s·]+)', info.group(1)):
                 cal.append({'k': k, 'v': v})
         fulltext = mdlite.strip_md(blk)
+        audit_row = audit.get((volume, n), {})
+        pan_html = ''
+        pan_ok = False
+        no_pan_reason = ''
+        status = audit_row.get('status')
+        if status == 'excluded_non_liuren':
+            no_pan_reason = '本例是六爻纳甲卦，不是六壬四课三传，因此不生成六壬课盘。'
+        elif status == 'manual_source_unresolved':
+            no_pan_reason = '原书题头与四课日干互相冲突，无法确定唯一参数，暂不伪造课盘。'
+        elif not (audit_row.get('rgz') and audit_row.get('yj') and audit_row.get('zs') and audit_row.get('computed_chuan')):
+            no_pan_reason = '原书未保留足够的日干支、月将或占时，无法可靠复排，暂不补造课盘。'
+        else:
+            # 人工已从原书版面读出的三传优先；其余用统一引擎复排值。
+            source_chuan = audit_row.get('manual_scan_chuan') or audit_row.get('computed_chuan')
+            if source_chuan and len(source_chuan) == 3:
+                board = build_pan({'r': audit_row['rgz'], 'yj': audit_row['yj'], 'zs': audit_row['zs'],
+                                   'sc': list(source_chuan)})
+                notes = []
+                if status == 'mismatch_manual_scan':
+                    notes.append('> ⚠️ **原书盘面**：三传按原书照录；它与本站统一发用口径的复排结果不同，不擅自改原文。')
+                elif status == 'reconstructed_no_source_chuan':
+                    notes.append('> ℹ️ **参数复排盘**：原书三传未能从 OCR 版面可靠读出，以题头日干支、月将、占时按本站口径复排。')
+                elif audit_row.get('yj_basis') == 'month_inferred':
+                    notes.append('> ℹ️ **月将推定盘**：题头只记月份，月将按该月通常值推定，交节附近应以原始日期再核。')
+                pan_md = '\n\n'.join([
+                    '#### 课盘',
+                    *notes,
+                    '**天地盘**', md_pan(board),
+                    '**四课**', md_sike(board),
+                    '**三传**', md_sanchuan(board),
+                ])
+                pan_html = mdlite.md2html(pan_md)
+                pan_ok = True
+        if not pan_ok:
+            pan_html = '<blockquote class="warn"><p><strong>课盘说明</strong>：%s</p></blockquote>' % no_pan_reason
+        case_html = mdlite.md2html('### ' + blk)
+        case_html = case_html.replace('</h3>', '</h3>' + pan_html, 1)
         items.append({'id': {'上': 'u', '中': 'm', '下': 'l'}[volume] + ('%03d' % n),
                       'n': n, 'volume': volume, 'title': title, 'category': category,
                       'tags': [volume + '册', category], 'cal': cal,
-                      'html': mdlite.md2html('### ' + blk),
+                      'html': case_html, 'pan': pan_ok,
                       # 列表包只留轻量检索文本；古文全文单独按需加载。
                       'text': '%s %s册 %s %s' % (title, volume, category, (info.group(1) if info else '')),
                       'search_text': fulltext})
