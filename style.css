@@ -96,6 +96,15 @@ main{overflow-x:clip}
   padding-bottom:12px;border-bottom:2px solid var(--ink);text-wrap:balance}
 .doc h2{font-family:var(--f-disp);font-size:18.5px;font-weight:600;margin:34px 0 12px;
   padding-left:11px;border-left:3px solid var(--blue);text-wrap:balance;scroll-margin-top:60px}
+.lesson-sec{margin:12px 0;border:1px solid var(--line);border-radius:4px;background:var(--paper);overflow:clip}
+.lesson-sec>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:0 12px}
+.lesson-sec>summary::-webkit-details-marker{display:none}
+.lesson-sec>summary::after{content:"＋";flex:0 0 auto;color:var(--blue);font-size:18px;line-height:1}
+.lesson-sec[open]>summary::after{content:"－"}
+.doc .lesson-sec>summary h2{flex:1;min-width:0;margin:0;padding:13px 0 13px 11px;border-left:3px solid var(--blue)}
+.lesson-sec[open]>summary{border-bottom:1px solid var(--line);background:var(--surface)}
+.lesson-sec-body{padding:1px 14px 14px}
+.lesson-sec-body>:first-child{margin-top:14px}
 .doc h3{font-size:16px;font-weight:700;margin:24px 0 8px;scroll-margin-top:60px}
 .doc h4{font-size:14.5px;font-weight:700;color:var(--ink2);margin:18px 0 6px}
 .doc p{margin:11px 0}

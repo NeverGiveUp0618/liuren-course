@@ -325,13 +325,21 @@ async function typeSearch(kw) {
   
   console.log('\n== 课内目录 ==');
   ok($('#fabToc').classList.contains('on'), '课文屏显示目录按钮');
+  const folds = $$('#lessonBody details.lesson-sec');
+  const L01 = C.find(x => x.id === 'L01');
+  ok(folds.length === L01.heads.length, `正文按 h2 分成 ${folds.length} 个折叠节`);
+  ok(folds.every(x => !x.open), '进入课程时各大标题默认收起');
+  folds[0].querySelector('summary').click();
+  ok(folds[0].open, '点击大标题展开该节');
+  folds[0].querySelector('summary').click();
+  ok(!folds[0].open, '再次点击大标题收起该节');
   $('#fabToc').onclick();
   const tocs = $$('#tocList .toci');
-  const L01 = C.find(x => x.id === 'L01');
   ok(tocs.length === L01.heads.length && tocs.length > 4, `目录项数＝本课 h2 数（${tocs.length}）`);
   ok(tocs[0].textContent === L01.heads[0].t, '目录第一项与课文第一节同名');
   scrolls = [];
   tocs[2].onclick();
+  ok(folds[2].open, '目录跳转会自动展开目标章节');
   ok(scrolls.includes('into'), '点目录项滚到那一节');
   ok(!$('#tocMask').classList.contains('on'), '跳转后目录自动收起');
   

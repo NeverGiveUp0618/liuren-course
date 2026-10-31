@@ -842,6 +842,7 @@ function paintLesson(id) {
   $('#ttl').textContent = '第' + l.num + '课';
   body.innerHTML = l.html;
   bindDoc(body);
+  foldLessonSections(body);
   buildStickyPan(body);
   buildToc(l);
   var list = M.list || [], k = -1;
@@ -856,6 +857,31 @@ function paintLesson(id) {
     var ps = load(K.pos, {})[id] || 0;
     window.scrollTo(0, (load(K.read, {})[id] || 0) >= 95 ? 0 : ps);
   }
+}
+
+/* 课程正文按最大的分节标题（h2）折叠。
+   标题仍保留原 id；从目录或搜索定位时，会先自动展开所在章节。 */
+function foldLessonSections(root) {
+  var hs = [].slice.call(root.children).filter(function (el) { return el.tagName === 'H2'; });
+  hs.forEach(function (h) {
+    var details = document.createElement('details');
+    details.className = 'lesson-sec';
+    var summary = document.createElement('summary');
+    var content = document.createElement('div');
+    content.className = 'lesson-sec-body';
+    root.insertBefore(details, h);
+    details.appendChild(summary);
+    summary.appendChild(h);
+    details.appendChild(content);
+    while (details.nextSibling && details.nextSibling.tagName !== 'H2') {
+      content.appendChild(details.nextSibling);
+    }
+  });
+}
+function openLessonFold(el) {
+  var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
+          el && el.parentElement ? el.parentElement.closest('details.lesson-sec') : null;
+  if (d) d.open = true;
 }
 
 RENDER.outline = function () {
@@ -1002,7 +1028,7 @@ function buildToc(l) {
     b.onclick = function () {
       $('#tocMask').classList.remove('on');
       var el = document.getElementById(b.dataset.a);
-      if (el) el.scrollIntoView({ block: 'start' });
+      if (el) { openLessonFold(el); el.scrollIntoView({ block: 'start' }); }
     };
   });
 }
@@ -1207,6 +1233,7 @@ function locate(root, find) {
     if (end === null && p + kw.length > a && p + kw.length <= b) end = { node: it.n, off: p + kw.length - a };
   });
   if (!start) { window.scrollTo(0, 0); return; }
+  openLessonFold(start.node);
   try {
     var r = document.createRange();
     r.setStart(start.node, start.off);
