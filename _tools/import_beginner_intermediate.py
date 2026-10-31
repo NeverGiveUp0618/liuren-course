@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from docx import Document
+from _mkquiz import build as build_pan, md_pan, md_sanchuan, md_sike
 
 
 CN = "一二三四五六七八九十百"
@@ -509,6 +510,91 @@ def case_label(section: Section) -> str:
     return labels.get(key, "")
 
 
+# 只收录能从用户提供的 PPT/PDF 明确核对到日干支、月将、占时、三传的盘。
+# 同一课件案例连续讲数节，只在案例起始节放一次。sc 以课件三传为准，
+# 天地盘、四课、天将、六亲和遁干由站内同一套起盘引擎复算，避免手抄错位。
+PANS = {
+    ("中级第2课", 1): [{
+        "r": "丙申", "yj": "未", "zs": "巳", "sc": ["子", "寅", "辰"],
+        "cal": "2007-07-01 巳时", "pillars": "丁亥年　丙午月　丙申日　癸巳时",
+        "src": "《大六壬初中级》PPT 第14—24页（实盘构成示例）",
+    }],
+    ("中级第2课", 12): [{
+        "r": "丙申", "yj": "未", "zs": "巳", "sc": ["子", "寅", "辰"],
+        "cal": "2007-07-01 巳时", "pillars": "丁亥年　丙午月　丙申日　癸巳时",
+        "src": "《大六壬初中级》PPT 第14—24页（起四课练习）",
+    }],
+    ("中级第5课", 10): [
+        {"r": "丙辰", "yj": "酉", "zs": "申", "sc": ["亥", "午", "午"],
+         "cal": "丙辰日申时", "pillars": "日柱丙辰　占时申", "src": "《大六壬初中级》PPT 第75页（刚日别责例）"},
+        {"r": "辛酉", "yj": "戌", "zs": "亥", "sc": ["丑", "酉", "酉"],
+         "cal": "辛酉日亥时", "pillars": "日柱辛酉　占时亥", "src": "《大六壬初中级》PPT 第76页（柔日别责例）"},
+    ],
+    ("公开课第2讲", 6): [{
+        "r": "丁未", "yj": "寅", "zs": "戌", "sc": ["亥", "卯", "未"],
+        "cal": "丁未日戌时", "pillars": "乙巳年　丁亥月　丁未日　庚戌时",
+        "src": "《纵观全球术数全景第二天》PDF 第8页（丁未八专案例）",
+    }],
+    ("公开课第2讲", 16): [{
+        "r": "戊辰", "yj": "酉", "zs": "申", "sc": ["寅", "午", "午"],
+        "cal": "2025-04-29 16:06", "pillars": "乙巳年　庚辰月　戊辰日　庚申时",
+        "src": "《纵观全球术数全景第二天》PDF 第9—10页（丢失合同案例）",
+    }],
+    ("公开课第3讲", 20): [{
+        "r": "丁巳", "yj": "酉", "zs": "戌", "sc": ["卯", "寅", "丑"],
+        "cal": "2022-05-04 20:33", "pillars": "壬寅年　甲辰月　丁巳日　庚戌时",
+        "src": "《大六壬体系特质与学易通病修正 第三天》PDF 第10—11页（婚姻子女案例）",
+    }],
+    ("公开课第4讲", 9): [{
+        "r": "丁巳", "yj": "酉", "zs": "戌", "sc": ["卯", "寅", "丑"],
+        "cal": "2022-05-04 20:33", "pillars": "壬寅年　甲辰月　丁巳日　庚戌时",
+        "src": "《叶氏快速论断法与全科应用落地 第四天》PDF 第9—10页（身陷罗网案例）",
+    }],
+    ("公开课第4讲", 11): [{
+        "r": "癸丑", "yj": "巳", "zs": "酉", "sc": ["巳", "丑", "酉"],
+        "cal": "2020-09-07 18:10", "pillars": "庚子年　乙酉月　癸丑日　辛酉时",
+        "src": "《叶氏快速论断法与全科应用落地 第四天》PDF 第11—12页（一课两断）",
+    }],
+    ("公开课第4讲", 14): [{
+        "r": "丁酉", "yj": "申", "zs": "亥", "sc": ["午", "卯", "子"],
+        "cal": "2025-05-28 21:31", "pillars": "乙巳年　辛巳月　丁酉日　辛亥时",
+        "src": "《叶氏快速论断法与全科应用落地 第四天》PDF 第12—13页（占病闭口课）",
+    }],
+    ("中级第12课", 11): [{
+        "r": "丙辰", "yj": "亥", "zs": "亥", "sc": ["巳", "申", "寅"],
+        "cal": "丙辰日亥时", "pillars": "己丑年　丁卯月　丙辰日　己亥时",
+        "src": "《大六壬初中级》PPT 第216页（占何时怀孕）",
+    }],
+    ("中级第12课", 14): [{
+        "r": "丙申", "yj": "戌", "zs": "亥", "sc": ["卯", "寅", "丑"],
+        "cal": "丙申日亥时", "pillars": "己丑年　丁卯月　丙申日　己亥时",
+        "src": "《大六壬初中级》PPT 第217页（温秀才占生育）",
+    }],
+    ("中级第12课", 17): [{
+        "r": "丁卯", "yj": "未", "zs": "丑", "sc": ["卯", "酉", "卯"],
+        "cal": "丁卯日丑时", "pillars": "己巳年　庚午月　丁卯日　辛丑时",
+        "src": "《大六壬初中级》PPT 第218页（官司牢狱）",
+    }],
+    ("中级第12课", 19): [{
+        "r": "丙午", "yj": "子", "zs": "亥", "sc": ["申", "酉", "戌"],
+        "cal": "丙午日亥时", "pillars": "己巳年　庚午月　丙午日　己亥时",
+        "src": "《大六壬初中级》PPT 第219页（疾病从革课）",
+    }],
+}
+
+
+def pan_markdown(spec: dict) -> list[str]:
+    b = build_pan(spec)
+    return [
+        "**课件原盘复排**", "",
+        f"> **课时**：{spec['cal']}　　**四柱**：{spec['pillars']}　　**月将**：{spec['yj']}　　**占时**：{spec['zs']}",
+        f"> **课件出处**：{spec['src']}", "",
+        "**天地盘**", "", md_pan(b), "",
+        "**四课**", "", md_sike(b), "",
+        "**三传**", "", md_sanchuan(b), "",
+    ]
+
+
 def safe_text(text: str) -> str:
     # 防止正文行首被 Markdown 误当标题或列表。
     return re.sub(r"^(#{1,6}|[-+*]\s)", r"\\\1", text)
@@ -650,7 +736,12 @@ def build(source_root: Path, output: Path, checklist: Path) -> None:
                 chunks += [f"## {i}. {heading}", ""]
                 case = case_label(sec)
                 if case:
-                    chunks += [f"> **盘面待补**：请提供“{sec.source} · {case}”的视频案例截图；本案例后续相邻小节共用此盘。", ""]
+                    specs_for_case = PANS.get((sec.source, sec.index), [])
+                    if specs_for_case:
+                        for spec in specs_for_case:
+                            chunks += pan_markdown(spec)
+                    else:
+                        chunks += [f"> **盘面待补**：请提供“{sec.source} · {case}”的视频案例截图；本案例后续相邻小节共用此盘。", ""]
                 if (sec.source, sec.index) in CASE_SUMMARIES:
                     chunks += [CASE_SUMMARIES[(sec.source, sec.index)].strip(), ""]
                 else:
@@ -659,10 +750,10 @@ def build(source_root: Path, output: Path, checklist: Path) -> None:
         filename = output / f"B{n:02d}-{title}.md"
         filename.write_text("\n".join(chunks).rstrip() + "\n", encoding="utf-8")
 
-    cases = [s for s in sections if case_label(s)]
+    cases = [s for s in sections if case_label(s) and (s.source, s.index) not in PANS]
     lines = [
         "# 大六壬初中级课程案例盘面截图清单", "",
-        "> 以下小节的文字讲解已经收入课程，但源 Word 没有盘面。请按原视频课次和节名提供截图。", "",
+        "> 以下小节的文字讲解已经收入课程，但在现有 PPT/PDF 中尚未找到可完整核对的盘面。请按原视频课次和节名提供截图。", "",
     ]
     for i, s in enumerate(cases, 1):
         lesson_title = next(x[1] for x in LESSONS if x[0] == s.lesson)

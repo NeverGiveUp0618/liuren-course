@@ -30,7 +30,7 @@
   .stats div{flex:1;text-align:center}
   .stats b{display:block}
 </style>
-<!--ASSET-CSS--><link rel="stylesheet" href="b/93a0288ee8/style.css"><!--/ASSET-CSS-->
+<!--ASSET-CSS--><link rel="stylesheet" href="b/f6338cfc7f/style.css"><!--/ASSET-CSS-->
 </head>
 <body>
 <header class="top">
@@ -70,8 +70,7 @@
          ⚠️ 分组口径＝00 总目录里那句「依赖驱动 vs 查阅式」，改这里先回去看那句。 -->
     <div class="menu">
       <details class="navgrp"><summary class="mgrp g1"><i>学</i><s class="sep"> · </s><span>一课一课往下读</span></summary>
-      <button class="mi" data-go="course"><b>大六壬通解课程</b><span><b id="mTongjieCourse">—</b> 课 · 从《大六壬通解》重排的原课程</span></button>
-      <button class="mi" data-go="basiccourse"><b>大六壬初中级课程</b><span><b id="mBasicCourse">—</b> 课 · 公开课与中级校对稿跨课重组</span></button>
+      <button class="mi" data-go="courses"><b>课程</b><span>两个独立课程入口 · 进入后再选择</span></button>
       </details>
 
       <details class="navgrp"><summary class="mgrp g2"><i>练</i><s class="sep"> · </s><span>自己动手</span></summary>
@@ -103,6 +102,9 @@
     </div>
     <p class="muted center" id="buildInfo"></p>
   </section>
+
+  <!-- 课程总入口：两个课程各用一张纵向大卡片，不在课内来回切换 -->
+  <section class="screen" id="s-courses"><div id="courseEntrances"></div></section>
 
   <!-- 课程列表 -->
   <section class="screen" id="s-course"><div id="courseList"></div></section>
@@ -201,7 +203,7 @@
         读到课文深处就没有任何回本站首页的路。底栏常驻，四个根屏随时可跳。 -->
 <nav class="tabbar">
   <button data-tab="home" class="on"><b>首</b><span>首页</span></button>
-  <button data-tab="course"><b>学</b><span>课程</span></button>
+  <button data-tab="courses"><b>学</b><span>课程</span></button>
   <button data-tab="qlist"><b>例</b><span>课例</span></button>
   <button data-tab="ref"><b>查</b><span>速查</span></button>
 </nav>
@@ -210,9 +212,9 @@
 <button class="fab" id="fabToc" aria-label="本课目录">目</button>
 <div class="tocmask" id="tocMask"><div class="tocbox"></div></div>
 
-<!--ASSET-JS--><script>window.ASSET='b/93a0288ee8/'</script>
-<script src="b/93a0288ee8/data/data-meta.js"></script>
-<script src="b/93a0288ee8/engine.js"></script>
-<script src="b/93a0288ee8/app.js"></script><!--/ASSET-JS-->
+<!--ASSET-JS--><script>window.ASSET='b/f6338cfc7f/'</script>
+<script src="b/f6338cfc7f/data/data-meta.js"></script>
+<script src="b/f6338cfc7f/engine.js"></script>
+<script src="b/f6338cfc7f/app.js"></script><!--/ASSET-JS-->
 </body>
 </html>

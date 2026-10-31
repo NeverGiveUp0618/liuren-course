@@ -476,8 +476,17 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 #courseList .part em,#basicCourseList .part em{font-style:normal;font-size:11.5px;font-weight:400;color:var(--ink3);font-family:var(--f-mono)}
 #courseList .mi,#basicCourseList .mi{border-radius:12px;border-left:4px solid var(--blue);margin-bottom:4px}
 #courseList .mi b,#basicCourseList .mi b{color:var(--blue)}
-.course-switch{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-.course-switch>.mi{margin:9px 0 0!important;background:var(--paper)}
+.course-entrances{display:flex;flex-direction:column;gap:16px;padding:10px 0 24px}
+.course-entry{width:100%;min-height:150px;padding:22px 20px;display:flex;align-items:center;gap:18px;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 8px 24px rgba(54,42,24,.06)}
+.course-entry>i{flex:0 0 58px;height:58px;border-radius:16px;display:grid;place-items:center;background:var(--gold);color:#fff;font-style:normal;font-size:28px;font-family:serif}
+.course-entry.beginner>i{background:#7665b5}
+.course-entry>span{min-width:0;display:flex;flex-direction:column;gap:8px}
+.course-entry b{font-size:21px;line-height:1.35}
+.course-entry small{color:var(--muted);font-size:14px;line-height:1.55}
+.course-entry em{color:var(--gold);font-style:normal;font-weight:700;font-size:14px}
+.course-entry.beginner em{color:#6552a6}
+.course-entry:active{transform:scale(.985)}
+.course-note{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--muted);line-height:1.65}
 #basicCourseList .li small{display:block;margin-top:5px;color:var(--ink3);font-size:11px;font-weight:400}
 .li{border-radius:12px;align-items:center;padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
 .li .n{flex:none;width:30px;height:30px;min-width:0;border-radius:50%;display:grid;place-items:center;font-size:14px;

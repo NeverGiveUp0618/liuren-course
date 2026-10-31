@@ -259,7 +259,7 @@ function basicLessonById(id) {
    所以：前进 pushState，回到栈上已有的屏用 history.go(-n) 折叠，
    popstate 只移动指针**绝不截断栈**（截断会让 forward 找不到原来那屏）。 */
 var stack = [], pos = 0, cur = { scr: 'home', id: null };
-var TITLES = { home: '六壬神课', course: '大六壬通解课程', lesson: '',
+var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解课程', lesson: '',
                basiccourse: '大六壬初中级课程', basiclesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例',
@@ -268,7 +268,7 @@ var TITLES = { home: '六壬神课', course: '大六壬通解课程', lesson: ''
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
-var ROOTS = { home: 1, course: 1, basiccourse: 1, qlist: 1, ref: 1 };
+var ROOTS = { home: 1, courses: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -904,6 +904,23 @@ function paintTongjie(items, id) {
   });
 }
 
+RENDER.courses = function () {
+  var tongjieN = (M.list || []).length;
+  var basicN = (M.basicList || []).length;
+  $('#courseEntrances').innerHTML =
+    '<div class="course-entrances">' +
+      '<button class="course-entry tongjie" data-course-go="course">' +
+        '<i>通</i><span><b>大六壬通解课程</b><small>从《大六壬通解》重排的系统课程</small><em>' + tongjieN + ' 课　进入学习 ›</em></span>' +
+      '</button>' +
+      '<button class="course-entry beginner" data-course-go="basiccourse">' +
+        '<i>初</i><span><b>大六壬初中级课程</b><small>公开课与中级校对稿跨课梳理，案例随知识点学习</small><em>' + basicN + ' 课　进入学习 ›</em></span>' +
+      '</button>' +
+    '</div>';
+  $$('[data-course-go]', $('#courseEntrances')).forEach(function (b) {
+    b.onclick = function () { show(b.dataset.courseGo); };
+  });
+};
+
 RENDER.course = function () {
   var read = load(K.read, {});
   var byId = {}; (M.list || []).forEach(function (l) { byId[l.num] = l; });
@@ -950,10 +967,7 @@ RENDER.course = function () {
       '<em>' + rd + ' / ' + refPlan.length + '</em></summary>' + refPlan.map(item).join('') + '</details>';
   }
   // 学习路线原是首页单独一项，2026-10-22 并到课程列表顶上（首页入口精简）
-  $('#courseList').innerHTML = '<div class="course-switch"><b>当前：大六壬通解课程</b>' +
-    '<button class="mi" id="toBasicCourse"><b>切换到大六壬初中级课程</b><span>公开课与中级校对稿 · 20课</span></button></div>' +
-    '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
-  $('#toBasicCourse').onclick = function () { show('basiccourse'); };
+  $('#courseList').innerHTML = '<button class="mi" id="toOutline"><b>学习路线</b><span>全书结构 · 依赖图 · 三个卡点</span></button>' + html;
   $('#toOutline').onclick = function () { show('outline'); };
   $$('#courseList .li[data-id]').forEach(function (b) {
     b.onclick = function () { show('lesson', b.dataset.id); };
@@ -978,10 +992,7 @@ RENDER.basiccourse = function () {
       '</small></span><span class="mark">' + (pct >= 90 ? '已读' : pct > 0 ? pct + '%' : '') + '</span></button>';
   });
   if (part) html += '</details>';
-  $('#basicCourseList').innerHTML = '<div class="course-switch"><b>当前：大六壬初中级课程</b>' +
-    '<p class="muted">公开课与中级校对稿按知识点跨课重组；原小节全文保留，案例缺盘处已逐一标记。</p>' +
-    '<button class="mi" id="toTongjieCourse"><b>切换到大六壬通解课程</b><span>原有 25 课</span></button></div>' + html;
-  $('#toTongjieCourse').onclick = function () { show('course'); };
+  $('#basicCourseList').innerHTML = '<p class="course-note">公开课与中级校对稿按知识点跨课重组；实战案例放回对应知识课，已找到的课件原盘均已复排。</p>' + html;
   $$('[data-basic-id]', $('#basicCourseList')).forEach(function (b) {
     b.onclick = function () { show('basiclesson', b.dataset.basicId); };
   });

@@ -131,7 +131,7 @@ console.log('\n== 首页分组 ==');
   homeFolds[0].querySelector('summary').click();
   ok(!homeFolds[0].open, '首页再次点击最大标题可以收起');
   const items = $$('.menu .mi');
-  ok(items.length === 13, `入口 13 项一个不少（实得 ${items.length}；含两套课程与两个案例库）`);
+  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}；两套课程收进一个课程总入口）`);
   ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const orphan = items.filter(el => !el.closest('details.navgrp')).length;
@@ -221,8 +221,14 @@ ok(/内容更新于/.test($('#buildInfo').textContent), '显示构建时间');
 const counts = JSON.parse(window.localStorage.getItem('liuren_course_counts') || '{}');
 ok(counts.lesson === C.length, '写了 liuren_course_counts 给导航看板当分母');
 
-console.log('\n== 课程列表 ==');
-$$('.mi[data-go="course"]')[0].onclick();
+console.log('\n== 课程总入口与课程列表 ==');
+$$('.mi[data-go="courses"]')[0].onclick();
+ok($('#s-courses').classList.contains('active'), '首页课程按钮进入课程总入口');
+const courseEntries = $$('#courseEntrances .course-entry');
+ok(courseEntries.length === 2 && courseEntries[0].dataset.courseGo === 'course' && courseEntries[1].dataset.courseGo === 'basiccourse',
+   '上下两张独立方框分别进入通解课程和初中级课程');
+ok(!$('#courseEntrances').textContent.includes('切换到'), '课程入口不再使用课内切换');
+courseEntries[0].onclick();
 const rows = $$('#courseList .li');
 ok(rows.length === M.plan.length, `列出全部 ${M.plan.length} 课（含未写的）`);
 ok($$('#courseList .li[data-id]').length === C.length, '可点的正好是已写成的 ' + C.length + ' 课');
@@ -233,15 +239,17 @@ ok(courseFolds.length >= 5 && courseFolds.every(x => !x.open), '课程列表按�
 courseFolds[0].querySelector('summary').click();
 ok(courseFolds[0].open, '点击课程大标题可以展开该部分');
 
-console.log('\n== 双课程入口与大六壬初中级课程 ==');
-ok($$('.mi[data-go="course"]').length >= 1 && $$('.mi[data-go="basiccourse"]').length === 1,
-   '首页分成大六壬通解课程与大六壬初中级课程两个入口');
+console.log('\n== 大六壬初中级课程 ==');
+ok($$('.mi[data-go="courses"]').length === 1,
+   '首页只保留一个课程入口，两个课程在总入口上下分列');
 ok(BC.length === 20 && M.basicList.length === 20 && M.counts.basicLesson === 20,
    '初中级课程共 20 课，数据与首页计数一致');
 const basicText = BC.map(x => x.text).join('\n');
 ok(basicText.length < 140000 && basicText.length > 80000,
    '17 份讲稿已消化重编为课程正文，不再逐字堆放转录稿');
-ok(BC.reduce((n, x) => n + x.pan_pending, 0) === 25, '识别出并合并为 25 组需要补视频盘面的独立案例');
+ok(BC.reduce((n, x) => n + x.pan_pending, 0) === 12, '课件已补入 13 组案例，余 12 组确实缺完整盘面');
+ok((basicText.match(/课件原盘复排/g) || []).length === 14,
+   '13 组案例共复排 14 张盘（刚柔别责一组含两盘）');
 ok(/类象必须服从占问、位置和生克逻辑/.test(basicText) && /预测风险与现实分寸/.test(basicText) && /先定唯一，不定其二/.test(basicText),
    '老师明确讲出的判断步骤、类象逻辑与实战边界均保留');
 ok(!BC.some(x => /公开课实战案例|中级综合案例/.test(x.title)) &&
@@ -249,7 +257,8 @@ ok(!BC.some(x => /公开课实战案例|中级综合案例/.test(x.title)) &&
    /丢失的合同/.test(BC.find(x => x.id === 'B10').text) &&
    /九宝综合课例/.test(BC.find(x => x.id === 'B14').text),
    '案例已分散回对应知识课与分类实占课，不再堆在最后');
-$$('.mi[data-go="basiccourse"]')[0].onclick();
+$$('.tabbar [data-tab="courses"]')[0].onclick();
+$$('#courseEntrances [data-course-go="basiccourse"]')[0].onclick();
 ok($('#s-basiccourse').classList.contains('active'), '初中级入口进入独立课程列表');
 const basicFolds = $$('#basicCourseList details.coursegrp');
 ok(basicFolds.length === 6 && basicFolds.every(x => !x.open), '初中级 20 课按六部分折叠');
@@ -259,7 +268,8 @@ ok($('#s-basiclesson').classList.contains('active') && /初中级第1课/.test($
 ok($('#basicLessonBody').querySelectorAll('h2').length === 10 && /七个步骤/.test($('#basicLessonBody').textContent),
    '第一课已重排成十个学习章节，不是原小节全文搬运');
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
-$('#toTongjieCourse').onclick();
+$$('.tabbar [data-tab="courses"]')[0].onclick();
+$$('#courseEntrances [data-course-go="course"]')[0].onclick();
 $$('#courseList .li[data-id]')[0].onclick();
 
 console.log('\n== 课文 ==');
@@ -766,7 +776,7 @@ async function typeSearch(kw) {
     const css2 = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
     const tabs = $$('.tabbar button');
     ok(tabs.length === 4, `底栏 4 个 tab（${tabs.map(b => b.querySelector('span').textContent).join(' ')}）`);
-    ok(tabs.every(b => ['home', 'course', 'qlist', 'ref'].includes(b.dataset.tab)),
+    ok(tabs.every(b => ['home', 'courses', 'qlist', 'ref'].includes(b.dataset.tab)),
        '四个 tab 指向的都是真实的根屏');
     // ⚠️ 这条是这次改动的起因：套壳在五术堂里时，本站返回键曾被 CSS 藏掉，
     //    而套壳那条「返回首页」是回导航首页、不是回本站 —— 别再把它藏回去。
@@ -813,7 +823,8 @@ async function typeSearch(kw) {
     // 真点一次：底栏 → 课程列表 → 课文，再从课文一步回首页
     tabs[1].onclick();
     await sleep(30);
-    ok($('#s-course').classList.contains('active'), '点底栏「课程」到课程列表');
+    ok($('#s-courses').classList.contains('active'), '点底栏「课程」到两个课程的总入口');
+    $$('#courseEntrances [data-course-go="course"]')[0].onclick();
     $$('#courseList .li[data-id]')[0].onclick();
     await sleep(30);
     ok($('#s-lesson').classList.contains('active'), '再进到课文里');
