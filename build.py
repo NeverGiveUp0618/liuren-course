@@ -541,6 +541,48 @@ def build_mufu():
     return items
 
 
+def build_tongjie():
+    """101-大六壬通解案例库.md → 独立的通解案例库。
+
+    内容由 _tools/import_tongjie_cases.py 从三册 OCR 批量生成；列表与正文
+    分开，避免数百例一次全部下载。
+    """
+    fp = os.path.join(SRC, '101-大六壬通解案例库.md')
+    if not os.path.exists(fp):
+        return []
+    md = read(fp)
+    blocks = re.split(r'^### (?=【通解[^】]+】)', md, flags=re.M)
+    items = []
+    for blk in blocks[1:]:
+        head = blk.split('\n', 1)[0]
+        m = re.match(r'【通解([上中下])册(\d+)】\s*(.+?)(?:\s+`([^`]+)`)?$', head)
+        if not m:
+            sys.exit('✗ 通解案例题头解析不了：' + head[:80])
+        volume, n, title, category = m.group(1), int(m.group(2)), m.group(3).strip(), (m.group(4) or '未分类')
+        if '**古文原文**' not in blk or '**现代阅读提示**' not in blk:
+            sys.exit('✗ 通解%s册第 %d 例缺古文或现代讲解' % (volume, n))
+        info = re.search(r'^\*\*原案信息\*\*：(.+)$', blk, re.M)
+        cal = []
+        if info:
+            for k, v in re.findall(r'([年月日时])([^\s·]+)', info.group(1)):
+                cal.append({'k': k, 'v': v})
+        items.append({'id': {'上': 'u', '中': 'm', '下': 'l'}[volume] + ('%03d' % n),
+                      'n': n, 'volume': volume, 'title': title, 'category': category,
+                      'tags': [volume + '册', category], 'cal': cal,
+                      'html': mdlite.md2html('### ' + blk), 'text': mdlite.strip_md(blk)})
+    keys = [(x['volume'], x['n']) for x in items]
+    if len(keys) != len(set(keys)):
+        sys.exit('✗ 通解案例存在重复册别/例号')
+    by_volume = {}
+    for item in items:
+        by_volume.setdefault(item['volume'], []).append(item['n'])
+    expected = {'上': 75, '中': 197, '下': 570}
+    for volume, nums in by_volume.items():
+        if nums != list(range(1, expected[volume] + 1)):
+            sys.exit('✗ 通解%s册例号不连续：共 %d 例' % (volume, len(nums)))
+    return items
+
+
 def write_bodies(kind, items, key, chunk_of):
     """⭐ 2026-10-23 大文件拆分：正文 html 从列表里拿出来，按块写进 data/<kind>/<块>.js，
     点开哪条才加载哪块。列表里留标题、标签和 text（全站搜索要用）。
@@ -665,10 +707,13 @@ def main():
     counts['quizstar'] = sum(x['star'] for x in qitems)
     mfitems = build_mufu()
     counts['mufu'] = len(mfitems)
+    tjitems = build_tongjie()
+    counts['tongjie'] = len(tjitems)
     meta['counts'] = counts
     qnames = [c['name'] for c in qcats]
     nq, sq = write_bodies('q', qitems, 'n', lambda it: qnames.index(it['cat']))
     nmf, smf = write_bodies('mf', mfitems, 'n', lambda it: (it['n'] - 1) // 10)
+    ntj, stj = write_bodies('tj', tjitems, 'id', lambda it: {'上': 0, '中': 100, '下': 300}[it['volume']] + (it['n'] - 1) // 10)
     nb, sb = write_bodies('bf', bifa, 'n', lambda it: (it['n'] - 1) // 10)
     s1 = write_js('data-course.js', 'DATA_COURSE', lessons)
     s2 = write_js('data-meta.js', 'DATA_META', meta)
@@ -680,6 +725,7 @@ def main():
     s8 = write_js('data-extra.js', 'DATA_EXTRA', extra)
     s9 = write_js('data-jinsuo.js', 'DATA_JINSUO', js or {})
     s10 = write_js('data-mufu.js', 'DATA_MUFU', mfitems)
+    s11 = write_js('data-tongjie.js', 'DATA_TONGJIE', tjitems)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -690,6 +736,8 @@ def main():
     print('  正文分块：课例 %d 块 %.1f KB／毕法 %d 块 %.1f KB（点开才加载）' % (nq, sq / 1024, nb, sb / 1024))
     print('  data-mufu.js  %7.1f KB（王牧夫初级案例 %d；正文 %d 块 %.1f KB）'
           % (s10 / 1024, len(mfitems), nmf, smf / 1024))
+    print('  data-tongjie.js %5.1f KB（通解案例 %d；正文 %d 块 %.1f KB）'
+          % (s11 / 1024, len(tjitems), ntj, stj / 1024))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))

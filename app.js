@@ -10,7 +10,7 @@ var K = {
   counts: 'liuren_course_counts', theme: 'liuren_course_theme',
   progopen: 'liuren_course_progopen',
   qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen',
-  mfseen: 'liuren_course_mfseen'
+  mfseen: 'liuren_course_mfseen', tjseen: 'liuren_course_tjseen'
 };
 // ⚠️ 这个项目原本没有 esc——课例的标题/占类是从 md 抄来的纯文本，
 //    但插进 innerHTML 前照样得转义，别图省事直接拼。
@@ -149,7 +149,7 @@ var _bodyLoading = {};
 /* ⭐ 2026-10-23：课例、毕法赋的正文按块拆进 data/q/、data/bf/，点开哪条才加载哪块。
    列表文件里只有标题和检索文字，所以首次进列表快得多。 */
 function withBody(kind, it, cb) {
-  var B = window.BODY || {}, k = kind + it.n;
+  var B = window.BODY || {}, k = kind + (it.id || it.n);
   if (it.html || B[k]) { cb(it.html || B[k]); return; }
   var key = kind + '/' + it.c;
   if (!_bodyLoading[key]) {
@@ -189,6 +189,19 @@ function needMufu() {
   });
   return _mufuLoading;
 }
+var _tongjieLoading = null;
+function needTongjie() {
+  if (window.DATA_TONGJIE) return Promise.resolve(window.DATA_TONGJIE);
+  if (_tongjieLoading) return _tongjieLoading;
+  _tongjieLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-tongjie.js?v=' + VER;
+    el.onload = function () { res(window.DATA_TONGJIE); };
+    el.onerror = function () { _tongjieLoading = null; rej(new Error('通解案例加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _tongjieLoading;
+}
 function lessonById(id) {
   var a = window.DATA_COURSE || [];
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
@@ -205,6 +218,7 @@ var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例',
                mflist: '王牧夫入门案例', mufu: '王牧夫案例',
+               tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
@@ -301,6 +315,7 @@ RENDER.home = function () {
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
+  var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
   var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
   var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
@@ -771,6 +786,54 @@ function paintMufu(items, n) {
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
     buildStickyPan($('#mfBody'), it.cal);
+  });
+}
+
+/* ── 《大六壬通解》案例库 ── */
+RENDER.tjlist = function () {
+  var box = $('#tjRows');
+  if (!window.DATA_TONGJIE) box.innerHTML = '<p class="muted" style="padding:16px">载入通解案例…</p>';
+  needTongjie().then(paintTongjieList);
+  if (window.DATA_TONGJIE) paintTongjieList(window.DATA_TONGJIE);
+};
+function paintTongjieList(items) {
+  var seen = load(K.tjseen, {}), groups = {}, order = [];
+  items.forEach(function (it) {
+    var key = it.volume + '册 · ' + it.category;
+    if (!groups[key]) { groups[key] = []; order.push(key); }
+    groups[key].push(it);
+  });
+  $('#tjRows').innerHTML = order.map(function (key) {
+    var a = groups[key];
+    return '<details class="qgrp"><summary class="qgh"><b>' + esc(key) + '</b><span>' + a.length + ' 例</span></summary><div class="qgb">' +
+      a.map(function (it) {
+        return '<div class="qrow" data-tj="' + esc(it.id) + '"><span class="qn">' + it.n +
+          '</span><span class="t">' + esc(it.title) + '<small>' + esc(it.volume + '册 · ' + it.category) +
+          '</small></span><span class="s"><i class="dot ' + (seen[it.id] ? 'ok' : 'new') + '"></i></span></div>';
+      }).join('') + '</div></details>';
+  }).join('');
+  $$('[data-tj]', $('#tjRows')).forEach(function (el) {
+    el.onclick = function () { show('tongjie', el.dataset.tj); };
+  });
+}
+RENDER.tongjie = function (id) {
+  needTongjie().then(function (items) { paintTongjie(items, id); });
+  if (window.DATA_TONGJIE) paintTongjie(window.DATA_TONGJIE, id);
+};
+function paintTongjie(items, id) {
+  var it = items.filter(function (x) { return x.id === id; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '通解' + it.volume + '册 · 第' + it.n + '例';
+  var seen = load(K.tjseen, {}); seen[it.id] = 1; save(K.tjseen, seen);
+  var idx = items.map(function (x) { return x.id; }).indexOf(id);
+  var prev = items[idx - 1], next = items[idx + 1];
+  withBody('tj', it, function (html) {
+    $('#tjBody').innerHTML = html + '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+      (prev ? '<button class="btn" id="tjPrev">‹ 上一例</button>' : '') +
+      (next ? '<button class="btn" id="tjNext">下一例 ›</button>' : '') + '</div>';
+    if (prev) $('#tjPrev').onclick = function () { show('tongjie', prev.id); };
+    if (next) $('#tjNext').onclick = function () { show('tongjie', next.id); };
+    buildStickyPan($('#tjBody'), it.cal);
   });
 }
 
@@ -1309,7 +1372,7 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
@@ -1321,6 +1384,7 @@ function startSources(onMore) {
   needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
   needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
   needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
+  needTongjie().then(add(function (r) { (r || []).forEach(function (x) { put('通解案例', { g: '通解案例', t: x.volume + '册第' + x.n + '例 · ' + x.title, text: x.text, go: ['tongjie', x.id], body: '#tjBody' }); }); })).catch(function () {});
   needXf().then(add(function (r) { (r.items || []).forEach(function (x) { put('象法', { g: '象法', t: x.name, text: x.name + '　' + x.text, go: ['xflist', null], xf: x.name }); }); })).catch(function () {});
 }
 function srcList() {

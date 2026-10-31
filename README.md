@@ -39,6 +39,20 @@ python3 _tools/_verify_cite.py           # 引文逐条回查原书页码
 python3 _tools/_audit_pan.py             # 盘面复算，与课文里的表逐字比对
 ```
 
+### 《大六壬通解》案例批量导入
+
+`_tools/import_tongjie_cases.py` 负责从 `_ref/通解_上中下.txt` 切分独立课例、提取册别/例号/
+年月日时、保留古文，并校验三册数量必须为 75/197/570。它只代替重复排版，不冒充人工断课；
+OCR 疑字、课盘和现代讲解仍须复核。
+
+```bash
+python3 _tools/import_tongjie_cases.py --check
+python3 _tools/import_tongjie_cases.py --volume 上 --site-markdown 'content/101-大六壬通解案例库.md'
+python3 build.py && node smoke.js
+```
+
+站内列表数据生成到 `data/data-tongjie.js`，正文每 10 例一包生成到 `data/tj/`，点开案例时才加载。
+
 ### 屏
 
 首页 / 课程（25 课含待写占位）/ 课文 / **速查** / 学习路线 / **起盘台** / 搜索。

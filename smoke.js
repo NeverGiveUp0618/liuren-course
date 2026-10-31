@@ -31,8 +31,9 @@ run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按
 run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
 run('data/data-mufu.js');
+run('data/data-tongjie.js');
 // ⭐ 2026-10-23 正文拆块：课例、毕法赋的 html 在 data/q/、data/bf/，点开才加载；这里全部预置
-['q', 'bf', 'mf'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
+['q', 'bf', 'mf', 'tj'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
 const BODY = () => window.BODY || {};
 run('data/data-ge.js');
 run('app.js');
@@ -127,7 +128,7 @@ console.log('\n== 首页分组 ==');
   homeFolds[0].querySelector('summary').click();
   ok(!homeFolds[0].open, '首页再次点击最大标题可以收起');
   const items = $$('.menu .mi');
-  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}；新增王牧夫初级案例库）`);
+  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}；含王牧夫与通解两个案例库）`);
   ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const orphan = items.filter(el => !el.closest('details.navgrp')).length;
@@ -650,6 +651,27 @@ async function typeSearch(kw) {
        '三传缺遁干时仍按六亲／○／传支／天将对齐，不发生错列');
     $('#tocMask').classList.remove('on');
     ok(!!$('#mfNext'), '详情页可以进入下一例');
+  }
+
+  console.log('\n== 大六壬通解案例库 ==');
+  {
+    const TJ = window.DATA_TONGJIE || [];
+    ok(TJ.length === 75 && M.counts.tongjie === 75, '上册 75 例，与 meta 计数一致');
+    ok(TJ.map(x => x.n).join(',') === Array.from({length:75}, (_,i) => i + 1).join(','), '上册站内例号 1–75 连续');
+    ok(TJ.every(x => x.id && x.volume === '上' && x.category && x.cal.length), '每例都有稳定 ID、册别、分类和原案日历');
+    ok(TJ.every(x => /<strong>古文原文<\/strong>/.test(BODY()['tj' + x.id]) &&
+                     /<strong>现代阅读提示<\/strong>/.test(BODY()['tj' + x.id])),
+       '每例同时保留古文原文与现代阅读提示');
+    ok(fs.readdirSync(path.join(dir, 'data', 'tj')).length === 8, '75 例正文拆为 8 个按需加载包');
+    ok($('#mTongjie').textContent === '75', '首页显示通解上册 75 例');
+    $$('.mi[data-go="tjlist"]')[0].click();
+    await sleep(10);
+    ok($$('#tjRows .qrow').length === 75, '列表完整显示 75 例');
+    ok($$('#tjRows details.qgrp').length >= 2 && $$('#tjRows details.qgrp').every(x => !x.open), '按原书课体分类且默认折叠');
+    $$('#tjRows .qrow')[0].click();
+    await sleep(10);
+    ok($('#s-tongjie').classList.contains('active') && /通解上册/.test($('#ttl').textContent), '可进入通解案例详情');
+    ok(!!$('#tjNext'), '详情页可进入下一例');
   }
 
   console.log('\n== 首屏防闪（关键样式内联）==');
