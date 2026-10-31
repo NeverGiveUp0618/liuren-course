@@ -587,16 +587,16 @@ async function typeSearch(kw) {
   console.log('\n== 王牧夫初级案例库 ==');
   {
     const MF = window.DATA_MUFU || [];
-    ok(MF.length === 25 && M.counts.mufu === 25, '共 25 例，与 meta 计数一致');
-    ok(MF.every(x => BODY()['mf' + x.n]), '25 例正文都按需分块生成');
+    ok(MF.length === 55 && M.counts.mufu === 55, '共 55 例，与 meta 计数一致');
+    ok(MF.every(x => BODY()['mf' + x.n]), '55 例正文都按需分块生成');
     ok(MF.every(x => /古文原断/.test(BODY()['mf' + x.n]) && /白话拆解/.test(BODY()['mf' + x.n])),
        '每例都有古文原断与白话拆解');
     ok(MF.every(x => /class="pan"/.test(BODY()['mf' + x.n]) && /class="sike"/.test(BODY()['mf' + x.n]) && /class="sanchuan"/.test(BODY()['mf' + x.n])),
        '每例都按本站样式渲染天地盘、四课、三传');
-    ok($('#mMufu').textContent === '25', '首页显示 25 例');
+    ok($('#mMufu').textContent === '55', '首页显示 55 例');
     $$('.mi[data-go="mflist"]')[0].click();
     await sleep(10);
-    ok($$('#mfRows .qrow').length === 25, '列表显示 25 例');
+    ok($$('#mfRows .qrow').length === 55, '列表显示 55 例');
     $$('#mfRows .qrow')[0].click();
     await sleep(10);
     ok(!!$('#mfBody .stickypan'), '详情页沿用四课三传吸顶样式');
