@@ -810,21 +810,39 @@ RENDER.tjlist = function () {
   if (window.DATA_TONGJIE) paintTongjieList(window.DATA_TONGJIE);
 };
 function paintTongjieList(items) {
-  var seen = load(K.tjseen, {}), groups = {}, order = [];
+  var seen = load(K.tjseen, {}), volumes = { '上': {}, '中': {}, '下': {} };
   items.forEach(function (it) {
-    var key = it.volume + '册 · ' + it.category;
-    if (!groups[key]) { groups[key] = []; order.push(key); }
-    groups[key].push(it);
+    if (!volumes[it.volume][it.category]) volumes[it.volume][it.category] = [];
+    volumes[it.volume][it.category].push(it);
   });
-  $('#tjRows').innerHTML = order.map(function (key) {
-    var a = groups[key];
-    return '<details class="qgrp"><summary class="qgh"><b>' + esc(key) + '</b><span>' + a.length + ' 例</span></summary><div class="qgb">' +
-      a.map(function (it) {
-        return '<div class="qrow" data-tj="' + esc(it.id) + '"><span class="qn">' + it.n +
+  $('#tjRows').innerHTML = ['上', '中', '下'].map(function (volume) {
+    var cats = volumes[volume], total = Object.keys(cats).reduce(function (n, key) { return n + cats[key].length; }, 0);
+    return '<section class="tjvol" data-tj-volume="' + volume + '">' +
+      '<button type="button" class="tjfold tjvol-h" aria-expanded="false"><i>' + volume + '</i><b>' + volume +
+      '册</b><span>' + total + ' 例</span><em>›</em></button><div class="tjvol-body">' +
+      Object.keys(cats).map(function (category) {
+        var a = cats[category];
+        return '<section class="tjcat"><button type="button" class="tjfold tjcat-h" aria-expanded="false"><b>' +
+          esc(category) + '</b><span>' + a.length + ' 例</span><em>›</em></button><div class="tjcat-body">' +
+          a.map(function (it) {
+            return '<button type="button" class="qrow tjcase" data-tj="' + esc(it.id) + '"><span class="qn">' + it.n +
           '</span><span class="t">' + esc(it.title) + '<small>' + esc(it.volume + '册 · ' + it.category) +
-          '</small></span><span class="s"><i class="dot ' + (seen[it.id] ? 'ok' : 'new') + '"></i></span></div>';
-      }).join('') + '</div></details>';
+          '</small></span><span class="s"><i class="dot ' + (seen[it.id] ? 'ok' : 'new') + '"></i></span></button>';
+          }).join('') + '</div></section>';
+      }).join('') + '</div></section>';
   }).join('');
+  $$('.tjvol-h', $('#tjRows')).forEach(function (btn) {
+    btn.onclick = function () {
+      var fold = btn.closest('.tjvol'), on = !fold.classList.contains('open');
+      fold.classList.toggle('open', on); btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    };
+  });
+  $$('.tjcat-h', $('#tjRows')).forEach(function (btn) {
+    btn.onclick = function () {
+      var fold = btn.closest('.tjcat'), on = !fold.classList.contains('open');
+      fold.classList.toggle('open', on); btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    };
+  });
   $$('[data-tj]', $('#tjRows')).forEach(function (el) {
     el.onclick = function () { show('tongjie', el.dataset.tj); };
   });
@@ -840,6 +858,7 @@ function paintTongjie(items, id) {
   var seen = load(K.tjseen, {}); seen[it.id] = 1; save(K.tjseen, seen);
   var idx = items.map(function (x) { return x.id; }).indexOf(id);
   var prev = items[idx - 1], next = items[idx + 1];
+  $('#tjBody').innerHTML = '<p class="muted" style="padding:16px">正在载入案例正文…</p>';
   withBody('tj', it, function (html) {
     $('#tjBody').innerHTML = html + '<div class="row" style="gap:8px;margin:18px 0 8px">' +
       (prev ? '<button class="btn" id="tjPrev">‹ 上一例</button>' : '') +

@@ -675,7 +675,13 @@ async function typeSearch(kw) {
     $$('.mi[data-go="tjlist"]')[0].click();
     await sleep(10);
     ok($$('#tjRows .qrow').length === 842, '列表完整显示 842 例');
-    ok($$('#tjRows details.qgrp').length >= 2 && $$('#tjRows details.qgrp').every(x => !x.open), '按原书课体分类且默认折叠');
+    ok($$('#tjRows .tjvol').length === 3 && $$('#tjRows .tjvol').every(x => !x.classList.contains('open')),
+       '上中下三册分层且默认折叠');
+    $$('#tjRows .tjvol-h')[0].click();
+    ok($$('#tjRows .tjvol')[0].classList.contains('open') && $$('#tjRows .tjcat').length >= 2,
+       '点上册后才显示原书分类');
+    $$('#tjRows .tjcat-h')[0].click();
+    ok($$('#tjRows .tjcat')[0].classList.contains('open'), '点分类后展开案例');
     $$('#tjRows .qrow')[0].click();
     await sleep(10);
     ok($('#s-tongjie').classList.contains('active') && /通解上册/.test($('#ttl').textContent), '可进入通解案例详情');

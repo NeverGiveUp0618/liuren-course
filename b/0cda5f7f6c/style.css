@@ -360,6 +360,25 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .qrow .dot.new{background:var(--line)}
 .qrow .dot.ok{background:var(--gold)}
 
+/* 通解 842 例：先按上中下三册收纳，再按原书分类展开。 */
+#tjRows{padding:4px 0}
+.tjvol{border:1px solid var(--line);border-radius:13px;background:var(--paper);margin:0 0 10px;overflow:hidden}
+.tjfold{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:var(--ink);
+  padding:13px 14px;text-align:left;font-family:inherit;cursor:pointer}
+.tjfold i{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-style:normal;
+  color:#fff;background:linear-gradient(135deg,var(--blue),var(--acc2));font-family:var(--f-disp);font-size:16px}
+.tjfold b{flex:1;font-size:15px}.tjfold span{font-size:12px;color:var(--ink3)}
+.tjfold em{font-style:normal;font-size:21px;color:var(--ink3);transition:transform .16s}
+.tjvol-body,.tjcat-body{display:none}
+.tjvol.open>.tjvol-body,.tjcat.open>.tjcat-body{display:block}
+.tjvol.open>.tjvol-h em,.tjcat.open>.tjcat-h em{transform:rotate(90deg);color:var(--blue)}
+.tjvol.open{border-color:var(--blue)}
+.tjcat{border-top:1px solid var(--line)}
+.tjcat-h{padding:11px 14px 11px 22px}.tjcat-h b{font-size:14px;color:var(--ink2)}
+.tjcat-h em{font-size:18px}
+.qrow.tjcase{width:100%;margin:0;border:0;border-top:1px solid var(--line);background:none;text-align:left;
+  font-family:inherit;color:inherit;-webkit-appearance:none;appearance:none}
+
 /* 学习进度：25 个课号 chip 折叠收纳（进度条与百分比常显） */
 .proghd{display:flex;align-items:center;gap:7px;width:100%;padding:0;background:none;
   border:0;color:var(--ink);font-family:inherit;font-size:inherit;cursor:pointer;text-align:left}
