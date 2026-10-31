@@ -491,6 +491,37 @@ def build_quiz():
     return cats, items
 
 
+def build_mufu():
+    """100-王牧夫初级案例库.md → 独立的初级案例列表。
+
+    与 99 课例题库分开：99 按占类训练，这里按王牧夫原案顺序学习，
+    并强制每例同时保留「古文原断」与「白话拆解」。
+    """
+    fp = os.path.join(SRC, '100-王牧夫初级案例库.md')
+    if not os.path.exists(fp):
+        return []
+    md = read(fp)
+    blocks = re.split(r'^### (?=【入门例\d+】)', md, flags=re.M)
+    items = []
+    for blk in blocks[1:]:
+        head = blk.split('\n', 1)[0]
+        m = re.match(r'【入门例(\d+)】\s*(.+?)\s*(`.*)?$', head)
+        if not m:
+            sys.exit('✗ 王牧夫题头解析不了：' + head[:60])
+        n = int(m.group(1))
+        tags = re.findall(r'`([^`]+)`', m.group(3) or '')
+        title = m.group(2).strip()
+        if '**古文原断**' not in blk or '**白话拆解**' not in blk:
+            sys.exit('✗ 王牧夫入门例 %d 缺「古文原断」或「白话拆解」' % n)
+        items.append({'n': n, 'title': title, 'tags': tags,
+                      'html': mdlite.md2html('### ' + blk),
+                      'text': mdlite.strip_md(blk)})
+    ns = sorted(x['n'] for x in items)
+    if ns != list(range(1, len(items) + 1)):
+        sys.exit('✗ 王牧夫入门例号不连续：%s' % ns)
+    return items
+
+
 def write_bodies(kind, items, key, chunk_of):
     """⭐ 2026-10-23 大文件拆分：正文 html 从列表里拿出来，按块写进 data/<kind>/<块>.js，
     点开哪条才加载哪块。列表里留标题、标签和 text（全站搜索要用）。
@@ -613,9 +644,12 @@ def main():
     qcats, qitems = build_quiz()
     counts['quiz'] = len(qitems)
     counts['quizstar'] = sum(x['star'] for x in qitems)
+    mfitems = build_mufu()
+    counts['mufu'] = len(mfitems)
     meta['counts'] = counts
     qnames = [c['name'] for c in qcats]
     nq, sq = write_bodies('q', qitems, 'n', lambda it: qnames.index(it['cat']))
+    nmf, smf = write_bodies('mf', mfitems, 'n', lambda it: (it['n'] - 1) // 10)
     nb, sb = write_bodies('bf', bifa, 'n', lambda it: (it['n'] - 1) // 10)
     s1 = write_js('data-course.js', 'DATA_COURSE', lessons)
     s2 = write_js('data-meta.js', 'DATA_META', meta)
@@ -626,6 +660,7 @@ def main():
     s7 = write_js('data-xf.js', 'DATA_XF', {'libs': xflibs, 'items': xfitems})
     s8 = write_js('data-extra.js', 'DATA_EXTRA', extra)
     s9 = write_js('data-jinsuo.js', 'DATA_JINSUO', js or {})
+    s10 = write_js('data-mufu.js', 'DATA_MUFU', mfitems)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -634,6 +669,8 @@ def main():
     print('  data-quiz.js   %7.1f KB（课例 %d，其中入门精选 %d，%d 个占类）'
           % (s4 / 1024, counts['quiz'], counts['quizstar'], len(qcats)))
     print('  正文分块：课例 %d 块 %.1f KB／毕法 %d 块 %.1f KB（点开才加载）' % (nq, sq / 1024, nb, sb / 1024))
+    print('  data-mufu.js  %7.1f KB（王牧夫初级案例 %d；正文 %d 块 %.1f KB）'
+          % (s10 / 1024, len(mfitems), nmf, smf / 1024))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))

@@ -30,8 +30,9 @@ run('engine.js');            // 起课引擎（起盘台要用）
 run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按需加载，这里预置）
 run('data/data-ref.js');
 run('data/data-quiz.js');            // 同上，预置绕开按需加载
+run('data/data-mufu.js');
 // ⭐ 2026-10-23 正文拆块：课例、毕法赋的 html 在 data/q/、data/bf/，点开才加载；这里全部预置
-['q', 'bf'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
+['q', 'bf', 'mf'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
 const BODY = () => window.BODY || {};
 run('data/data-ge.js');
 run('app.js');
@@ -120,7 +121,7 @@ console.log('\n== 首页分组 ==');
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
   const items = $$('.menu .mi');
-  ok(items.length === 10, `入口 10 项一个不少（实得 ${items.length}；2026-10-22：做题训练整套删除待重做，学习路线进课程列表，源流进附篇）`);
+  ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}；新增王牧夫初级案例库）`);
   ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const kids = [].slice.call($('.menu').children);
@@ -565,6 +566,25 @@ async function typeSearch(kw) {
     ok(!!$('#quizBody .stickypan'), '课例也吸顶四课三传');
     ok(!!$('#qNext'), '有「下一例」');
 
+  }
+
+  console.log('\n== 王牧夫初级案例库 ==');
+  {
+    const MF = window.DATA_MUFU || [];
+    ok(MF.length === 5 && M.counts.mufu === 5, '首批 5 例，与 meta 计数一致');
+    ok(MF.every(x => BODY()['mf' + x.n]), '五例正文都按需分块生成');
+    ok(MF.every(x => /古文原断/.test(BODY()['mf' + x.n]) && /白话拆解/.test(BODY()['mf' + x.n])),
+       '每例都有古文原断与白话拆解');
+    ok(MF.every(x => /class="pan"/.test(BODY()['mf' + x.n]) && /class="sike"/.test(BODY()['mf' + x.n]) && /class="sanchuan"/.test(BODY()['mf' + x.n])),
+       '每例都按本站样式渲染天地盘、四课、三传');
+    ok($('#mMufu').textContent === '5', '首页显示 5 例');
+    $$('.mi[data-go="mflist"]')[0].click();
+    await sleep(10);
+    ok($$('#mfRows .qrow').length === 5, '列表显示五例');
+    $$('#mfRows .qrow')[0].click();
+    await sleep(10);
+    ok(!!$('#mfBody .stickypan'), '详情页沿用四课三传吸顶样式');
+    ok(!!$('#mfNext'), '详情页可以进入下一例');
   }
 
   console.log('\n== 首屏防闪（关键样式内联）==');

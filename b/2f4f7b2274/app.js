@@ -9,7 +9,8 @@ var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   counts: 'liuren_course_counts', theme: 'liuren_course_theme',
   progopen: 'liuren_course_progopen',
-  qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen'
+  qseen: 'liuren_course_qseen', qopen: 'liuren_course_qopen',
+  mfseen: 'liuren_course_mfseen'
 };
 // ⚠️ 这个项目原本没有 esc——课例的标题/占类是从 md 抄来的纯文本，
 //    但插进 innerHTML 前照样得转义，别图省事直接拼。
@@ -175,6 +176,19 @@ function needQuiz() {
   });
   return _quizLoading;
 }
+var _mufuLoading = null;
+function needMufu() {
+  if (window.DATA_MUFU) return Promise.resolve(window.DATA_MUFU);
+  if (_mufuLoading) return _mufuLoading;
+  _mufuLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'data/data-mufu.js?v=' + VER;
+    el.onload = function () { res(window.DATA_MUFU); };
+    el.onerror = function () { _mufuLoading = null; rej(new Error('王牧夫案例加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _mufuLoading;
+}
 function lessonById(id) {
   var a = window.DATA_COURSE || [];
   for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
@@ -190,6 +204,7 @@ var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬神课', course: '课程', lesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
                qlist: '课例题库', quiz: '课例',
+               mflist: '王牧夫入门案例', mufu: '王牧夫案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
@@ -285,6 +300,7 @@ RENDER.home = function () {
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
+  var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
   var mb = $('#mBifa'); if (mb) mb.textContent = c.bifa || '—';
   var mx = $('#mXf'); if (mx) mx.textContent = c.xf || '—';
@@ -718,6 +734,46 @@ function paintQuiz(Q, n) {
   });
 }
 
+/* ── 王牧夫初级案例库 ─────────────────────────────────── */
+RENDER.mflist = function () {
+  var box = $('#mfRows');
+  if (!window.DATA_MUFU) box.innerHTML = '<p class="muted" style="padding:16px">载入案例…</p>';
+  needMufu().then(paintMufuList);
+  if (window.DATA_MUFU) paintMufuList(window.DATA_MUFU);
+};
+function paintMufuList(items) {
+  var seen = load(K.mfseen, {});
+  $('#mfRows').innerHTML = '<div class="qgrp open"><div class="qgb">' + items.map(function (it) {
+    return '<div class="qrow" data-mf="' + it.n + '">' +
+      '<span class="qn">' + it.n + '</span><span class="t">' + esc(it.title) +
+      '<small>' + esc((it.tags || []).join(' · ')) + '</small></span>' +
+      '<span class="s"><i class="dot ' + (seen[it.n] ? 'ok' : 'new') + '"></i></span></div>';
+  }).join('') + '</div></div>';
+  $$('[data-mf]', $('#mfRows')).forEach(function (el) {
+    el.onclick = function () { show('mufu', +el.dataset.mf); };
+  });
+}
+RENDER.mufu = function (n) {
+  needMufu().then(function (items) { paintMufu(items, n); });
+  if (window.DATA_MUFU) paintMufu(window.DATA_MUFU, n);
+};
+function paintMufu(items, n) {
+  var it = items.filter(function (x) { return x.n === n; })[0];
+  if (!it) return;
+  $('#ttl').textContent = '王牧夫 · 入门例' + it.n;
+  var seen = load(K.mfseen, {}); seen[it.n] = 1; save(K.mfseen, seen);
+  var idx = items.map(function (x) { return x.n; }).indexOf(n);
+  var prev = items[idx - 1], next = items[idx + 1];
+  withBody('mf', it, function (html) {
+    $('#mfBody').innerHTML = html + '<div class="row" style="gap:8px;margin:18px 0 8px">' +
+      (prev ? '<button class="btn" id="mfPrev">‹ 上一例</button>' : '') +
+      (next ? '<button class="btn" id="mfNext">下一例 ›</button>' : '') + '</div>';
+    if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
+    if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
+    buildStickyPan($('#mfBody'));
+  });
+}
+
 RENDER.course = function () {
   var read = load(K.read, {});
   var byId = {}; (M.list || []).forEach(function (l) { byId[l.num] = l; });
@@ -1050,7 +1106,7 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
@@ -1061,6 +1117,7 @@ function startSources(onMore) {
   needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
   needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
   needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
+  needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
   needXf().then(add(function (r) { (r.items || []).forEach(function (x) { put('象法', { g: '象法', t: x.name, text: x.name + '　' + x.text, go: ['xflist', null], xf: x.name }); }); })).catch(function () {});
 }
 function srcList() {
