@@ -1038,16 +1038,114 @@ function showPanSheet(body) {
   var mask = $('#tocMask'), box = $('.tocbox', mask);
   var parts = ['<div class="sheet-grip" role="separator" aria-label="上下拖动调节全盘高度" tabindex="0"><i></i><span>拖动调节</span></div>',
     '<div class="toch">本课课盘</div>'];
-  [].slice.call(body.querySelectorAll('.panwrap, .sike, .sanchuan')).forEach(function (el) {
-    parts.push(el.outerHTML);
-  });
+  // 熟悉盘式：每组固定「三传 → 四课 → 天地盘」，而不是正文里的讲解顺序。
+  var pans = [].slice.call(body.querySelectorAll('.panwrap')),
+      kes = [].slice.call(body.querySelectorAll('.sike')),
+      chuans = [].slice.call(body.querySelectorAll('.sanchuan')),
+      groups = Math.max(pans.length, kes.length, chuans.length);
+  for (var i = 0; i < groups; i++) {
+    parts.push('<div class="sheet-pan-group">' +
+      (chuans[i] ? chuans[i].outerHTML : '') +
+      (kes[i] ? kes[i].outerHTML : '') +
+      (pans[i] ? pans[i].outerHTML : '') + '</div>');
+  }
   box.classList.add('pan-sheet');
   var maxH = Math.max(260, window.innerHeight - 58);
   box.style.height = Math.min(maxH, _panSheetHeight || Math.round(window.innerHeight * .72)) + 'px';
   box.innerHTML = parts.join('');
   mask.classList.add('on');
+  decoratePanSheet(box, body);
   bindPanSheetResize(box);
   bindPan(box);
+}
+
+function decoratePanSheet(box, sourceBody) {
+  var groups = $$('.sheet-pan-group', box);
+  groups.forEach(function (group) {
+    var ke = $('.sike', group), sc = $('.sanchuan', group), pan = $('.pan', group);
+    var dayGan = '', dayZhi = '';
+    if (ke) {
+      $$('.ke', ke).forEach(function (k) {
+        var note = $('.nt', k), dn = $('.dn', k);
+        if (!note || !dn) return;
+        if (/日干/.test(note.textContent)) dayGan = dn.textContent.trim().charAt(0);
+        if (/日支/.test(note.textContent)) dayZhi = dn.textContent.trim().charAt(0);
+      });
+    }
+
+    // 三传改成参考图的横向字段次序：六亲、遁干、传支、天将；初中末标签保留作辅助。
+    var marks = {};
+    if (sc) {
+      $$('.cr', sc).forEach(function (row) {
+        var lab = $('.lb', row), z = $('.z', row), ex = $('.ex', row);
+        if (!z) return;
+        var shortLab = lab ? lab.textContent.replace('传', '') : '';
+        (marks[z.textContent.trim()] = marks[z.textContent.trim()] || []).push(shortLab);
+        if (!ex) return;
+        var vals = ex.textContent.trim().split(/[　]+/).filter(Boolean);
+        var kinMap = { '父母': '父', '兄弟': '兄', '子孙': '子', '妻财': '财', '官鬼': '官' };
+        var kinFull = vals.filter(function (v) { return kinMap[v]; })[0] || '',
+            dunGan = vals.filter(function (v) { return /^[甲乙丙丁戊己庚辛壬癸]$/.test(v); })[0] || '○',
+            jiangFull = '', jiang = '';
+        var kin = kinMap[kinFull] || kinFull;
+        vals.some(function (v) {
+          if (TJN.indexOf(v) >= 0 || Object.keys(TJFULL).some(function (k) { return TJFULL[k] === v; })) {
+            jiangFull = v; return true;
+          }
+          return false;
+        });
+        jiang = jiangFull;
+        Object.keys(TJFULL).some(function (k) {
+          if (TJFULL[k] === jiang) { jiang = k; return true; }
+          return false;
+        });
+        var notes = vals.filter(function (v) {
+          return v !== kinFull && v !== dunGan && v !== jiangFull && v !== '—';
+        });
+        ex.innerHTML = '<span class="sx-kin">' + esc(kin) + '</span>' +
+          '<span class="sx-dun">' + esc(dunGan) + '</span>' +
+          '<span class="sx-jiang">' + esc(jiang) + '</span>' +
+          (notes.length ? '<span class="sx-note">' + esc(notes.join('·')) + '</span>' : '');
+      });
+    }
+
+    if (!pan) return;
+    var dun = xunDun(dayGan, dayZhi);
+    $$('.gong', pan).forEach(function (gong) {
+      var tp = $('.tp', gong), dp = $('.dp', gong), tj = $('.tj', gong);
+      if (!tp || !dp) return;
+      var z = tp.textContent.trim(), line = document.createElement('span');
+      line.className = 'gline';
+      var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || '○';
+      tp.parentNode.insertBefore(line, tp); line.appendChild(dg); line.appendChild(tp);
+      if (tj) tj.title = TJFULL[tj.textContent.trim()] || tj.textContent.trim();
+      (marks[z] || []).forEach(function (m) {
+        var badge = document.createElement('span'); badge.className = 'chuan-mark'; badge.textContent = m;
+        gong.appendChild(badge);
+      });
+    });
+
+    var mid = $('.panmid', pan), ge = '';
+    [].slice.call(sourceBody.querySelectorAll('p')).some(function (p) {
+      var strong = p.querySelector('strong');
+      if (!strong || strong.textContent.trim() !== '格') return false;
+      ge = p.textContent.replace(/^格\s*[：:]?\s*/, '').split(/[·，。]/)[0].trim();
+      return true;
+    });
+    if (mid && (dayGan || dayZhi || ge)) {
+      mid.innerHTML = (dayGan || dayZhi ? '<b>' + esc(dayGan + dayZhi + '日') + '</b>' : '') +
+        (ge ? '<span>' + esc(ge) + '</span>' : '');
+    }
+  });
+}
+
+function xunDun(dayGan, dayZhi) {
+  var G = '甲乙丙丁戊己庚辛壬癸'.split(''), out = {};
+  var gi = G.indexOf(dayGan), zi = Z.indexOf(dayZhi);
+  if (gi < 0 || zi < 0) return out;
+  var start = (zi - gi + 12) % 12;
+  G.forEach(function (g, i) { out[Z[(start + i) % 12]] = g; });
+  return out;
 }
 
 var _panSheetHeight = 0;

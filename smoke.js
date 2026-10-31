@@ -338,6 +338,14 @@ async function typeSearch(kw) {
   ok($('#tocMask .pan') && $('#tocMask .pan').querySelectorAll('.gong').length === 12, '弹出的是完整十二宫方盘');
   ok($('#tocMask .tocbox').classList.contains('pan-sheet') && !!$('#tocMask .sheet-grip'),
      '全盘弹层顶部有可拖动调节高度的把手');
+  {
+    const group = $('#tocMask .sheet-pan-group');
+    const order = [].slice.call(group.children).map(x => x.className).join('|');
+    ok(/^sanchuan\|sike\|panwrap/.test(order), '熟悉盘式固定为三传→四课→天地盘');
+    ok(group.querySelectorAll('.gong .dg').length === 12, '十二宫显示遁干（旬空位用○）');
+    ok(group.querySelectorAll('.chuan-mark').length === 3, '初中末三传标回对应天盘宫位');
+    ok(/日/.test(group.querySelector('.panmid').textContent), '中宫显示日干支与课体');
+  }
   ok(/bindPanSheetResize/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')) &&
      /onpointermove/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')),
      '全盘高度支持鼠标与触摸拖动');
@@ -634,6 +642,13 @@ async function typeSearch(kw) {
        '四柱按八字样式竖排：天干在上、地支在下');
     ok(!pillars[3].querySelector('.pg').textContent.trim() && pillars[3].querySelector('.pz').textContent === '未',
        '原案只有时支时，天干位留空而不补造');
+    mfSticky.click();
+    const firstChuan = $('#tocMask .sanchuan .cr');
+    ok(firstChuan.querySelector('.sx-kin').textContent === '父' &&
+       firstChuan.querySelector('.sx-dun').textContent === '○' &&
+       firstChuan.querySelector('.sx-jiang').textContent === '后',
+       '三传缺遁干时仍按六亲／○／传支／天将对齐，不发生错列');
+    $('#tocMask').classList.remove('on');
     ok(!!$('#mfNext'), '详情页可以进入下一例');
   }
 
