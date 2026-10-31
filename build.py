@@ -565,8 +565,8 @@ def build_tongjie():
         if not m:
             sys.exit('✗ 通解案例题头解析不了：' + head[:80])
         volume, n, title, category = m.group(1), int(m.group(2)), m.group(3).strip(), (m.group(4) or '未分类')
-        if '**古文原文**' not in blk or '**现代阅读提示**' not in blk:
-            sys.exit('✗ 通解%s册第 %d 例缺古文或现代讲解' % (volume, n))
+        if '**原书案例原文**' not in blk:
+            sys.exit('✗ 通解%s册第 %d 例缺原书案例原文' % (volume, n))
         info = re.search(r'^\*\*原案信息\*\*：(.+)$', blk, re.M)
         cal = []
         if info and not info.group(1).startswith('原文未'):
@@ -614,6 +614,7 @@ def build_tongjie():
                       'n': n, 'volume': volume, 'title': title, 'category': category,
                       'tags': [volume + '册', category], 'cal': cal,
                       'html': case_html, 'pan': pan_ok,
+                      'modern': '**书中现代讲解（全文照录）**' in blk,
                       # 列表包只留轻量检索文本；古文全文单独按需加载。
                       'text': '%s %s册 %s %s' % (title, volume, category, (info.group(1) if info else '')),
                       'search_text': fulltext})

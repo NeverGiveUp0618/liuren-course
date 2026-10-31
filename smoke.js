@@ -665,9 +665,12 @@ async function typeSearch(kw) {
        Array.from({length:{'上':75,'中':197,'下':570}[v]}, (_,i) => i + 1).join(',')), '三册站内例号各自连续');
     ok(TJ.every(x => x.id && x.volume && x.category) && TJ.filter(x => x.cal.length).length === 837,
        '每例都有稳定 ID/册别/分类；837 例识别出原案日历');
-    ok(TJ.every(x => /<strong>古文原文<\/strong>/.test(BODY()['tj' + x.id]) &&
-                     /<strong>现代阅读提示<\/strong>/.test(BODY()['tj' + x.id])),
-       '每例同时保留古文原文与现代阅读提示');
+    ok(TJ.every(x => /<strong>原书案例原文<\/strong>/.test(BODY()['tj' + x.id])),
+       '842 例均保留原书案例原文');
+    ok(TJ.filter(x => x.modern).every(x => /<strong>书中现代讲解（全文照录）<\/strong>/.test(BODY()['tj' + x.id])),
+       '书中现代讲解全文照录，不生成总结提示');
+    ok(TJ.every(x => !/现代阅读提示|阅读顺序/.test(BODY()['tj' + x.id])),
+       '通解案例已删除工具生成的阅读提示');
     const TJP = TJ.filter(x => x.pan);
     ok(TJP.length === 772, '可靠复排的 772 例已生成天地盘、四课、三传');
     ok(TJP.every(x => /class="panwrap"/.test(BODY()['tj' + x.id]) &&

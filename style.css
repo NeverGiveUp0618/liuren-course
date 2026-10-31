@@ -255,13 +255,13 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .sheet-pan-group{padding:2px 0 18px}
 .sheet-pan-group+.sheet-pan-group{border-top:1px solid var(--line);padding-top:20px}
 /* 熟悉盘式：三传在上、四课居中、天地盘在下；沿用本站现有颜色。 */
-.pan-sheet .sanchuan{max-width:min(330px,100%);margin:4px auto 20px;gap:1px}
-.pan-sheet .cr{display:grid;grid-template-columns:36px 34px 34px 38px 34px 1fr;
+.pan-sheet .sanchuan{width:min(330px,100%);max-width:100%;margin:4px auto 20px;gap:1px}
+.pan-sheet .cr{display:grid;grid-template-columns:36px 34px 34px 38px 34px 34px;
   justify-content:center;gap:4px;padding:4px 2px;background:transparent;border:0;text-align:center}
 .pan-sheet .cr .lb{grid-column:1;min-width:0;font-size:9px;align-self:center}
 .pan-sheet .cr .z{grid-column:4;grid-row:1;font-size:20px;min-width:0}
 .pan-sheet .cr .ex{grid-column:2/7;grid-row:1;display:grid;
-  grid-template-columns:34px 34px 38px 34px 1fr;align-items:center;gap:4px;color:var(--ink2)}
+  grid-template-columns:34px 34px 38px 34px 34px;align-items:center;gap:4px;color:var(--ink2)}
 .pan-sheet .sx-kin{grid-column:1}.pan-sheet .sx-dun{grid-column:2}
 .pan-sheet .sx-jiang{grid-column:4;color:var(--gold);font-size:17px}
 .pan-sheet .sx-note{grid-column:5;font-size:9px;color:var(--ink3);text-align:left}

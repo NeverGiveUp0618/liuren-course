@@ -238,50 +238,45 @@ def write_markdown(path: Path, cases: list[Case]) -> None:
     path.write_text("\n".join(chunks), encoding="utf-8")
 
 
-def _first_sentence(text: str, label: str, limit: int = 110) -> str:
-    m = re.search(rf"{label}\s+(.+?)(?=\n(?:正议|参议|案验|附议)\s|$)", text, re.S)
-    if not m:
-        return ""
-    s = " ".join(m.group(1).split())
-    cut = re.split(r"[。！？]", s, 1)[0].strip()
-    return (cut[:limit] + "…") if len(cut) > limit else cut
+def split_book_explanation(text: str) -> tuple[str, str]:
+    """书中现代讲解以「解：／解曰：／笔者按：」起首，保留到本例结束。
+
+    只按明载标记分段，不把正议、参议、案验等原断改写成“白话摘要”。
+    """
+    marker = re.search(r"(?m)^(?:解(?:曰)?|笔者按)[：:]", text)
+    if not marker:
+        return text.strip(), ""
+    return text[:marker.start()].rstrip(), text[marker.start():].strip()
 
 
 def write_site_markdown(path: Path, cases: list[Case]) -> None:
-    """生成站点内容源：原文全留，自动导读只做结构化，不冒充人工精断。"""
+    """生成站点内容源：原案与书中现代讲解全文照录，不自作摘要。"""
     chunks = [
         "# 大六壬通解案例库",
         "",
         "> 三册原书共收入 842 个独立编号示例：上册 75 例、中册 197 例、下册 570 例。",
-        "> 古文按 OCR 校对稿保留；“现代阅读提示”由工具先分出正议、参议、案验和附议，不替原作者加断。",
+        "> 原案与书中现代讲解均按 OCR 校对稿全文照录；不另写总结、提示或代作者加断。",
         "",
     ]
     for case in cases:
         cal = " · ".join(f"{x['k']}{x['v']}" for x in case.calendar) or "原文未载日历"
-        guide = []
-        for label, modern in (("正议", "主断"), ("参议", "补充辨析"), ("案验", "实际验证"), ("附议", "可复用规则")):
-            sentence = _first_sentence(case.original, label)
-            if sentence:
-                guide.append(f"- **{modern}**：{sentence}。")
-        if not guide:
-            guide = ["- **阅读顺序**：先核对年月日时与课盘，再顺着原书的取象与结论阅读。"]
-        quote = "\n".join("> " + x if x else ">" for x in case.original.splitlines())
-        chunks.extend([
+        original, modern = split_book_explanation(case.original)
+        quote = "\n".join("> " + x if x else ">" for x in original.splitlines())
+        block = [
             f"### 【通解{case.volume}册{case.index:03d}】{case.title} `{case.category}`",
             "",
             f"**原案信息**：{cal}",
             "",
-            "**古文原文**",
+            "**原书案例原文**",
             "",
             quote,
             "",
-            "**现代阅读提示**",
-            "",
-            *guide,
-            "",
-            f"〔出处〕《大六壬通解》{case.volume}册 OCR p{case.page or '未知'}；源文行 {case.line_start}—{case.line_end}。",
-            "",
-        ])
+        ]
+        if modern:
+            modern_quote = "\n".join("> " + x if x else ">" for x in modern.splitlines())
+            block.extend(["**书中现代讲解（全文照录）**", "", modern_quote, ""])
+        block.extend([f"〔出处〕《大六壬通解》{case.volume}册 OCR p{case.page or '未知'}；源文行 {case.line_start}—{case.line_end}。", ""])
+        chunks.extend(block)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(chunks), encoding="utf-8")
 
