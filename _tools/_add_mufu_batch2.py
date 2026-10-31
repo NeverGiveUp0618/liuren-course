@@ -278,7 +278,8 @@ def load_source():
 
 def originals(item):
     paras = [text for kind, text in item["p"] if kind == "o"]
-    start = next(j for j, text in enumerate(paras) if "王牧夫曰" in text)
+    start = next(j for j, text in enumerate(paras)
+                 if re.search(r"王牧夫(?:曰|断曰)", text))
     out = paras[start:]
     # 公版底本缺字统一用方框，不把现代猜字塞回古文。
     return [re.sub(r"[？?]+", lambda m: "□" * len(m.group()), p) for p in out]

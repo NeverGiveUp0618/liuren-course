@@ -587,16 +587,18 @@ async function typeSearch(kw) {
   console.log('\n== 王牧夫初级案例库 ==');
   {
     const MF = window.DATA_MUFU || [];
-    ok(MF.length === 55 && M.counts.mufu === 55, '共 55 例，与 meta 计数一致');
-    ok(MF.every(x => BODY()['mf' + x.n]), '55 例正文都按需分块生成');
+    ok(MF.length === 80 && M.counts.mufu === 80, '共 80 条，与 meta 计数一致');
+    ok(MF.every(x => BODY()['mf' + x.n]), '80 条正文都按需分块生成');
     ok(MF.every(x => /古文原断/.test(BODY()['mf' + x.n]) && /白话拆解/.test(BODY()['mf' + x.n])),
        '每例都有古文原断与白话拆解');
-    ok(MF.every(x => /class="pan"/.test(BODY()['mf' + x.n]) && /class="sike"/.test(BODY()['mf' + x.n]) && /class="sanchuan"/.test(BODY()['mf' + x.n])),
-       '每例都按本站样式渲染天地盘、四课、三传');
-    ok($('#mMufu').textContent === '55', '首页显示 55 例');
+    const mfFull = MF.filter(x => /class="pan"/.test(BODY()['mf' + x.n]) && /class="sike"/.test(BODY()['mf' + x.n]) && /class="sanchuan"/.test(BODY()['mf' + x.n]));
+    const mfLost = MF.filter(x => /原书课盘遗失/.test(BODY()['mf' + x.n]) && /不能复排|不能伪造/.test(BODY()['mf' + x.n]));
+    ok(mfFull.length === 78, '78 条完整占验均渲染天地盘、四课、三传');
+    ok(mfLost.length === 2, '2 条原书残案明确标注盘面遗失，不伪造课盘');
+    ok($('#mMufu').textContent === '80', '首页显示 80 条');
     $$('.mi[data-go="mflist"]')[0].click();
     await sleep(10);
-    ok($$('#mfRows .qrow').length === 55, '列表显示 55 例');
+    ok($$('#mfRows .qrow').length === 80, '列表显示 80 条');
     $$('#mfRows .qrow')[0].click();
     await sleep(10);
     ok(!!$('#mfBody .stickypan'), '详情页沿用四课三传吸顶样式');
