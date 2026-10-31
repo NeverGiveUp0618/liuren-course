@@ -147,9 +147,25 @@ def extract_source_chuans(text: str) -> tuple[list[str], str]:
     return groups, ("high" if high_groups else ("low" if groups else "none"))
 
 
+def prose_chuan_evidence(text: str, chuan: str) -> str | None:
+    """只接受断语中明确写出三传或初中末传的证据，不从普通支字排列猜测。"""
+    a, b, c = chuan
+    patterns = [
+        rf"三传[^。；\n]{{0,18}}{a}[、，\s]*(?:[{GAN}]?){b}[、，\s]*(?:[{GAN}]?){c}",
+        rf"初传[^。；\n]{{0,16}}{a}[^。；\n]{{0,28}}中传[^。；\n]{{0,16}}{b}"
+        rf"[^。；\n]{{0,28}}末传[^。；\n]{{0,16}}{c}",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(0)
+    return None
+
+
 def audit() -> list[dict]:
     rows = []
     payload = []
+    originals = {}
     for volume in ("上", "中", "下"):
         for case in parse_volume(volume):
             params = extract_inputs(case.original)
@@ -160,6 +176,7 @@ def audit() -> list[dict]:
                 **params, "source_chuans": source_chuans, "source_chuan_confidence": source_confidence,
             }
             rows.append(row)
+            originals[case.id] = case.original
             if params["rgz"] and params["yj"] and params["zs"]:
                 payload.append({"id": case.id, "rgz": params["rgz"], "yj": params["yj"], "zs": params["zs"]})
 
@@ -184,13 +201,15 @@ def audit() -> list[dict]:
             row.update(manual_scan_chuan=scan_chuan, manual_scan_note=scan_note)
             row["status"] = "verified_manual_scan" if got["chuan"] == scan_chuan else "mismatch_manual_scan"
             continue
-        if not row["source_chuans"]:
-            row["status"] = "reconstructed_no_source_chuan"
-        elif got["chuan"] in row["source_chuans"]:
+        if row["source_chuans"] and got["chuan"] in row["source_chuans"]:
             if len(row["source_chuans"]) > 1:
                 row["status"] = "verified_multi_pan"
             else:
                 row["status"] = "verified_explicit" if row["yj_basis"] == "explicit" else "verified_inferred"
+        elif (prose_evidence := prose_chuan_evidence(originals[row["id"]], got["chuan"])):
+            row.update(status="verified_prose", prose_chuan_evidence=prose_evidence)
+        elif not row["source_chuans"]:
+            row["status"] = "reconstructed_no_source_chuan"
         elif row["source_chuan_confidence"] != "high":
             row["status"] = "source_chuan_ambiguous"
         elif row["yj_basis"] != "explicit":
@@ -205,6 +224,7 @@ STATUS_CN = {
     "verified_inferred": "月份推定月将，三传一致",
     "verified_multi_pan": "一案多盘，复盘命中其中一盘",
     "verified_manual_scan": "原始扫描页人工确认一致",
+    "verified_prose": "原文断语明确三传且复盘一致",
     "reconstructed_no_source_chuan": "可复排，原书三传未能机读",
     "missing_input": "缺日干支/月将/占时",
     "mismatch_explicit": "明载参数复盘与机读原传不同",
@@ -241,6 +261,14 @@ def report_md(rows: list[dict]) -> str:
             lines.append(
                 f"- **{r['volume']}册第{r['index']}例**：{r['manual_scan_note']}；"
                 f"复盘 `{r['computed_chuan']}`；结论：{STATUS_CN[r['status']]}。"
+            )
+    prose_verified = [r for r in rows if r["status"] == "verified_prose"]
+    if prose_verified:
+        lines.extend(["", "## 原文断语交叉确认", ""])
+        for r in prose_verified:
+            lines.append(
+                f"- **{r['volume']}册第{r['index']}例**：`{r['prose_chuan_evidence']}`；"
+                f"复盘 `{r['computed_chuan']}`，一致。"
             )
     lines.extend(["", "## 需要人工复核", ""])
     risky = {"mismatch_explicit", "mismatch_manual_scan", "inferred_unresolved", "source_chuan_ambiguous", "missing_input", "engine_error"}

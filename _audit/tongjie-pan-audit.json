@@ -3431,7 +3431,8 @@
     "computed_chuan": "丑亥酉",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传丑亥酉"
   },
   {
     "id": "tongjie-中-096",
@@ -4537,7 +4538,8 @@
     "computed_chuan": "子亥戌",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传子亥戌"
   },
   {
     "id": "tongjie-中-151",
@@ -6328,7 +6330,8 @@
     "computed_chuan": "申亥寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传申亥寅"
   },
   {
     "id": "tongjie-下-044",
@@ -6660,7 +6663,8 @@
     "computed_chuan": "戌午寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传戌午寅"
   },
   {
     "id": "tongjie-下-060",
@@ -6679,7 +6683,8 @@
     "computed_chuan": "亥卯未",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传亥卯未"
   },
   {
     "id": "tongjie-下-061",
@@ -7259,7 +7264,8 @@
     "computed_chuan": "子未子",
     "computed_ke": "昴星",
     "computed_ge": "冬蛇掩目",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "初传是支上之子，中传是干上之未，末传又归支上子"
   },
   {
     "id": "tongjie-下-090",
@@ -9505,7 +9511,8 @@
     "computed_chuan": "巳申寅",
     "computed_ke": "伏吟",
     "computed_ge": "自任",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传巳申寅"
   },
   {
     "id": "tongjie-下-203",
@@ -13113,7 +13120,8 @@
     "computed_chuan": "未丑未",
     "computed_ke": "返吟",
     "computed_ge": "无依",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传未丑未"
   },
   {
     "id": "tongjie-下-385",
@@ -13132,7 +13140,8 @@
     "computed_chuan": "辰巳午",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传辰巳午"
   },
   {
     "id": "tongjie-下-386",
@@ -14112,7 +14121,8 @@
     "computed_chuan": "卯寅丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传卯寅丑"
   },
   {
     "id": "tongjie-下-436",
@@ -14131,7 +14141,8 @@
     "computed_chuan": "卯申丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传卯申丑"
   },
   {
     "id": "tongjie-下-437",
@@ -14283,7 +14294,8 @@
     "computed_chuan": "辰巳午",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传辰巳午"
   },
   {
     "id": "tongjie-下-445",
@@ -14302,7 +14314,8 @@
     "computed_chuan": "申亥寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传申亥寅"
   },
   {
     "id": "tongjie-下-446",
@@ -14688,7 +14701,8 @@
     "computed_chuan": "卯寅丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传卯寅丑"
   },
   {
     "id": "tongjie-下-466",
@@ -15980,7 +15994,8 @@
     "computed_chuan": "酉子卯",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传酉子卯"
   },
   {
     "id": "tongjie-下-531",
@@ -16214,7 +16229,8 @@
     "computed_chuan": "辰巳午",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "reconstructed_no_source_chuan"
+    "status": "verified_prose",
+    "prose_chuan_evidence": "三传辰巳午"
   },
   {
     "id": "tongjie-下-543",
