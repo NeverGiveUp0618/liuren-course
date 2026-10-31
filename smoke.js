@@ -268,6 +268,11 @@ ok($('#s-basiclesson').classList.contains('active') && /初中级第1课/.test($
 ok($('#basicLessonBody').querySelectorAll('h2').length === 10 && /七个步骤/.test($('#basicLessonBody').textContent),
    '第一课已重排成十个学习章节，不是原小节全文搬运');
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
+{
+  const courseGateSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+  ok(/startLessonReadDelay\('lesson'/.test(courseGateSrc) && /startLessonReadDelay\('basiclesson'/.test(courseGateSrc),
+     '通解课程与初中级课程共用五分钟完成门槛');
+}
 $$('.tabbar [data-tab="courses"]')[0].onclick();
 $$('#courseEntrances [data-course-go="course"]')[0].onclick();
 $$('#courseList .li[data-id]')[0].onclick();
@@ -510,6 +515,23 @@ async function typeSearch(kw) {
   await sleep(300);
   const read = JSON.parse(window.localStorage.getItem('liuren_course_read') || '{}');
   ok(Object.keys(read).length > 0, '滚动后记下了阅读百分比');
+
+  // 新进入一课后，先拖到底也不能立即点亮“已读”；测试把线上 5 分钟缩成 500ms。
+  const oldBasicRead = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
+  delete oldBasicRead.B01;
+  window.localStorage.setItem('liuren_basic_course_read', JSON.stringify(oldBasicRead));
+  window.__READ_DELAY_MS = 500;
+  window.__go('basiclesson', 'B01');
+  await sleep(20);
+  window.scrollY = 1200;
+  window.dispatchEvent(new window.Event('scroll'));
+  await sleep(300);
+  let basicReadGate = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
+  ok(basicReadGate.B01 === 89, '课程五分钟前即使快速拖到底，也最多记录 89%');
+  await sleep(250);
+  basicReadGate = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
+  ok(basicReadGate.B01 >= 90, '停留达到门槛且读到末尾后才标记已读');
+  window.__READ_DELAY_MS = 40;
 
   console.log('\n== 主题 ==');
   const t0 = doc.documentElement.getAttribute('data-theme');

@@ -36,6 +36,54 @@ function markSeenLater(storageKey, itemKey, screen, routeId) {
   }, delay);
 }
 
+/* 课程“已读”也要防误触：必须在同一课前台累计停留满 5 分钟，且阅读位置
+   到达 90%，两个条件同时满足才写成完成。五分钟以前仍记录阅读位置，但最多
+   记到 89%，这样快速拖到底不会立刻点亮“已读”。切课后重新计时。 */
+var lessonReadGate = { timer: null, screen: '', id: '', key: '', ready: false,
+                       elapsed: 0, started: 0, maxPct: 0 };
+function lessonReadDelay() { return Number(window.__READ_DELAY_MS) || 5 * 60 * 1000; }
+function saveLessonPct(pct) {
+  var g = lessonReadGate;
+  if (!g.key || !g.id || cur.scr !== g.screen || String(cur.id) !== String(g.id)) return;
+  g.maxPct = Math.max(g.maxPct, pct);
+  var shown = g.ready ? g.maxPct : Math.min(89, g.maxPct);
+  var r = load(g.key, {});
+  if (shown > (r[g.id] || 0)) { r[g.id] = shown; save(g.key, r); }
+}
+function finishLessonReadDelay() {
+  var g = lessonReadGate;
+  g.timer = null;
+  if (cur.scr !== g.screen || String(cur.id) !== String(g.id) || document.hidden) return;
+  g.elapsed = lessonReadDelay(); g.started = 0; g.ready = true;
+  saveLessonPct(g.maxPct);
+}
+function resumeLessonReadDelay() {
+  var g = lessonReadGate;
+  if (!g.id || g.ready || g.timer || document.hidden || cur.scr !== g.screen || String(cur.id) !== String(g.id)) return;
+  g.started = Date.now();
+  g.timer = setTimeout(finishLessonReadDelay, Math.max(0, lessonReadDelay() - g.elapsed));
+}
+function pauseLessonReadDelay() {
+  var g = lessonReadGate;
+  if (g.started) { g.elapsed += Date.now() - g.started; g.started = 0; }
+  clearTimeout(g.timer); g.timer = null;
+}
+function startLessonReadDelay(screen, id, key) {
+  pauseLessonReadDelay();
+  var old = load(key, {})[id] || 0;
+  lessonReadGate = { timer: null, screen: screen, id: id, key: key,
+                     ready: old >= 90, elapsed: 0, started: 0, maxPct: old };
+  resumeLessonReadDelay();
+}
+function stopLessonReadDelay() {
+  pauseLessonReadDelay();
+  lessonReadGate = { timer: null, screen: '', id: '', key: '', ready: false,
+                     elapsed: 0, started: 0, maxPct: 0 };
+}
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) pauseLessonReadDelay(); else resumeLessonReadDelay();
+});
+
 /* ── 课例编号迁移（一次性）────────────────────────────────
    2026-08-25 把课例号按占类重排成每类连续（求财 1-24、求官 25-46…），
    ⚠️ qseen/qopen 是**按例号存的**，不迁移的话「看过/展开过」的记录会全部错位。
@@ -272,6 +320,7 @@ var ROOTS = { home: 1, courses: 1, qlist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
+  if (scr !== 'lesson' && scr !== 'basiclesson') stopLessonReadDelay();
   cur = { scr: scr, id: id };
   $$('.screen').forEach(function (el) { el.classList.remove('active'); });
   var el = $('#s-' + scr);
@@ -1011,6 +1060,7 @@ function paintBasicLesson(id) {
   if (!l) { body.innerHTML = '<p class="muted">这一课还没写。</p>'; return; }
   $('#ttl').textContent = '初中级第' + l.num + '课';
   body.innerHTML = l.html;
+  startLessonReadDelay('basiclesson', id, K.basicread);
   bindDoc(body); foldLessonSections(body); buildStickyPan(body); buildToc(l);
   list.forEach(function (x, i) { if (x.id === id) k = i; });
   $('#prevB').disabled = k <= 0; $('#nextB').disabled = k < 0 || k >= list.length - 1;
@@ -1039,6 +1089,7 @@ function paintLesson(id) {
   if (!l) { body.innerHTML = '<p class="muted">这一课还没写。</p>'; return; }
   $('#ttl').textContent = '第' + l.num + '课';
   body.innerHTML = l.html;
+  startLessonReadDelay('lesson', id, K.read);
   bindDoc(body);
   foldLessonSections(body);
   buildStickyPan(body);
@@ -1634,10 +1685,8 @@ window.addEventListener('scroll', function () {
   _tick = setTimeout(function () {
     var h = document.documentElement.scrollHeight - window.innerHeight;
     var pct = h > 0 ? Math.min(100, Math.round(window.scrollY / h * 100)) : 100;
-    var rk = cur.scr === 'basiclesson' ? K.basicread : K.read;
     var pk = cur.scr === 'basiclesson' ? K.basicpos : K.pos;
-    var r = load(rk, {});
-    if (pct > (r[cur.id] || 0)) { r[cur.id] = pct; save(rk, r); }
+    saveLessonPct(pct);
     var ps = load(pk, {}); ps[cur.id] = window.scrollY; save(pk, ps);
   }, 220);
 }, { passive: true });
