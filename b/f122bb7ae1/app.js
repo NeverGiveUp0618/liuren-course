@@ -22,6 +22,19 @@ function esc(t) {
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
+/* 案例圆点延迟 5 分钟再点亮：误触进入、立刻返回、快速翻页都不算读过。 */
+var seenTimer = null;
+function markSeenLater(storageKey, itemKey, screen, routeId) {
+  clearTimeout(seenTimer);
+  var delay = Number(window.__READ_DELAY_MS) || 5 * 60 * 1000;
+  seenTimer = setTimeout(function () {
+    seenTimer = null;
+    if (cur.scr !== screen || String(cur.id) !== String(routeId) || document.hidden) return;
+    var seen = load(storageKey, {});
+    if (!seen[itemKey]) { seen[itemKey] = Date.now(); save(storageKey, seen); }
+  }, delay);
+}
+
 /* ── 课例编号迁移（一次性）────────────────────────────────
    2026-08-25 把课例号按占类重排成每类连续（求财 1-24、求官 25-46…），
    ⚠️ qseen/qopen 是**按例号存的**，不迁移的话「看过/展开过」的记录会全部错位。
@@ -748,7 +761,7 @@ function paintQuiz(Q, n) {
   var it = Q.items.filter(function (x) { return x.n === n; })[0];
   if (!it) return;
   $('#ttl').textContent = '课例 ' + it.n;
-  var seen = load(K.qseen, {}); seen[it.n] = 1; save(K.qseen, seen);
+  markSeenLater(K.qseen, it.n, 'quiz', it.n);
   var idx = Q.items.map(function (x) { return x.n; }).indexOf(n);
   var prev = Q.items[idx - 1], next = Q.items[idx + 1];
   withBody('q', it, function (html) {
@@ -789,7 +802,7 @@ function paintMufu(items, n) {
   var it = items.filter(function (x) { return x.n === n; })[0];
   if (!it) return;
   $('#ttl').textContent = '王牧夫 · 入门例' + it.n;
-  var seen = load(K.mfseen, {}); seen[it.n] = 1; save(K.mfseen, seen);
+  markSeenLater(K.mfseen, it.n, 'mufu', it.n);
   var idx = items.map(function (x) { return x.n; }).indexOf(n);
   var prev = items[idx - 1], next = items[idx + 1];
   withBody('mf', it, function (html) {
@@ -855,7 +868,7 @@ function paintTongjie(items, id) {
   var it = items.filter(function (x) { return x.id === id; })[0];
   if (!it) return;
   $('#ttl').textContent = '通解' + it.volume + '册 · 第' + it.n + '例';
-  var seen = load(K.tjseen, {}); seen[it.id] = 1; save(K.tjseen, seen);
+  markSeenLater(K.tjseen, it.id, 'tongjie', it.id);
   var idx = items.map(function (x) { return x.id; }).indexOf(id);
   var prev = items[idx - 1], next = items[idx + 1];
   $('#tjBody').innerHTML = '<p class="muted" style="padding:16px">正在载入案例正文…</p>';

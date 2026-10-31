@@ -15,6 +15,7 @@ const dom = new JSDOM(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), {
   runScripts: 'outside-only', pretendToBeVisual: true, url: 'https://x.test/liuren-course/'
 });
 const { window } = dom;
+window.__READ_DELAY_MS = 40; // 测试专用；线上默认 5 分钟
 const doc = window.document;
 let scrolls = [];
 window.scrollTo = (x, y) => { scrolls.push(typeof x === 'object' ? x.top : y); };
@@ -631,6 +632,11 @@ async function typeSearch(kw) {
     ok($$('#mfRows .qrow').length === 80, '列表显示 80 条');
     $$('#mfRows .qrow')[0].click();
     await sleep(10);
+    ok(!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'],
+       '误触进入案例不会立刻标记已读');
+    await sleep(45);
+    ok(!!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'],
+       '停留达到门槛后才标记已读（线上门槛为 5 分钟）');
     const mfSticky = $('#mfBody .stickypan');
     ok(!!mfSticky, '详情页启用年月日时、四课、三传吸顶样式');
     ok(mfSticky.firstElementChild.classList.contains('sp-time'), '吸顶第一部分是年月日时');
