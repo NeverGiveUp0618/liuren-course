@@ -1036,13 +1036,60 @@ function buildStickyPan(body, cal) {
 }
 function showPanSheet(body) {
   var mask = $('#tocMask'), box = $('.tocbox', mask);
-  var parts = ['<div class="toch">本课课盘</div>'];
+  var parts = ['<div class="sheet-grip" role="separator" aria-label="上下拖动调节全盘高度" tabindex="0"><i></i><span>拖动调节</span></div>',
+    '<div class="toch">本课课盘</div>'];
   [].slice.call(body.querySelectorAll('.panwrap, .sike, .sanchuan')).forEach(function (el) {
     parts.push(el.outerHTML);
   });
+  box.classList.add('pan-sheet');
+  var maxH = Math.max(260, window.innerHeight - 58);
+  box.style.height = Math.min(maxH, _panSheetHeight || Math.round(window.innerHeight * .72)) + 'px';
   box.innerHTML = parts.join('');
   mask.classList.add('on');
+  bindPanSheetResize(box);
   bindPan(box);
+}
+
+var _panSheetHeight = 0;
+function bindPanSheetResize(box) {
+  var grip = $('.sheet-grip', box), active = false, pointer = null, startY = 0, startH = 0;
+  function limits() {
+    return { min: Math.min(260, Math.max(180, Math.round(window.innerHeight * .32))),
+      max: Math.max(260, window.innerHeight - 58) };
+  }
+  function setHeight(h) {
+    var lim = limits();
+    h = Math.max(lim.min, Math.min(lim.max, h));
+    box.style.height = Math.round(h) + 'px';
+    _panSheetHeight = Math.round(h);
+  }
+  function stop(e) {
+    if (!active) return;
+    active = false; box.classList.remove('resizing');
+    if (grip.releasePointerCapture && pointer !== null) {
+      try { grip.releasePointerCapture(pointer); } catch (_) {}
+    }
+    pointer = null;
+    if (e) e.preventDefault();
+  }
+  grip.onpointerdown = function (e) {
+    active = true; pointer = e.pointerId; startY = e.clientY; startH = box.getBoundingClientRect().height;
+    box.classList.add('resizing');
+    if (grip.setPointerCapture) grip.setPointerCapture(pointer);
+    e.preventDefault();
+  };
+  grip.onpointermove = function (e) {
+    if (!active || (pointer !== null && e.pointerId !== pointer)) return;
+    setHeight(startH + startY - e.clientY);
+    e.preventDefault();
+  };
+  grip.onpointerup = stop;
+  grip.onpointercancel = stop;
+  grip.onkeydown = function (e) {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    setHeight(box.getBoundingClientRect().height + (e.key === 'ArrowUp' ? 40 : -40));
+    e.preventDefault();
+  };
 }
 
 /* 课内目录：一课上万字，没这个只能靠搜 */
@@ -1050,6 +1097,8 @@ function buildToc(l) {
   // ⚠️ 目录与「全盘」共用这一个浮层，各自重建整块内容——
   //    早先目录容器是写死在 html 里的，点过全盘后它就被覆盖掉，再点目录直接崩。
   var box = $('.tocbox');
+  box.classList.remove('pan-sheet', 'resizing');
+  box.style.removeProperty('height');
   var hs = (l.heads || []);
   box.innerHTML = '<div class="toch">本课目录</div><div id="tocList">' + (hs.length
     ? hs.map(function (h) { return '<button class="toci" data-a="' + h.a + '">' + h.t + '</button>'; }).join('')

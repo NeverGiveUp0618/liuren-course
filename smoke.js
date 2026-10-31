@@ -336,6 +336,13 @@ async function typeSearch(kw) {
   sp.onclick();
   ok($('#tocMask').classList.contains('on'), '点吸顶条弹出全盘');
   ok($('#tocMask .pan') && $('#tocMask .pan').querySelectorAll('.gong').length === 12, '弹出的是完整十二宫方盘');
+  ok($('#tocMask .tocbox').classList.contains('pan-sheet') && !!$('#tocMask .sheet-grip'),
+     '全盘弹层顶部有可拖动调节高度的把手');
+  ok(/bindPanSheetResize/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')) &&
+     /onpointermove/.test(fs.readFileSync(path.join(dir, 'app.js'), 'utf8')),
+     '全盘高度支持鼠标与触摸拖动');
+  ok(/\.sheet-grip\{[^}]*touch-action:\s*none/.test(fs.readFileSync(path.join(dir, 'style.css'), 'utf8')),
+     '拖动把手接管纵向手势，不与内部滚动冲突');
   $('#tocMask').classList.remove('on');
   
   console.log('\n== 课内目录 ==');
@@ -349,6 +356,8 @@ async function typeSearch(kw) {
   folds[0].querySelector('summary').click();
   ok(!folds[0].open, '再次点击大标题收起该节');
   $('#fabToc').onclick();
+  ok(!$('#tocMask .tocbox').classList.contains('pan-sheet') && !$('#tocMask .tocbox').style.height,
+     '课程目录不会继承全盘弹层的可调高度');
   const tocs = $$('#tocList .toci');
   ok(tocs.length === L01.heads.length && tocs.length > 4, `目录项数＝本课 h2 数（${tocs.length}）`);
   ok(tocs[0].textContent === L01.heads[0].t, '目录第一项与课文第一节同名');
