@@ -2859,7 +2859,9 @@
     "computed_chuan": "丑亥酉",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "mismatch_explicit"
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "中册 PDF p280，三传自上而下为丑、亥、酉",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-067",
@@ -5902,7 +5904,9 @@
     "computed_chuan": "丑亥酉",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "mismatch_explicit"
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "下册 PDF p18，三传自上而下为丑、亥、酉",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-023",
@@ -10711,7 +10715,9 @@
     "computed_chuan": "子申辰",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "mismatch_explicit"
+    "manual_scan_chuan": "子申辰",
+    "manual_scan_note": "下册 PDF p155，三传自上而下为子、申、辰",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-263",
@@ -16455,7 +16461,9 @@
     "computed_chuan": "申酉戌",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "mismatch_explicit"
+    "manual_scan_chuan": "申酉戌",
+    "manual_scan_note": "下册 PDF p332，三传自上而下为申、酉、戌",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-555",

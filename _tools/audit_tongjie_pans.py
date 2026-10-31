@@ -43,6 +43,14 @@ MONTH_JIANG = {
 KIN = "兄弟子孙父母财官鬼"
 JIANG_SHORT = "贵蛇朱合勾青龙空虎常玄阴后"
 
+# 逐页查看原始 PDF 扫描后确认。OCR 将竖排三传拆散或改了行序，不能按纯文本顺序判断。
+MANUAL_SCAN_CHUAN = {
+    "tongjie-中-066": ("丑亥酉", "中册 PDF p280，三传自上而下为丑、亥、酉"),
+    "tongjie-下-022": ("丑亥酉", "下册 PDF p18，三传自上而下为丑、亥、酉"),
+    "tongjie-下-262": ("子申辰", "下册 PDF p155，三传自上而下为子、申、辰"),
+    "tongjie-下-554": ("申酉戌", "下册 PDF p332，三传自上而下为申、酉、戌"),
+}
+
 
 def four_pillars(text: str):
     m = re.search(rf"([{GAN}][{ZHI}])(?:年)?\s+([{GAN}][{ZHI}])(?:月)?\s+"
@@ -171,6 +179,11 @@ def audit() -> list[dict]:
                        engine_error=got["error"])
             continue
         row.update(computed_chuan=got["chuan"], computed_ke=got["ke"], computed_ge=got["ge"])
+        if row["id"] in MANUAL_SCAN_CHUAN:
+            scan_chuan, scan_note = MANUAL_SCAN_CHUAN[row["id"]]
+            row.update(manual_scan_chuan=scan_chuan, manual_scan_note=scan_note)
+            row["status"] = "verified_manual_scan" if got["chuan"] == scan_chuan else "mismatch_manual_scan"
+            continue
         if not row["source_chuans"]:
             row["status"] = "reconstructed_no_source_chuan"
         elif got["chuan"] in row["source_chuans"]:
@@ -191,9 +204,11 @@ STATUS_CN = {
     "verified_explicit": "明载月将，三传一致",
     "verified_inferred": "月份推定月将，三传一致",
     "verified_multi_pan": "一案多盘，复盘命中其中一盘",
+    "verified_manual_scan": "原始扫描页人工确认一致",
     "reconstructed_no_source_chuan": "可复排，原书三传未能机读",
     "missing_input": "缺日干支/月将/占时",
     "mismatch_explicit": "明载参数复盘与机读原传不同",
+    "mismatch_manual_scan": "原始扫描页人工确认仍不一致",
     "inferred_unresolved": "月将仅为月份推定，尚不足以定盘",
     "source_chuan_ambiguous": "OCR 盘面三传读取有歧义",
     "engine_error": "起课引擎拒绝参数",
@@ -219,8 +234,16 @@ def report_md(rows: list[dict]) -> str:
         n = counts.get(status, 0)
         if n:
             lines.append(f"| {STATUS_CN[status]} | {by_volume['上'][status]} | {by_volume['中'][status]} | {by_volume['下'][status]} | {n} |")
+    manual = [r for r in rows if r["status"] in {"verified_manual_scan", "mismatch_manual_scan"}]
+    if manual:
+        lines.extend(["", "## 原始扫描页人工核验", ""])
+        for r in manual:
+            lines.append(
+                f"- **{r['volume']}册第{r['index']}例**：{r['manual_scan_note']}；"
+                f"复盘 `{r['computed_chuan']}`；结论：{STATUS_CN[r['status']]}。"
+            )
     lines.extend(["", "## 需要人工复核", ""])
-    risky = {"mismatch_explicit", "inferred_unresolved", "source_chuan_ambiguous", "missing_input", "engine_error"}
+    risky = {"mismatch_explicit", "mismatch_manual_scan", "inferred_unresolved", "source_chuan_ambiguous", "missing_input", "engine_error"}
     for r in rows:
         if r["status"] not in risky:
             continue
