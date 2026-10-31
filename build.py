@@ -573,6 +573,64 @@ def build_mufu():
     return items
 
 
+_TJ_PAN_CHARS = set(
+    '甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥'
+    '贵貴蛇朱合六勾青空虎白常玄阴陰后後龙龍陈陳'
+    '父母兄弟官鬼妻财財孙孫传傳初中末用日干支上下神遁旬'
+    '六亲親天乙人将將空亡年月时時昼晝夜'
+)
+
+
+def strip_tongjie_raw_pan(blk):
+    """复排盘已经显示时，删掉原文开头重复的 OCR 旧盘字符块。
+
+    只处理“原书案例原文”引文中的连续盘式行：题头、年月日时、脚注、
+    正议／断曰／案验以及书中现代讲解一律保留。返回 (正文, 是否删盘)。
+    """
+    lines = blk.splitlines()
+    try:
+        begin = lines.index('**原书案例原文**') + 1
+    except ValueError:
+        return blk, False
+    end = next((i for i in range(begin, len(lines))
+                if lines[i].startswith('**书中现代讲解') or lines[i].startswith('〔出处〕')), len(lines))
+    quoted = [i for i in range(begin, end) if lines[i].startswith('>') and lines[i][1:].strip()]
+    if not quoted:
+        return blk, False
+
+    def is_pan_line(text):
+        text = text.strip()
+        if not text:
+            return False
+        if '|' in text:                       # OCR 后仍保留成 Markdown 表格的课盘
+            return True
+        if re.search(r'[，。；！？：:“”《》]', text):
+            return False                      # 完整语句、注文和断语不当盘面删
+        chars = [c for c in text if '\u3400' <= c <= '\u9fff']
+        if not chars:
+            return bool(re.fullmatch(r'[-—\s◎○←→\d]+', text))
+        allowed = sum(c in _TJ_PAN_CHARS for c in chars)
+        return len(chars) >= 2 and allowed / len(chars) >= .80 and len(text) <= 140
+
+    # 第一条非空引文是例题题头，永远保留；之后寻找第一个真正的盘式行。
+    start = next((i for i in range(quoted[0] + 1, end)
+                  if lines[i].startswith('>') and is_pan_line(lines[i][1:].strip())), None)
+    if start is None:
+        return blk, False
+    stop = start
+    while stop < end:
+        if not lines[stop].startswith('>'):
+            stop += 1
+            continue
+        text = lines[stop][1:].strip()
+        if not text or is_pan_line(text):
+            stop += 1
+            continue
+        break
+    cleaned = lines[:start] + lines[stop:]
+    return '\n'.join(cleaned), True
+
+
 def build_tongjie():
     """101-大六壬通解案例库.md → 独立的通解案例库。
 
@@ -604,7 +662,6 @@ def build_tongjie():
         if info and not info.group(1).startswith('原文未'):
             for k, v in re.findall(r'([年月日时])([^\s·]+)', info.group(1)):
                 cal.append({'k': k, 'v': v})
-        fulltext = mdlite.strip_md(blk)
         audit_row = audit.get((volume, n), {})
         pan_html = ''
         pan_ok = False
@@ -640,12 +697,14 @@ def build_tongjie():
                 pan_ok = True
         if not pan_ok:
             pan_html = '<blockquote class="warn"><p><strong>课盘说明</strong>：%s</p></blockquote>' % no_pan_reason
-        case_html = mdlite.md2html('### ' + blk)
+        display_blk, raw_pan_removed = strip_tongjie_raw_pan(blk) if pan_ok else (blk, False)
+        fulltext = mdlite.strip_md(display_blk)
+        case_html = mdlite.md2html('### ' + display_blk)
         case_html = case_html.replace('</h3>', '</h3>' + pan_html, 1)
         items.append({'id': {'上': 'u', '中': 'm', '下': 'l'}[volume] + ('%03d' % n),
                       'n': n, 'volume': volume, 'title': title, 'category': category,
                       'tags': [volume + '册', category], 'cal': cal,
-                      'html': case_html, 'pan': pan_ok,
+                      'html': case_html, 'pan': pan_ok, 'raw_pan_removed': raw_pan_removed,
                       'modern': '**书中现代讲解（全文照录）**' in blk,
                       # 列表包只留轻量检索文本；古文全文单独按需加载。
                       'text': '%s %s册 %s %s' % (title, volume, category, (info.group(1) if info else '')),

@@ -748,6 +748,12 @@ async function typeSearch(kw) {
                       /class="sike"/.test(BODY()['tj' + x.id]) &&
                       /class="sanchuan"/.test(BODY()['tj' + x.id])),
        '每个可复排案例都有三组结构化盘面');
+    ok(TJ.filter(x => x.raw_pan_removed).length === 766,
+       '已从 766 例正文删除重复的 OCR 旧盘字符块（另 6 例原文没有旧盘可删）');
+    ok(TJ.filter(x => !x.pan).every(x => !x.raw_pan_removed),
+       '无法可靠复排的案例保留原始资料，不删除唯一盘面信息');
+    ok(!/六亲←/.test(BODY()['tju001']) && /本例中，日干是丙/.test(BODY()['tju001']),
+       '删除旧盘只去重复盘式，紧随其后的原书讲解仍完整保留');
     ok(TJ.filter(x => !x.pan).every(x => /课盘说明/.test(BODY()['tj' + x.id])),
        '缺参数或非六壬的 70 例明确说明不伪造课盘');
     ok(fs.readdirSync(path.join(dir, 'data', 'tj')).length === 85, '842 例正文拆为 85 个按需加载包');
