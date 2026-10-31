@@ -805,13 +805,15 @@ RENDER.course = function () {
   }
   plan.forEach(function (p) {
     if (p.part !== part) {
+      if (part) html += '</details>';
       part = p.part; pk++;
       var m = /^第(.)部分\s*[·・]?\s*(.*)$/.exec(part);
-      html += '<div class="part"><i>' + (m ? m[1] : pk) + '</i><span>' + esc(m ? m[2] : part) + '</span>' +
-        '<em>' + (partDone[part] || 0) + ' / ' + partN[part] + '</em></div>';
+      html += '<details class="coursegrp"><summary class="part"><i>' + (m ? m[1] : pk) + '</i><span>' + esc(m ? m[2] : part) + '</span>' +
+        '<em>' + (partDone[part] || 0) + ' / ' + partN[part] + '</em></summary>';
     }
     html += item(p);
   });
+  if (part) html += '</details>';
   if (refPlan.length) {
     var rd = refPlan.filter(function (p) { var l = byId[p.num]; return l && (read[l.id] || 0) >= 90; }).length;
     html += '<details class="refgrp"><summary class="part"><i>查</i><span>进阶与查阅 · 定完课体再翻</span>' +

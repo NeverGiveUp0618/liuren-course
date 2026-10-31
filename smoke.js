@@ -120,16 +120,17 @@ console.log('\n== 首页分组 ==');
   const groups = $$('.menu .mgrp').map(e => e.textContent.trim());
   ok(groups.length === 4, `四个分组（实得 ${groups.length}）`);
   ok(groups.every(g => /^[学练查读] · /.test(g)), '组名是「学/练/查/读 · 一句话」');
+  const homeFolds = $$('.menu details.navgrp');
+  ok(homeFolds.length === 4 && homeFolds.every(x => !x.open), '首页四个最大标题默认折叠');
+  homeFolds[0].querySelector('summary').click();
+  ok(homeFolds[0].open, '首页点击最大标题可以展开');
+  homeFolds[0].querySelector('summary').click();
+  ok(!homeFolds[0].open, '首页再次点击最大标题可以收起');
   const items = $$('.menu .mi');
   ok(items.length === 11, `入口 11 项一个不少（实得 ${items.length}；新增王牧夫初级案例库）`);
   ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
-  const kids = [].slice.call($('.menu').children);
-  let seen = 0, orphan = 0;
-  kids.forEach(el => {
-    if (el.classList.contains('mgrp')) seen++;
-    else if (el.classList.contains('mi') && !seen) orphan++;
-  });
+  const orphan = items.filter(el => !el.closest('details.navgrp')).length;
   ok(!orphan, `没有落在组外的入口（${orphan} 项）`);
   // ⚠️ 底栏那三项（课程/课例/速查）在首页也有，是有意的：首页当目录、底栏当快捷。
   //    但别让它变成「四张大卡片＋底栏四栏」那种同一件事做两遍（六壬神课踩过）。
@@ -220,6 +221,10 @@ ok(rows.length === M.plan.length, `列出全部 ${M.plan.length} 课（含未写
 ok($$('#courseList .li[data-id]').length === C.length, '可点的正好是已写成的 ' + C.length + ' 课');
 ok($$('#courseList .li.todo').length === M.plan.length - C.length, '其余标为待写');
 ok($$('#courseList .part').length >= 6, '按六部分分组');
+const courseFolds = $$('#courseList details.coursegrp');
+ok(courseFolds.length >= 5 && courseFolds.every(x => !x.open), '课程列表按各大部分默认折叠');
+courseFolds[0].querySelector('summary').click();
+ok(courseFolds[0].open, '点击课程大标题可以展开该部分');
 
 console.log('\n== 课文 ==');
 $$('#courseList .li[data-id]')[0].onclick();

@@ -55,11 +55,14 @@ main{overflow-x:clip}
 .stats b{display:block;font-family:var(--f-disp);font-size:22px;color:var(--gold)}
 .stats span{font-size:11.5px;color:var(--ink3)}
 .menu{display:flex;flex-direction:column;gap:8px;margin:16px 0}
-/* 首页分组小标题。⚠️ 只是分隔，别做成可折叠——首页要的是一眼看全，不是层层点开 */
-.mgrp{font-size:12px;color:var(--ink3);letter-spacing:.08em;margin:14px 2px 2px;
-  display:flex;align-items:center;gap:8px}
-.mgrp:first-child{margin-top:4px}
-.mgrp::after{content:"";flex:1;height:1px;background:var(--line)}
+.navgrp{border:1px solid var(--line);border-radius:4px;background:var(--paper);overflow:clip}
+.mgrp{cursor:pointer;list-style:none;font-size:12px;color:var(--ink3);letter-spacing:.08em;margin:0;
+  padding:11px 13px;display:flex;align-items:center;gap:8px}
+.mgrp::-webkit-details-marker{display:none}
+.mgrp::after{content:"＋";margin-left:auto;color:var(--blue);font-size:17px;line-height:1}
+.navgrp[open]>.mgrp{border-bottom:1px solid var(--line);background:var(--surface)}
+.navgrp[open]>.mgrp::after{content:"－"}
+.navgrp>.mi{margin:8px}
 .mi{all:unset;cursor:pointer;display:block;padding:14px 16px;background:var(--paper);
   border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px}
 .mi:focus-visible{outline:2px solid var(--blue)}
@@ -81,6 +84,14 @@ main{overflow-x:clip}
 /* 课程列表 */
 .part{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--gold);
   margin:22px 0 8px;text-transform:uppercase}
+.coursegrp,.refgrp{margin:8px 0;border:1px solid var(--line);border-radius:4px;background:var(--paper);overflow:clip}
+.coursegrp>.part,.refgrp>.part{cursor:pointer;list-style:none;margin:0;padding:11px 13px;display:flex;align-items:center;gap:8px}
+.coursegrp>.part::-webkit-details-marker,.refgrp>.part::-webkit-details-marker{display:none}
+.coursegrp>.part span,.refgrp>.part span{flex:1}
+.coursegrp>.part::after,.refgrp>.part::after{content:"＋";color:var(--blue);font-size:17px;line-height:1}
+.coursegrp[open]>.part::after,.refgrp[open]>.part::after{content:"－"}
+.coursegrp[open]>.part,.refgrp[open]>.part{border-bottom:1px solid var(--line);background:var(--surface)}
+.coursegrp>.li,.refgrp>.li{width:calc(100% - 16px);margin:8px}
 .li{all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;
   background:var(--paper);border:1px solid var(--line);border-radius:4px;margin-bottom:7px;width:100%}
 .li:focus-visible{outline:2px solid var(--blue)}
@@ -433,9 +444,3 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .qbar .chip.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sbox input{border-radius:12px}
 #courseList .mi{display:block;width:100%;box-sizing:border-box}
-
-/* 2026-10-23 课程列表底部「进阶与查阅」折叠组 */
-#courseList .refgrp summary{list-style:none;cursor:pointer}
-#courseList .refgrp summary::-webkit-details-marker{display:none}
-#courseList .refgrp summary em::after{content:' ›';display:inline-block;transition:transform .2s}
-#courseList .refgrp[open] summary em::after{transform:rotate(90deg)}

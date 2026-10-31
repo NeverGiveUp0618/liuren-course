@@ -30,7 +30,7 @@
   .stats div{flex:1;text-align:center}
   .stats b{display:block}
 </style>
-<!--ASSET-CSS--><link rel="stylesheet" href="b/7b5ffb63e9/style.css"><!--/ASSET-CSS-->
+<!--ASSET-CSS--><link rel="stylesheet" href="b/60d1948c6a/style.css"><!--/ASSET-CSS-->
 </head>
 <body>
 <header class="top">
@@ -63,30 +63,34 @@
       </div>
     </div>
     <div id="resume"></div>
-    <!-- ⚠️ 首页是**目录**（一眼看全站有什么），底栏是**快捷**（常用四处随时跳）。
+    <!-- ⚠️ 首页是**目录**，按「学／练／查／读」四个最大标题折叠；底栏是**快捷**（常用四处随时跳）。
          课程／课例／速查三项两处都有，这是有意的：分组之后它读起来是「这一组里的一项」，
          不是把导航又摆一遍。⚠️ 别把这里改成四张大卡片＋底栏四栏——
          那就成了同一件事做两遍（六壬神课 2026-08-12 踩过，用户原话「太繁琐」）。
          ⚠️ 分组口径＝00 总目录里那句「依赖驱动 vs 查阅式」，改这里先回去看那句。 -->
     <div class="menu">
-      <div class="mgrp g1"><i>学</i><s class="sep"> · </s><span>一课一课往下读</span></div>
+      <details class="navgrp"><summary class="mgrp g1"><i>学</i><s class="sep"> · </s><span>一课一课往下读</span></summary>
       <button class="mi" data-go="course"><b>课程</b><span>从起课到断课，一课一课来</span></button>
+      </details>
 
-      <div class="mgrp g2"><i>练</i><s class="sep"> · </s><span>自己动手</span></div>
+      <details class="navgrp"><summary class="mgrp g2"><i>练</i><s class="sep"> · </s><span>自己动手</span></summary>
       <button class="mi" data-go="lab"><b>起盘台</b><span>拨月将、占时、日干支 · 全盘四课三传＋格局毕法初判</span></button>
       <button class="mi" data-go="qlist"><b>课例</b><span><b id="mQuiz">—</b> 例实盘 · 自己先推，再看拆解</span></button>
       <button class="mi" data-go="mflist"><b>王牧夫入门案例</b><span><b id="mMufu">—</b> 例试读 · 保留古文原断，再看白话拆解</span></button>
+      </details>
 
-      <div class="mgrp g3"><i>查</i><s class="sep"> · </s><span>断课时随用随翻</span></div>
+      <details class="navgrp"><summary class="mgrp g3"><i>查</i><s class="sep"> · </s><span>断课时随用随翻</span></summary>
       <button class="mi" data-go="ref"><b>速查</b><span><b id="mRef">—</b> 张表 · 学完之后天天翻的那些</span></button>
       <button class="mi" data-go="xflist"><b>象法速查</b><span><b id="mXf">—</b> 条断法规则 · 占什么事看什么字 · 含天时晴雨</span></button>
       <button class="mi" data-go="gelist"><b>格局</b><span><b id="mGe">—</b> 格详解 · 定完课体来这儿查断意</span></button>
       <button class="mi" data-go="bflist"><b>毕法赋</b><span><b id="mBifa">—</b> 法逐格详解 · 断课时按法号或格名查</span></button>
+      </details>
 
-      <div class="mgrp g4"><i>读</i><s class="sep"> · </s><span>备查与背景 · 不读也不影响起课</span></div>
+      <details class="navgrp"><summary class="mgrp g4"><i>读</i><s class="sep"> · </s><span>备查与背景 · 不读也不影响起课</span></summary>
       <button class="mi" data-go="jinsuo"><b>金锁玉匙</b><span><b id="mJs">—</b> 首诗诀 · 只看初传加在哪个字上的简断</span></button>
       <button class="mi" data-go="extra" data-id="bayao"><b>课式八要素</b><span>排盘前的检查单 · 太岁月建日辰占时月将空亡本命行年</span></button>
       <button class="mi" data-go="xarch"><b>附篇</b><span>源流与背景 · 口诀合集 · 旧版入门与速查</span></button>
+      </details>
     </div>
     <div class="card" id="progCard">
       <button class="proghd" id="progTog" aria-expanded="false">
@@ -188,9 +192,9 @@
 <button class="fab" id="fabToc" aria-label="本课目录">目</button>
 <div class="tocmask" id="tocMask"><div class="tocbox"></div></div>
 
-<!--ASSET-JS--><script>window.ASSET='b/7b5ffb63e9/'</script>
-<script src="b/7b5ffb63e9/data/data-meta.js"></script>
-<script src="b/7b5ffb63e9/engine.js"></script>
-<script src="b/7b5ffb63e9/app.js"></script><!--/ASSET-JS-->
+<!--ASSET-JS--><script>window.ASSET='b/60d1948c6a/'</script>
+<script src="b/60d1948c6a/data/data-meta.js"></script>
+<script src="b/60d1948c6a/engine.js"></script>
+<script src="b/60d1948c6a/app.js"></script><!--/ASSET-JS-->
 </body>
 </html>
