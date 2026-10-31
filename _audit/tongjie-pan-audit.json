@@ -49,18 +49,22 @@
     "title": "咸丰甲寅年辰月戊申日巳时，卢姓占回家耕田。元首课。",
     "page": 276,
     "rgz": "戊申",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "卯申丑"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰申子",
+    "manual_scan_chuan": "卯申丑",
+    "manual_scan_note": "上册校对版书内 p276，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "卯申丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-004",
@@ -110,18 +114,22 @@
     "title": "咸丰甲寅年巳月甲申日子时，江西黄维型占友被掳回否。元首，闭口，玄胎，回环。",
     "page": 279,
     "rgz": "甲申",
-    "yj": "申",
+    "yj": "酉",
     "zs": "子",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "巳",
     "source_chuans": [
       "巳寅亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "子申辰",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "上册校对版书内 p279，盘面月将酉",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳寅亥",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-007",
@@ -131,18 +139,22 @@
     "title": "同治甲子年辰月己酉日卯时，在保康，占观察张洊山老夫子荆州动静。重审课。",
     "page": 282,
     "rgz": "己酉",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "卯",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "亥午丑"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "卯酉卯",
-    "computed_ke": "返吟",
-    "computed_ge": "无依",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "亥午丑",
+    "manual_scan_note": "上册校对版书内 p282，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "亥午丑",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-008",
@@ -154,17 +166,21 @@
     "rgz": "庚子",
     "yj": "未",
     "zs": "亥",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "子巳申",
       "巳申辰"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子申辰",
+    "manual_scan_note": "上册校对版书内 p282，盘面月将未",
+    "original_yj": "未",
+    "manual_pan_yj": "未",
     "computed_chuan": "子申辰",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-009",
@@ -214,18 +230,22 @@
     "title": "咸丰甲寅年未月甲申日申时，江西萍乡易姓占流年。知一，退茹。",
     "page": 286,
     "rgz": "甲申",
-    "yj": "午",
+    "yj": "未",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "未",
     "source_chuans": [
       "子亥戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午辰寅",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "子亥戌",
+    "manual_scan_note": "上册校对版书内 p286，盘面月将未",
+    "original_yj": "午",
+    "manual_pan_yj": "未",
+    "computed_chuan": "子亥戌",
+    "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-012",
@@ -311,18 +331,22 @@
     "title": "同治己巳年申月癸未日未时，占同寓监利县熊海洲病归吉凶。遥克，弹射。",
     "page": 297,
     "rgz": "癸未",
-    "yj": "巳",
+    "yj": "午",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "申",
     "source_chuans": [
       "巳辰卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳卯丑",
+    "manual_scan_chuan": "巳辰卯",
+    "manual_scan_note": "上册校对版书内 p297，盘面月将午",
+    "original_yj": "巳",
+    "manual_pan_yj": "午",
+    "computed_chuan": "巳辰卯",
     "computed_ke": "遥克",
     "computed_ge": "弹射",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-017",
@@ -374,18 +398,22 @@
     "title": "同治己巳年寅月甲戌日卯时，张洊山老夫子占年运。遥克，蒿矢，玄胎。",
     "page": 299,
     "rgz": "甲戌",
-    "yj": "亥",
+    "yj": "子",
     "zs": "卯",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "寅",
     "source_chuans": [
       "申巳寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌午寅",
-    "computed_ke": "重审",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "申巳寅",
+    "manual_scan_note": "上册校对版书内 p299，盘面月将子",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "申巳寅",
+    "computed_ke": "遥克",
+    "computed_ge": "蒿矢",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-020",
@@ -435,18 +463,22 @@
     "title": "道光辛卯年巳月癸未日亥时，自占月将。遥克，弹射，解离。",
     "page": 301,
     "rgz": "癸未",
-    "yj": "申",
+    "yj": "酉",
     "zs": "亥",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "巳",
     "source_chuans": [
       "巳卯丑"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌未辰",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "巳卯丑",
+    "manual_scan_note": "上册校对版书内 p301，盘面月将酉",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳卯丑",
+    "computed_ke": "遥克",
+    "computed_ge": "弹射",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-023",
@@ -557,18 +589,22 @@
     "title": "道光庚戌年亥月丁丑日午时，张姓占侄病。昴星，灾厄，冬蛇掩目。",
     "page": 307,
     "rgz": "丁丑",
-    "yj": "寅",
+    "yj": "卯",
     "zs": "午",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "亥",
     "source_chuans": [
       "子辰戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳丑酉",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "子辰戌",
+    "manual_scan_note": "上册校对版书内 p307，盘面月将卯",
+    "original_yj": "寅",
+    "manual_pan_yj": "卯",
+    "computed_chuan": "子辰戌",
+    "computed_ke": "昴星",
+    "computed_ge": "冬蛇掩目",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-029",
@@ -681,18 +717,22 @@
     "title": "咸丰甲寅年午月丁巳日申时，祝姓占家宅。伏吟，玄胎。",
     "page": 319,
     "rgz": "丁巳",
-    "yj": "未",
+    "yj": "申",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "巳申寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "卯寅丑",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "巳申寅",
+    "manual_scan_note": "上册校对版书内 p319，盘面月将申",
+    "original_yj": "未",
+    "manual_pan_yj": "申",
+    "computed_chuan": "巳申寅",
+    "computed_ke": "伏吟",
+    "computed_ge": "自信",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-035",
@@ -702,18 +742,22 @@
     "title": "咸丰癸丑年辰月壬寅日戌时，江臬台占出剿。伏吟，杜传。",
     "page": 320,
     "rgz": "壬寅",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "戌",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "亥寅巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "子亥戌",
-    "computed_ke": "比用",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "亥寅巳",
+    "manual_scan_note": "上册校对版书内 p320，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "亥寅巳",
+    "computed_ke": "伏吟",
+    "computed_ge": "自任",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-036",
@@ -824,18 +868,22 @@
     "title": "咸丰甲寅年卯月辛卯日巳时，路上自占往崇仁县。返吟，龙战。",
     "page": 326,
     "rgz": "辛卯",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "卯",
     "source_chuans": [
       "卯酉卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "卯申丑",
-    "computed_ke": "重审",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "卯酉卯",
+    "manual_scan_note": "上册校对版书内 p326，盘面月将亥",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "卯酉卯",
+    "computed_ke": "返吟",
+    "computed_ge": "无依",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-042",
@@ -904,18 +952,22 @@
     "title": "咸丰乙卯年子月壬申日子时，郧阳廪生江海帆占弟赴县考试。三阳，六仪。",
     "page": 332,
     "rgz": "壬申",
-    "yj": "丑",
+    "yj": "寅",
     "zs": "子",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "子",
     "source_chuans": [
       "子寅辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑寅卯",
-    "computed_ke": "元首",
+    "manual_scan_chuan": "子寅辰",
+    "manual_scan_note": "上册校对版书内 p332，盘面月将寅",
+    "original_yj": "丑",
+    "manual_pan_yj": "寅",
+    "computed_chuan": "子寅辰",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-046",
@@ -925,18 +977,22 @@
     "title": "同治戊辰年五月甲辰日亥时，占观察使张洊山老夫子出处。三阳，时泰。",
     "page": 333,
     "rgz": "甲辰",
-    "yj": "未",
+    "yj": "丑",
     "zs": "亥",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "五",
     "source_chuans": [
       "辰午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "子申辰",
+    "manual_scan_chuan": "辰午申",
+    "manual_scan_note": "上册校对版书内 p333，按天地盘反读月将丑",
+    "original_yj": "未",
+    "manual_pan_yj": "丑",
+    "computed_chuan": "辰午申",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-047",
@@ -946,18 +1002,22 @@
     "title": "道光己酉年酉月丁卯日午时自占出行。三奇、连珠、引从。",
     "page": 336,
     "rgz": "丁卯",
-    "yj": "辰",
+    "yj": "巳",
     "zs": "午",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "酉",
     "source_chuans": [
       "丑子亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥酉未",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "丑子亥",
+    "manual_scan_note": "上册校对版书内 p336，盘面月将巳",
+    "original_yj": "辰",
+    "manual_pan_yj": "巳",
+    "computed_chuan": "丑子亥",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-048",
@@ -1009,18 +1069,22 @@
     "title": "咸丰癸丑年亥月壬午日未时占行人。六仪，周遍，斩关，解网，交车。",
     "page": 339,
     "rgz": "壬午",
-    "yj": "寅",
+    "yj": "卯",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "亥",
     "source_chuans": [
       "戌午寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午丑申",
+    "manual_scan_chuan": "戌午寅",
+    "manual_scan_note": "上册校对版书内 p339，盘面月将卯",
+    "original_yj": "寅",
+    "manual_pan_yj": "卯",
+    "computed_chuan": "戌午寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-051",
@@ -1030,18 +1094,22 @@
     "title": "道光壬辰年辰月丙寅日酉时，占婚姻。时泰、连珠课。",
     "page": 341,
     "rgz": "丙寅",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "酉",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "辰巳午"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳申寅",
-    "computed_ke": "伏吟",
-    "computed_ge": "自任",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "辰巳午",
+    "manual_scan_note": "上册校对版书内 p341，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "辰巳午",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-052",
@@ -1059,10 +1127,12 @@
       "巳丑酉"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳丑酉",
+    "manual_scan_note": "上册校对版书内 p343；标题甲寅日，四课日干位却作癸，参数冲突",
     "computed_chuan": "丑亥亥",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "manual_source_unresolved"
   },
   {
     "id": "tongjie-上-053",
@@ -1091,18 +1161,22 @@
     "title": "咸丰甲寅年巳月己丑日辰时，杨振乡占家宅。铸印。",
     "page": 352,
     "rgz": "己丑",
-    "yj": "申",
+    "yj": "酉",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "巳",
     "source_chuans": [
       "巳戌卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "酉丑巳",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "巳戌卯",
+    "manual_scan_note": "上册校对版书内 p352，盘面月将酉",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳戌卯",
+    "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-055",
@@ -1112,18 +1186,22 @@
     "title": "咸丰辛亥年辰月乙未日巳时，罗生琴樵占母病。铸印。",
     "page": 353,
     "rgz": "乙未",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "巳戌卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥卯未",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "巳戌卯",
+    "manual_scan_note": "上册校对版书内 p353，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "巳戌卯",
+    "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-056",
@@ -1152,18 +1230,22 @@
     "title": "道光庚戌年巳月己未日辰时，吏部主政丁晓园先生占官。铸印，无禄。",
     "page": 354,
     "rgz": "己未",
-    "yj": "申",
+    "yj": "酉",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "巳",
     "source_chuans": [
       "巳戌卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥卯未",
+    "manual_scan_chuan": "巳戌卯",
+    "manual_scan_note": "上册校对版书内 p354，盘面月将酉",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳戌卯",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-058",
@@ -1372,19 +1454,23 @@
     "title": "道光壬辰年寅月壬子日辰时自占年将。合欢、全局。",
     "page": 370,
     "rgz": "壬子",
-    "yj": "亥",
+    "yj": "子",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "寅",
     "source_chuans": [
       "未巳卯",
       "巳卯亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午丑申",
-    "computed_ke": "重审",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "未卯亥",
+    "manual_scan_note": "上册校对版书内 p370，盘面月将子",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "未卯亥",
+    "computed_ke": "涉害",
+    "computed_ge": "见机",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-069",
@@ -1394,19 +1480,23 @@
     "title": "咸丰辛亥年巳月戊辰日巳时，张仲远夫子占新任本府差。合欢，遥克。",
     "page": 370,
     "rgz": "戊辰",
-    "yj": "申",
+    "yj": "丑",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "巳",
     "source_chuans": [
       "子巳申",
       "巳申辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥寅巳",
-    "computed_ke": "遥克",
-    "computed_ge": "弹射",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "子申辰",
+    "manual_scan_note": "上册校对版书内 p370，盘面月将丑",
+    "original_yj": "申",
+    "manual_pan_yj": "丑",
+    "computed_chuan": "子申辰",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-070",
@@ -1437,18 +1527,22 @@
     "title": "咸丰甲寅年辰月壬子日申时，占家有人来否。斩关，进间。",
     "page": 372,
     "rgz": "壬子",
-    "yj": "酉",
+    "yj": "戌",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "辰",
     "source_chuans": [
       "辰午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "寅卯辰",
-    "computed_ke": "知一",
+    "manual_scan_chuan": "辰午申",
+    "manual_scan_note": "上册校对版书内 p372，盘面月将戌",
+    "original_yj": "酉",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "辰午申",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-072",
@@ -1499,18 +1593,22 @@
     "title": "咸丰辛亥年午月庚寅日壬午时，饶鲁怡亲家占病。斩关，进间。",
     "page": 377,
     "rgz": "庚寅",
-    "yj": "未",
+    "yj": "申",
     "zs": "午",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "辰午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰巳午",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "辰午申",
+    "manual_scan_note": "上册校对版书内 p377，盘面月将申",
+    "original_yj": "未",
+    "manual_pan_yj": "申",
+    "computed_chuan": "辰午申",
+    "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-上-075",
@@ -1638,18 +1736,22 @@
     "title": "咸丰癸丑年卯月壬午日辰时，族侄占母病。赘婿，回环。",
     "page": 17,
     "rgz": "壬午",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "卯",
     "source_chuans": [
       "午丑申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午子午",
-    "computed_ke": "返吟",
-    "computed_ge": "无依",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "午丑申",
+    "manual_scan_note": "中册校对版书内 p17，盘面月将亥",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "午丑申",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-007",
@@ -1682,17 +1784,21 @@
     "rgz": "丙午",
     "yj": "午",
     "zs": "酉",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "未",
     "source_chuans": [
       "子未酉",
       "未酉午"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子酉午",
+    "manual_scan_note": "中册校对版书内 p19，三传自上而下为子、酉、午",
+    "original_yj": "午",
+    "manual_pan_yj": "午",
     "computed_chuan": "子酉午",
     "computed_ke": "遥克",
     "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-009",
@@ -1807,18 +1913,22 @@
     "title": "咸丰戊午年午月辛巳日丑时，闻警占。无禄。",
     "page": 36,
     "rgz": "辛巳",
-    "yj": "未",
+    "yj": "申",
     "zs": "丑",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "未寅酉"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳亥巳",
-    "computed_ke": "返吟",
-    "computed_ge": "无依",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "未寅酉",
+    "manual_scan_note": "中册校对版书内 p36，盘面月将申",
+    "original_yj": "未",
+    "manual_pan_yj": "申",
+    "computed_chuan": "未寅酉",
+    "computed_ke": "涉害",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-015",
@@ -1889,17 +1999,21 @@
     "rgz": "癸酉",
     "yj": "辰",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "八",
     "source_chuans": [
       "午卯未",
       "卯未子"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "午卯子",
+    "manual_scan_note": "中册校对版书内 p50，三传自上而下为午、卯、子",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "午卯子",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-019",
@@ -1909,19 +2023,23 @@
     "title": "道光乙巳年子月庚午日巳时，占张姓店事。天网，玄胎。",
     "page": 59,
     "rgz": "庚午",
-    "yj": "丑",
+    "yj": "寅",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "子",
     "source_chuans": [
       "巳未寅",
       "未寅亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "子申辰",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "中册校对版书内 p59，盘面月将寅",
+    "original_yj": "丑",
+    "manual_pan_yj": "寅",
+    "computed_chuan": "巳寅亥",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-020",
@@ -2007,18 +2125,22 @@
     "title": "咸丰辛亥年卯月壬戌日丑时，卓庭侄占年将。灾厄，顾祖。",
     "page": 71,
     "rgz": "壬戌",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "丑",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "卯",
     "source_chuans": [
       "午辰寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳寅亥",
+    "manual_scan_chuan": "午辰寅",
+    "manual_scan_note": "中册校对版书内 p71，盘面月将亥",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "午辰寅",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-025",
@@ -2068,18 +2190,22 @@
     "title": "咸丰癸丑年申月辛酉日辰时，在家占中丞江岷樵大人消息。九丑，丧魄。",
     "page": 76,
     "rgz": "辛酉",
-    "yj": "巳",
+    "yj": "午",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "申",
     "source_chuans": [
       "丑卯巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥子丑",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "丑卯巳",
+    "manual_scan_note": "中册校对版书内 p76，盘面月将午",
+    "original_yj": "巳",
+    "manual_pan_yj": "午",
+    "computed_chuan": "丑卯巳",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-028",
@@ -2089,18 +2215,22 @@
     "title": "道光庚戌年五月壬申日申时，前任邑侯张仲远夫子占胎产。鬼墓，死奇。",
     "page": 80,
     "rgz": "壬申",
-    "yj": "未",
+    "yj": "丑",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "五",
     "source_chuans": [
       "辰酉寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌酉申",
+    "manual_scan_chuan": "辰酉寅",
+    "manual_scan_note": "中册校对版书内 p80，按天地盘反读月将丑",
+    "original_yj": "未",
+    "manual_pan_yj": "丑",
+    "computed_chuan": "辰酉寅",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-029",
@@ -2188,18 +2318,22 @@
     "title": "咸丰丁巳年寅月甲子日申时，自兴安府迁汉阴县，占起馆。润下，解离。",
     "page": 93,
     "rgz": "甲子",
-    "yj": "亥",
+    "yj": "子",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "寅",
     "source_chuans": [
       "辰申子"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "申亥寅",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "辰申子",
+    "manual_scan_note": "中册校对版书内 p93，盘面月将子",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "辰申子",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-034",
@@ -2247,18 +2381,22 @@
     "title": "咸丰甲寅年午月辛酉日辰时，黄姓代占讼事。炎上。",
     "page": 94,
     "rgz": "辛酉",
-    "yj": "未",
+    "yj": "申",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "寅午戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "卯午酉",
-    "computed_ke": "遥克",
-    "computed_ge": "弹射",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "寅午戌",
+    "manual_scan_note": "中册校对版书内 p94，盘面月将申",
+    "original_yj": "未",
+    "manual_pan_yj": "申",
+    "computed_chuan": "寅午戌",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-037",
@@ -2270,17 +2408,21 @@
     "rgz": "乙未",
     "yj": "巳",
     "zs": "酉",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "申",
     "source_chuans": [
       "卯巳亥",
       "巳亥未"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "卯亥未",
+    "manual_scan_note": "中册校对版书内 p95，三传自上而下为卯、亥、未",
+    "original_yj": "巳",
+    "manual_pan_yj": "巳",
     "computed_chuan": "卯亥未",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-038",
@@ -2465,18 +2607,22 @@
     "title": "咸丰癸丑年卯月壬申日酉时自占家宅。六仪，进间。",
     "page": 104,
     "rgz": "壬申",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "酉",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "卯",
     "source_chuans": [
       "子寅辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑寅卯",
-    "computed_ke": "元首",
+    "manual_scan_chuan": "子寅辰",
+    "manual_scan_note": "中册校对版书内 p104，盘面月将亥",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "子寅辰",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-048",
@@ -2524,18 +2670,22 @@
     "title": "同治甲子年酉月庚寅日卯时，嘉鱼人占舟中失钱。斩关，进间，凑合。",
     "page": 106,
     "rgz": "庚寅",
-    "yj": "辰",
+    "yj": "巳",
     "zs": "卯",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "酉",
     "source_chuans": [
       "辰午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰巳午",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "辰午申",
+    "manual_scan_note": "中册校对版书内 p106，盘面月将巳",
+    "original_yj": "辰",
+    "manual_pan_yj": "巳",
+    "computed_chuan": "辰午申",
+    "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-051",
@@ -2789,18 +2939,22 @@
     "title": "公元 1637 年，丁丑十二月丁酉日癸卯时，江西前刑部兵长垣曾应遴先生，因为下雪后天气昏沉，自己又懂得数术，因此曾先生断明日必雪，陈公献则列六壬而断之。（《六壬指南》）",
     "page": 278,
     "rgz": "丁酉",
-    "yj": "子",
+    "yj": "丑",
     "zs": "卯",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "十二",
     "source_chuans": [
       "丑巳巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午卯子",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "丑巳巳",
+    "manual_scan_note": "中册校对版书内 p278；原文又明确说丑为月将，复排仍不同",
+    "original_yj": "子",
+    "manual_pan_yj": "丑",
+    "computed_chuan": "亥巳未",
+    "computed_ke": "昴星",
+    "computed_ge": "冬蛇掩目",
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-中-064",
@@ -2856,11 +3010,11 @@
       "亥酉丑"
     ],
     "source_chuan_confidence": "high",
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "中册 PDF p280，三传自上而下为丑、亥、酉",
     "computed_chuan": "丑亥酉",
     "computed_ke": "重审",
     "computed_ge": "",
-    "manual_scan_chuan": "丑亥酉",
-    "manual_scan_note": "中册 PDF p280，三传自上而下为丑、亥、酉",
     "status": "verified_manual_scan"
   },
   {
@@ -2957,16 +3111,20 @@
     "rgz": "戊辰",
     "yj": "巳",
     "zs": "亥",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "七",
     "source_chuans": [
       "巳亥巳"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳亥巳",
+    "manual_scan_note": "中册校对版书内 p283；题头明载巳将，复排初末顺序仍不同",
+    "original_yj": "巳",
+    "manual_pan_yj": "巳",
     "computed_chuan": "亥巳亥",
     "computed_ke": "返吟",
     "computed_ge": "无依",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-中-072",
@@ -3522,17 +3680,21 @@
     "rgz": "壬午",
     "yj": "辰",
     "zs": "申",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "戌巳午",
       "巳午寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "戌午寅",
+    "manual_scan_note": "中册校对版书内 p308，三传自上而下为戌、午、寅",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "戌午寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-101",
@@ -3802,16 +3964,20 @@
     "rgz": "乙巳",
     "yj": "戌",
     "zs": "亥",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "辰卯寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "辰卯寅",
+    "manual_scan_note": "中册校对版书内 p318；原文明确主张不备课不可重复取用，复排口径不同",
+    "original_yj": "戌",
+    "manual_pan_yj": "戌",
     "computed_chuan": "卯寅丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-中-115",
@@ -3943,18 +4109,22 @@
     "title": "郑宣义，己亥生，生于五月十六日酉时，七十岁，占宅。戊申年八月癸丑日丑时丑将。",
     "page": 322,
     "rgz": "癸丑",
-    "yj": "未",
+    "yj": "丑",
     "zs": "酉",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "五",
     "source_chuans": [
       "酉丑巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥酉未",
+    "manual_scan_chuan": "酉丑巳",
+    "manual_scan_note": "中册校对版书内 p322，题头丑时丑将",
+    "original_yj": "未",
+    "manual_pan_yj": "丑",
+    "computed_chuan": "酉丑巳",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-122",
@@ -3985,18 +4155,22 @@
     "title": "郭仲起，辛未生三十九岁占宅，己酉年六月甲寅日未时寅将。",
     "page": 324,
     "rgz": "甲寅",
-    "yj": "午",
+    "yj": "子",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "六",
     "source_chuans": [
       "子巳戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "子亥戌",
+    "manual_scan_chuan": "子巳戌",
+    "manual_scan_note": "中册校对版书内 p324；题头写寅将，但天地盘反读为子将，按盘复排一致",
+    "original_yj": "午",
+    "manual_pan_yj": "子",
+    "computed_chuan": "子巳戌",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-124",
@@ -4150,17 +4324,21 @@
     "rgz": "庚寅",
     "yj": "辰",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳寅未",
       "寅未亥"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "中册校对版书内 p330，三传自上而下为巳、寅、亥",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "巳寅亥",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-132",
@@ -4349,18 +4527,22 @@
     "title": "癸卯年，戊午月，癸酉日，甲寅时，某富商，甲子命，其妻庚午命，癸山丁向，阳宅修造催子。",
     "page": 336,
     "rgz": "癸酉",
-    "yj": "未",
+    "yj": "申",
     "zs": "寅",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "午",
     "source_chuans": [
       "卯酉卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "未子巳",
-    "computed_ke": "比用",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "卯酉卯",
+    "manual_scan_note": "中册校对版书内 p336，盘面月将申",
+    "original_yj": "未",
+    "manual_pan_yj": "申",
+    "computed_chuan": "卯酉卯",
+    "computed_ke": "返吟",
+    "computed_ge": "无依",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-142",
@@ -4448,17 +4630,21 @@
     "rgz": "甲戌",
     "yj": "辰",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "申巳未",
       "巳未寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "申巳寅",
+    "manual_scan_note": "中册校对版书内 p340，三传自上而下为申、巳、寅",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "申巳寅",
     "computed_ke": "遥克",
     "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-中-147",
@@ -5338,16 +5524,20 @@
     "rgz": "庚子",
     "yj": "寅",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "寅巳子"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅巳子",
+    "manual_scan_note": "中册校对版书内 p368；题头明载寅将，复排仍不同",
+    "original_yj": "寅",
+    "manual_pan_yj": "寅",
     "computed_chuan": "戌巳子",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-中-192",
@@ -5875,17 +6065,21 @@
     "rgz": "庚寅",
     "yj": "子",
     "zs": "丑",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳未寅",
       "未寅亥"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "下册 OCR p12；题头明载子将丑时，三传巳、寅、亥",
+    "original_yj": "子",
+    "manual_pan_yj": "子",
     "computed_chuan": "子亥戌",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-022",
@@ -5903,11 +6097,11 @@
       "亥酉未"
     ],
     "source_chuan_confidence": "high",
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "下册 PDF p18，三传自上而下为丑、亥、酉",
     "computed_chuan": "丑亥酉",
     "computed_ke": "重审",
     "computed_ge": "",
-    "manual_scan_chuan": "丑亥酉",
-    "manual_scan_note": "下册 PDF p18，三传自上而下为丑、亥、酉",
     "status": "verified_manual_scan"
   },
   {
@@ -6139,16 +6333,20 @@
     "rgz": "乙巳",
     "yj": "未",
     "zs": "亥",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳未卯"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未卯亥",
+    "manual_scan_note": "下册 OCR p19；原文断语明载初未、中卯、终亥",
+    "original_yj": "未",
+    "manual_pan_yj": "未",
     "computed_chuan": "酉巳丑",
     "computed_ke": "遥克",
     "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-035",
@@ -6568,17 +6766,21 @@
     "rgz": "己丑",
     "yj": "丑",
     "zs": "辰",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "子未辰",
       "未辰戌"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子辰戌",
+    "manual_scan_note": "下册 OCR p31；三传子、辰、戌",
+    "original_yj": "丑",
+    "manual_pan_yj": "丑",
     "computed_chuan": "子辰戌",
     "computed_ke": "昴星",
     "computed_ge": "冬蛇掩目",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-056",
@@ -6611,17 +6813,21 @@
     "rgz": "戊子",
     "yj": "子",
     "zs": "卯",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "寅亥未",
       "亥未申"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅亥申",
+    "manual_scan_note": "下册 OCR p32；三传寅、亥、申",
+    "original_yj": "子",
+    "manual_pan_yj": "子",
     "computed_chuan": "寅亥申",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-058",
@@ -6955,16 +7161,20 @@
     "rgz": "甲辰",
     "yj": "戌",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "寅未子"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅未子",
+    "manual_scan_note": "下册 OCR p42；题头明载戌将，三传寅、未、子",
+    "original_yj": "戌",
+    "manual_pan_yj": "戌",
     "computed_chuan": "子巳戌",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-075",
@@ -6974,18 +7184,22 @@
     "title": "乙卯年正月己酉日丑时子将，占病。",
     "page": 52,
     "rgz": "己酉",
-    "yj": "亥",
+    "yj": "子",
     "zs": "丑",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "正",
     "source_chuans": [
       "戌午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "卯丑亥",
-    "computed_ke": "遥克",
-    "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "戌午申",
+    "manual_scan_note": "下册 OCR p43；题头明载子将，三传戌、午、申",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "戌午申",
+    "computed_ke": "昴星",
+    "computed_ge": "冬蛇掩目",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-076",
@@ -7056,18 +7270,22 @@
     "title": "己卯六月己酉日戊辰时，维扬埂子街六如斋扇店浙江张澹宁相会占病。（《六壬指南》）",
     "page": 54,
     "rgz": "己酉",
-    "yj": "午",
+    "yj": "未",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "六",
     "source_chuans": [
       "卯午酉"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑卯巳",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "卯午酉",
+    "manual_scan_note": "下册 OCR p45；按天地盘反读未将，三传卯、午、酉",
+    "original_yj": "午",
+    "manual_pan_yj": "未",
+    "computed_chuan": "卯午酉",
+    "computed_ke": "遥克",
+    "computed_ge": "蒿矢",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-080",
@@ -7233,16 +7451,20 @@
     "rgz": "癸卯",
     "yj": "寅",
     "zs": "辰",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "丑亥酉"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "下册 OCR p51；题头明载寅将，三传丑、亥、酉",
+    "original_yj": "寅",
+    "manual_pan_yj": "寅",
     "computed_chuan": "亥酉未",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-089",
@@ -7933,16 +8155,20 @@
     "rgz": "甲辰",
     "yj": "戌",
     "zs": "寅",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳戌午"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "戌午寅",
+    "manual_scan_note": "下册 OCR p77；题头明载戌将，断语又说末传寅克初传戌",
+    "original_yj": "戌",
+    "manual_pan_yj": "戌",
     "computed_chuan": "子申辰",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-124",
@@ -8150,17 +8376,21 @@
     "rgz": "甲子",
     "yj": "卯",
     "zs": "子",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "未酉亥",
       "戌午寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未酉亥",
+    "manual_scan_note": "下册 OCR p82；一案附多组盘，题头主盘为卯将子时，首组三传未、酉、亥",
+    "original_yj": "卯",
+    "manual_pan_yj": "卯",
     "computed_chuan": "申亥寅",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-135",
@@ -8722,18 +8952,22 @@
     "title": "东京有僧仲褒，精通六壬，元丰八年乙丑二月十七辛巳日太学同人李明，癸未生，四十三岁求占得申时亥将。（《一针见血》）①",
     "page": 97,
     "rgz": "辛巳",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "申亥寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "寅辰午",
-    "computed_ke": "遥克",
-    "computed_ge": "弹射",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "申亥寅",
+    "manual_scan_note": "下册 OCR p97；题头明载亥将，三传申、亥、寅",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "申亥寅",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-164",
@@ -8965,16 +9199,20 @@
     "rgz": "甲申",
     "yj": "亥",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "寅申寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅申寅",
+    "manual_scan_note": "下册 OCR p104；题头明载亥将，三传寅、申、寅",
+    "original_yj": "亥",
+    "manual_pan_yj": "亥",
     "computed_chuan": "辰申子",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-176",
@@ -9336,16 +9574,20 @@
     "rgz": "辛卯",
     "yj": "亥",
     "zs": "卯",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳未卯"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未卯亥",
+    "manual_scan_note": "下册 OCR p112；三传未、卯、亥",
+    "original_yj": "亥",
+    "manual_pan_yj": "亥",
     "computed_chuan": "未卯亥",
     "computed_ke": "知一",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-195",
@@ -9357,16 +9599,20 @@
     "rgz": "癸巳",
     "yj": "寅",
     "zs": "卯",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳丑酉"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳丑酉",
+    "manual_scan_note": "下册 OCR p113；题头明载寅将，三传巳、丑、酉",
+    "original_yj": "寅",
+    "manual_pan_yj": "寅",
     "computed_chuan": "卯寅丑",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-196",
@@ -9418,18 +9664,22 @@
     "title": "丁丑年二月乙未日辛巳时，太仓吴孝廉讳克孝者，偶至安庆阮实夫寓中，相晤间占会试。（《六壬指南》）",
     "page": 114,
     "rgz": "乙未",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "戌辰戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳戌卯",
-    "computed_ke": "比用",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "戌辰戌",
+    "manual_scan_note": "下册 OCR p114；按天地盘反读亥将，三传戌、辰、戌",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "戌辰戌",
+    "computed_ke": "返吟",
+    "computed_ge": "无依",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-199",
@@ -9481,18 +9731,22 @@
     "title": "崇祯癸酉年七月辛卯日庚寅时，扬州明经宗开先，同张向之来占科场事，报寅时。（《六壬指南》）",
     "page": 115,
     "rgz": "辛卯",
-    "yj": "巳",
+    "yj": "午",
     "zs": "寅",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "七",
     "source_chuans": [
       "未亥卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "酉子卯",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "未亥卯",
+    "manual_scan_note": "下册 OCR p115；按天地盘反读午将，三传未、亥、卯",
+    "original_yj": "巳",
+    "manual_pan_yj": "午",
+    "computed_chuan": "亥卯未",
+    "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-202",
@@ -9524,16 +9778,20 @@
     "rgz": "乙巳",
     "yj": "辰",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "八",
     "source_chuans": [
       "巳酉巳"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "酉巳丑",
+    "manual_scan_note": "下册 OCR p116；三传酉、巳、丑",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "酉巳丑",
     "computed_ke": "遥克",
     "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-204",
@@ -9562,18 +9820,22 @@
     "title": "崇祯甲戌年二月戊辰日丁巳时，长兴前刑垣礼部讳继廉王公祖，令小童持字来为人占会试。（《六壬指南》）",
     "page": 117,
     "rgz": "戊辰",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "巳亥巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "寅未子",
-    "computed_ke": "重审",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "巳亥巳",
+    "manual_scan_note": "下册 OCR p117；按天地盘反读亥将，三传巳、亥、巳",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "亥巳亥",
+    "computed_ke": "返吟",
+    "computed_ge": "无依",
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-206",
@@ -9621,18 +9883,22 @@
     "title": "崇祯丁丑年二月乙未日丙戌时，安庆保举明经，阮实夫代刘若宣先生占会试。（《指南》）",
     "page": 118,
     "rgz": "乙未",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "戌",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "酉戌亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰未丑",
-    "computed_ke": "伏吟",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "酉戌亥",
+    "manual_scan_note": "下册 OCR p119；按天地盘反读亥将，三传酉、戌、亥",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "酉戌亥",
+    "computed_ke": "遥克",
+    "computed_ge": "蒿矢",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-209",
@@ -9663,17 +9929,21 @@
     "rgz": "丁未",
     "yj": "辰",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "亥辰未",
       "辰未辰"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "亥辰辰",
+    "manual_scan_note": "下册 OCR p120；三传亥、辰、辰",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "亥辰辰",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-211",
@@ -10084,16 +10354,20 @@
     "rgz": "壬寅",
     "yj": "辰",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳未寅"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "下册 OCR p135；三传巳、寅、亥",
+    "original_yj": "辰",
+    "manual_pan_yj": "辰",
     "computed_chuan": "巳寅亥",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-232",
@@ -10143,17 +10417,21 @@
     "rgz": "乙卯",
     "yj": "卯",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "未巳卯",
       "巳卯亥"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未卯亥",
+    "manual_scan_note": "下册 OCR p137；三传未、卯、亥",
+    "original_yj": "卯",
+    "manual_pan_yj": "卯",
     "computed_chuan": "未卯亥",
     "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-235",
@@ -10424,17 +10702,21 @@
     "rgz": "甲寅",
     "yj": "未",
     "zs": "戌",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "丑亥未",
       "亥未亥"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "丑亥亥",
+    "manual_scan_note": "下册 OCR p147；三传丑、亥、亥",
+    "original_yj": "未",
+    "manual_pan_yj": "未",
     "computed_chuan": "丑亥亥",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-249",
@@ -10508,16 +10790,20 @@
     "rgz": "癸亥",
     "yj": "未",
     "zs": "亥",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳未卯"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未卯亥",
+    "manual_scan_note": "下册 OCR p149；三传未、卯、亥",
+    "original_yj": "未",
+    "manual_pan_yj": "未",
     "computed_chuan": "未卯亥",
     "computed_ke": "涉害",
     "computed_ge": "见机",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-253",
@@ -10719,11 +11005,11 @@
       "子辰申"
     ],
     "source_chuan_confidence": "high",
+    "manual_scan_chuan": "子申辰",
+    "manual_scan_note": "下册 PDF p155，三传自上而下为子、申、辰",
     "computed_chuan": "子申辰",
     "computed_ke": "重审",
     "computed_ge": "",
-    "manual_scan_chuan": "子申辰",
-    "manual_scan_note": "下册 PDF p155，三传自上而下为子、申、辰",
     "status": "verified_manual_scan"
   },
   {
@@ -10974,18 +11260,22 @@
     "title": "张鉉占幕馆，互为因果，三课参看。",
     "page": 163,
     "rgz": "丁巳",
-    "yj": "申",
+    "yj": "酉",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "四",
     "source_chuans": [
       "申酉戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "巳申寅",
-    "computed_ke": "伏吟",
-    "computed_ge": "自信",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "申酉戌",
+    "manual_scan_note": "下册 OCR p164；原文明说三传申酉戌",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "申酉戌",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-276",
@@ -11033,18 +11323,22 @@
     "title": "己未夏间，余附粮舟回南，同舟一人已得官，占选期。六月壬寅日戌时未将，三传巳寅亥。",
     "page": 166,
     "rgz": "壬寅",
-    "yj": "午",
+    "yj": "未",
     "zs": "戌",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "六",
     "source_chuans": [
       "巳未寅"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌午寅",
-    "computed_ke": "重审",
+    "manual_scan_chuan": "巳寅亥",
+    "manual_scan_note": "下册 OCR p166；原文明载戌时未将、三传巳寅亥",
+    "original_yj": "午",
+    "manual_pan_yj": "未",
+    "computed_chuan": "巳寅亥",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-279",
@@ -11457,18 +11751,22 @@
     "title": "戊子六月乙未日癸未时，山右司化南在淮阴占得此课。己丑正月写出，求断何官所占。（《指南》）",
     "page": 176,
     "rgz": "乙未",
-    "yj": "午",
+    "yj": "亥",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "六",
     "source_chuans": [
       "亥卯未"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌卯午",
-    "computed_ke": "昴星",
-    "computed_ge": "冬蛇掩目",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "亥卯未",
+    "manual_scan_note": "下册 OCR p175；按天地盘反读亥将，三传亥、卯、未",
+    "original_yj": "午",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "亥卯未",
+    "computed_ke": "重审",
+    "computed_ge": "",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-301",
@@ -11478,19 +11776,23 @@
     "title": "崇祯丁卯年正月丁巳日癸卯时，京营参将涂松亭先生，为彭南溟占升迁。（《指南》）",
     "page": 176,
     "rgz": "丁巳",
-    "yj": "亥",
+    "yj": "子",
     "zs": "卯",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "正",
     "source_chuans": [
       "亥申未",
       "申未巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥未卯",
+    "manual_scan_chuan": "亥申巳",
+    "manual_scan_note": "下册 OCR p176；按天地盘反读子将，三传亥、申、巳",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "亥申巳",
     "computed_ke": "遥克",
     "computed_ge": "蒿矢",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-302",
@@ -11523,16 +11825,20 @@
     "rgz": "癸卯",
     "yj": "戌",
     "zs": "子",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "丑亥酉"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "丑亥酉",
+    "manual_scan_note": "下册 OCR p177；按天地盘反读戌将，三传丑、亥、酉",
+    "original_yj": "戌",
+    "manual_pan_yj": "戌",
     "computed_chuan": "亥酉未",
     "computed_ke": "涉害",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-304",
@@ -11542,18 +11848,22 @@
     "title": "崇祯辛未年四月己未日戊辰时，东省吏科宋太斗先生，在仇兵科宅中占功名。（《指南》）",
     "page": 177,
     "rgz": "己未",
-    "yj": "申",
+    "yj": "酉",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "四",
     "source_chuans": [
       "巳戌卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "亥卯未",
+    "manual_scan_chuan": "巳戌卯",
+    "manual_scan_note": "下册 OCR p178；按天地盘反读酉将，三传巳、戌、卯",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳戌卯",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-305",
@@ -12071,17 +12381,21 @@
     "rgz": "辛丑",
     "yj": "子",
     "zs": "未",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "丑卯申",
       "卯申卯"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "卯申卯",
+    "manual_scan_note": "下册 OCR p190；题头明载子将，三传卯、申、卯",
+    "original_yj": "子",
+    "manual_pan_yj": "子",
     "computed_chuan": "卯申丑",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-332",
@@ -12506,18 +12820,22 @@
     "title": "崇祯癸酉年四月癸亥日丙辰时，宜兴周首辅因陈科长弹论，",
     "page": 202,
     "rgz": "癸亥",
-    "yj": "申",
+    "yj": "酉",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "四",
     "source_chuans": [
       "午亥辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "酉丑巳",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "午亥辰",
+    "manual_scan_note": "下册 OCR p202；按天地盘反读酉将，三传午、亥、辰",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "午亥辰",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-354",
@@ -12565,18 +12883,22 @@
     "title": "崇祯癸未年七月丁未日丁未时，丹阳茸村盛顺白，被逮进京，舟泊邗关请占。（《指南》）",
     "page": 203,
     "rgz": "丁未",
-    "yj": "巳",
+    "yj": "辰",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "七",
     "source_chuans": [
       "亥未辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑巳巳",
+    "manual_scan_chuan": "亥辰辰",
+    "manual_scan_note": "下册 OCR p203；按天地盘反读辰将，三传亥、辰、辰",
+    "original_yj": "巳",
+    "manual_pan_yj": "辰",
+    "computed_chuan": "亥辰辰",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-357",
@@ -12839,16 +13161,20 @@
     "rgz": "辛卯",
     "yj": "亥",
     "zs": "寅",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "子未未"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子未子",
+    "manual_scan_note": "下册 OCR p210；题头明载亥将，三传子、未、子",
+    "original_yj": "亥",
+    "manual_pan_yj": "亥",
     "computed_chuan": "子未子",
     "computed_ke": "昴星",
     "computed_ge": "冬蛇掩目",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-371",
@@ -12860,16 +13186,20 @@
     "rgz": "庚辰",
     "yj": "寅",
     "zs": "午",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "巳子申"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子申辰",
+    "manual_scan_note": "下册 OCR p211；三传子、申、辰",
+    "original_yj": "寅",
+    "manual_pan_yj": "寅",
     "computed_chuan": "子申辰",
     "computed_ke": "涉害",
     "computed_ge": "复等",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-372",
@@ -12919,16 +13249,20 @@
     "rgz": "乙酉",
     "yj": "酉",
     "zs": "辰",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "未子丑"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "未子丑",
+    "manual_scan_note": "下册 OCR p212；题头明载酉将，三传未、子、丑",
+    "original_yj": "酉",
+    "manual_pan_yj": "酉",
     "computed_chuan": "未子巳",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-375",
@@ -13658,18 +13992,22 @@
     "title": "乙酉正月丙午日丙申时，总漕部院田百原闻高镇睢州被许定国围困，占吉凶。（《六壬指南》）",
     "page": 231,
     "rgz": "丙午",
-    "yj": "亥",
+    "yj": "子",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "正",
     "source_chuans": [
       "酉丑巳"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "申亥寅",
-    "computed_ke": "比用",
+    "manual_scan_chuan": "酉丑巳",
+    "manual_scan_note": "下册 OCR p239；按天地盘反读子将，三传酉、丑、巳",
+    "original_yj": "亥",
+    "manual_pan_yj": "子",
+    "computed_chuan": "酉丑巳",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-413",
@@ -13679,18 +14017,22 @@
     "title": "顺治二年，乙酉四月二十五①，丁丑日辰时，大兵用铳攻扬州，守西门将士索占吉凶。（《指南》）",
     "page": 231,
     "rgz": "丁丑",
-    "yj": "申",
+    "yj": "酉",
     "zs": "辰",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "四",
     "source_chuans": [
       "巳戌卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "酉丑巳",
+    "manual_scan_chuan": "巳戌卯",
+    "manual_scan_note": "下册 OCR p240；按天地盘反读酉将，三传巳、戌、卯",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "巳戌卯",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-414",
@@ -13700,18 +14042,22 @@
     "title": "顺治戊子年二月乙亥日癸未时，兴化台中李少文先生相召汪宁牛湾园，虑金兵东下占。（《指南》）",
     "page": 232,
     "rgz": "乙亥",
-    "yj": "戌",
+    "yj": "亥",
     "zs": "未",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "二",
     "source_chuans": [
       "未亥卯"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "未戌丑",
+    "manual_scan_chuan": "未亥卯",
+    "manual_scan_note": "下册 OCR p241；按天地盘反读亥将，三传未、亥、卯",
+    "original_yj": "戌",
+    "manual_pan_yj": "亥",
+    "computed_chuan": "未亥卯",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-415",
@@ -14014,17 +14360,21 @@
     "rgz": "己未",
     "yj": "丑",
     "zs": "巳",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "卯巳亥",
       "巳亥未"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "卯亥未",
+    "manual_scan_note": "下册 OCR p251；三传卯、亥、未",
+    "original_yj": "丑",
+    "manual_pan_yj": "丑",
     "computed_chuan": "卯亥未",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-431",
@@ -14053,18 +14403,22 @@
     "title": "顺治乙酉年四月癸亥日戊午时，予住淮阴，欲回扬州搬家眷，田百原恩师占课看该城住、乡住？（《指南》）",
     "page": 240,
     "rgz": "癸亥",
-    "yj": "申",
+    "yj": "酉",
     "zs": "午",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "四",
     "source_chuans": [
       "辰未戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑卯巳",
-    "computed_ke": "涉害",
+    "manual_scan_chuan": "辰未戌",
+    "manual_scan_note": "下册 OCR p252；按天地盘反读酉将，三传辰、未、戌",
+    "original_yj": "申",
+    "manual_pan_yj": "酉",
+    "computed_chuan": "辰未戌",
+    "computed_ke": "元首",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-433",
@@ -14352,10 +14706,10 @@
       "戌丑辰"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰未戌",
-    "computed_ke": "元首",
-    "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "excluded_non_liuren",
+    "computed_chuan": null,
+    "computed_ke": null,
+    "computed_ge": null
   },
   {
     "id": "tongjie-下-448",
@@ -14711,19 +15065,23 @@
     "category": "终身",
     "title": "张鎔家人毛丹占终身，八月初八日，壬戌寅时已将。（《六壬",
     "page": 268,
-    "rgz": "甲子",
-    "yj": "辰",
+    "rgz": "壬戌",
+    "yj": "巳",
     "zs": "寅",
-    "yj_basis": "month_inferred",
+    "yj_basis": "manual_input_correction",
     "month": "八",
     "source_chuans": [
       "辰未戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰午申",
-    "computed_ke": "涉害",
-    "computed_ge": "复等",
-    "status": "source_chuan_ambiguous"
+    "manual_scan_chuan": "辰未戌",
+    "manual_scan_note": "下册 OCR p268；壬戌日寅时巳将，三传辰、未、戌",
+    "original_yj": "辰",
+    "manual_pan_yj": "巳",
+    "computed_chuan": "辰未戌",
+    "computed_ke": "遥克",
+    "computed_ge": "蒿矢",
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-467",
@@ -14776,16 +15134,20 @@
     "rgz": "甲子",
     "yj": "亥",
     "zs": "午",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "丑子巳"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "子巳未",
+    "manual_scan_note": "下册 OCR p270；题头明载亥将，原文以初子、中巳、末未论断",
+    "original_yj": "亥",
+    "manual_pan_yj": "亥",
     "computed_chuan": "子巳戌",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-470",
@@ -14917,16 +15279,20 @@
     "rgz": "戊辰",
     "yj": "卯",
     "zs": "寅",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "寅午午"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅午午",
+    "manual_scan_note": "下册 OCR p275；题头明载卯将，三传寅、午、午",
+    "original_yj": "卯",
+    "manual_pan_yj": "卯",
     "computed_chuan": "戌巳午",
     "computed_ke": "昴星",
     "computed_ge": "虎视转蓬",
-    "status": "source_chuan_ambiguous"
+    "status": "mismatch_manual_scan"
   },
   {
     "id": "tongjie-下-477",
@@ -15523,19 +15889,23 @@
     "title": "射覆无物",
     "page": 304,
     "rgz": "乙亥",
-    "yj": "午",
+    "yj": "戌",
     "zs": "巳",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "六",
     "source_chuans": [
       "丑寅未",
       "寅未子"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "丑寅卯",
-    "computed_ke": "元首",
+    "manual_scan_chuan": "寅未子",
+    "manual_scan_note": "下册 OCR p301；按天地盘反读戌将，三传寅、未、子",
+    "original_yj": "午",
+    "manual_pan_yj": "戌",
+    "computed_chuan": "寅未子",
+    "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-508",
@@ -15826,19 +16196,23 @@
     "title": "辛巳年八月甲寅日壬申时，浙绍范玄同袖简包有物件，占问何物。（《指南》）",
     "page": 312,
     "rgz": "甲寅",
-    "yj": "辰",
+    "yj": "巳",
     "zs": "申",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "八",
     "source_chuans": [
       "丑亥未",
       "亥未亥"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "戌午寅",
+    "manual_scan_chuan": "丑亥亥",
+    "manual_scan_note": "下册 OCR p312；按天地盘反读巳将，三传丑、亥、亥",
+    "original_yj": "辰",
+    "manual_pan_yj": "巳",
+    "computed_chuan": "丑亥亥",
     "computed_ke": "八专",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-523",
@@ -16240,18 +16614,22 @@
     "title": "己未九月戊寅日寅时辰将，占灯花。",
     "page": 326,
     "rgz": "戊寅",
-    "yj": "卯",
+    "yj": "辰",
     "zs": "寅",
-    "yj_basis": "month_inferred",
+    "yj_basis": "pan_read",
     "month": "九",
     "source_chuans": [
       "辰午申"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "辰巳午",
+    "manual_scan_chuan": "辰午申",
+    "manual_scan_note": "下册 OCR p325；原文明说三传辰午申",
+    "original_yj": "卯",
+    "manual_pan_yj": "辰",
+    "computed_chuan": "辰午申",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-544",
@@ -16366,17 +16744,21 @@
     "rgz": "乙巳",
     "yj": "午",
     "zs": "亥",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "午丑巳",
       "丑巳申"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "午丑申",
+    "manual_scan_note": "下册 OCR p328；三传午、丑、申",
+    "original_yj": "午",
+    "manual_pan_yj": "午",
     "computed_chuan": "午丑申",
     "computed_ke": "重审",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-550",
@@ -16474,11 +16856,11 @@
       "巳午未"
     ],
     "source_chuan_confidence": "high",
+    "manual_scan_chuan": "申酉戌",
+    "manual_scan_note": "下册 PDF p332，三传自上而下为申、酉、戌",
     "computed_chuan": "申酉戌",
     "computed_ke": "重审",
     "computed_ge": "",
-    "manual_scan_chuan": "申酉戌",
-    "manual_scan_note": "下册 PDF p332，三传自上而下为申、酉、戌",
     "status": "verified_manual_scan"
   },
   {
@@ -16513,17 +16895,21 @@
     "rgz": "辛巳",
     "yj": "卯",
     "zs": "午",
-    "yj_basis": "explicit",
+    "yj_basis": "pan_read",
     "month": null,
     "source_chuans": [
       "寅未亥",
       "未亥申"
     ],
     "source_chuan_confidence": "low",
+    "manual_scan_chuan": "寅亥申",
+    "manual_scan_note": "下册 OCR p335；三传寅、亥、申",
+    "original_yj": "卯",
+    "manual_pan_yj": "卯",
     "computed_chuan": "寅亥申",
     "computed_ke": "遥克",
     "computed_ge": "弹射",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-557",
@@ -16610,20 +16996,24 @@
     "category": "第七章外编 · 三才法",
     "title": "庚寅 壬午 壬寅 癸卯",
     "page": 354,
-    "rgz": "甲辰",
-    "yj": "辰",
-    "zs": "酉",
-    "yj_basis": "explicit",
+    "rgz": "壬寅",
+    "yj": "申",
+    "zs": "卯",
+    "yj_basis": "manual_input_correction",
     "month": null,
     "source_chuans": [
       "丑子巳",
       "子巳戌"
     ],
     "source_chuan_confidence": "low",
-    "computed_chuan": "午丑申",
+    "manual_scan_chuan": "子巳戌",
+    "manual_scan_note": "下册 OCR p354；壬寅日、五月申将、卯时，三传子、巳、戌",
+    "original_yj": "辰",
+    "manual_pan_yj": "申",
+    "computed_chuan": "子巳戌",
     "computed_ke": "比用",
     "computed_ge": "",
-    "status": "source_chuan_ambiguous"
+    "status": "verified_manual_scan"
   },
   {
     "id": "tongjie-下-562",
