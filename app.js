@@ -5,6 +5,43 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
+/* 占断八门入站自检：只在当前页面内放行，刷新后必须重新作答。 */
+(function initEntryGate() {
+  var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
+  var gate = $('#entryGate');
+  if (!gate) return;
+  var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
+  var progress = $('#entryGateProgress'), at = 0, locked = false;
+  document.body.classList.add('entry-locked');
+  order.forEach(function (_, i) {
+    var s = document.createElement('i'); s.className = 'entry-gate-step';
+    s.setAttribute('aria-label', '第' + (i + 1) + '门'); progress.appendChild(s);
+  });
+  order.slice().sort(function () { return Math.random() - .5; }).forEach(function (name) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'entry-gate-option'; b.textContent = name;
+    b.onclick = function () {
+      if (locked || b.disabled) return;
+      if (name !== order[at]) {
+        locked = true; card.classList.add('wrong'); msg.textContent = '顺序不对，重新从先锋门开始';
+        setTimeout(function () {
+          at = 0; locked = false; card.classList.remove('wrong');
+          $$('.entry-gate-step', gate).forEach(function (x) { x.classList.remove('on'); });
+          $$('.entry-gate-option', gate).forEach(function (x) { x.disabled = false; x.classList.remove('picked'); });
+          msg.textContent = '现在请选择第 1 门';
+        }, 650);
+        return;
+      }
+      b.disabled = true; b.classList.add('picked');
+      $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
+      if (at === order.length) {
+        locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
+        setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
+      } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
+    };
+    opts.appendChild(b);
+  });
+})();
+
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   basicread: 'liuren_basic_course_read', basicpos: 'liuren_basic_course_pos',
