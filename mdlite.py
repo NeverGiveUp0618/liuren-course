@@ -41,16 +41,21 @@ _WIKI = re.compile(r'\[\[([^\]]+)\]\]')
 _LINK = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
 _SRC = re.compile(r'〔([^〕\n]{1,60})〕')      # 出处：〔通解上 p21｜PDF p36〕
 _QUOTE = re.compile(r'「([^」]+?)」')          # 原书引文
+_SMALL = re.compile(r'<small>(.*?)</small>', re.S)  # 课程里的讲稿出处；只放行这一种安全标签
 
 
 def _inline(s):
-    s = _html.escape(s)
     holes = []
 
     def keep(h):
         holes.append(h)
         return '\x00%d\x00' % (len(holes) - 1)
 
+    # 原始 HTML 默认一律转义；这里只对白名单 small 做安全转换，内部文字仍转义。
+    # 否则课程源里的 <small> 会直接显示成字面标签。
+    s = _SMALL.sub(lambda m: keep('<small class="source-note">%s</small>'
+                                  % _html.escape(m.group(1))), s)
+    s = _html.escape(s)
     s = _CODE.sub(lambda m: keep('<code>%s</code>' % m.group(1)), s)
     s = _SRC.sub(lambda m: keep('<span class="src">〔%s〕</span>' % m.group(1)), s)
     # ⚠️ 引文要先把里面的 **强调** 转掉再收进占位符——引文常自带重点标记，
@@ -309,6 +314,7 @@ def md2html(text, heading_offset=0, collect_headings=None):
 def strip_md(s):
     """取纯文本，供搜索与摘要用。"""
     s = re.sub(r'```.*?```', ' ', s, flags=re.S)
+    s = _SMALL.sub(lambda m: m.group(1), s)
     s = re.sub(r'[#>*`|\-]+', ' ', s)
     s = re.sub(r'\[\[([^\]]+)\]\]', lambda m: m.group(1).split('|')[-1], s)
     return re.sub(r'\s+', ' ', s).strip()

@@ -276,6 +276,9 @@ ok(BC.reduce((n, x) => n + (x.html.match(/study-core/g) || []).length, 0) > 200 
    BC.reduce((n, x) => n + (x.html.match(/study-steps/g) || []).length, 0) > 90 &&
    BC.reduce((n, x) => n + (x.html.match(/study-practice/g) || []).length, 0) > 190,
    '核心理解、判断步骤、实战经验已分成三类重点色块');
+const sourceNoteN = BC.reduce((n, x) => n + (x.html.match(/class="source-note"/g) || []).length, 0);
+ok(sourceNoteN > 100 && !BC.some(x => /&lt;\/?small&gt;/.test(x.html)),
+   '讲稿出处的 small 标签已安全渲染为小字，不再露出字面标签');
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
 {
   const courseGateSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
