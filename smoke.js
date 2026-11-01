@@ -267,6 +267,15 @@ $$('#basicCourseList .li[data-basic-id]')[0].onclick();
 ok($('#s-basiclesson').classList.contains('active') && /初中级第1课/.test($('#ttl').textContent), '可以打开初中级课文');
 ok($('#basicLessonBody').querySelectorAll('h2').length === 10 && /七个步骤/.test($('#basicLessonBody').textContent),
    '第一课已重排成十个学习章节，不是原小节全文搬运');
+ok(BC.every(x => /class="basic-lead"/.test(x.html) && /class="basic-meta"/.test(x.html)),
+   '20 课都有醒目的本课要点卡和辅助信息栏');
+ok($('#basicLessonBody .basic-overview-list').children.length === 10 &&
+   typeof $('#basicLessonBody [data-basic-anchor]').onclick === 'function',
+   '每课开头有可点击的内容梳理，与大标题一一对应');
+ok(BC.reduce((n, x) => n + (x.html.match(/study-core/g) || []).length, 0) > 200 &&
+   BC.reduce((n, x) => n + (x.html.match(/study-steps/g) || []).length, 0) > 90 &&
+   BC.reduce((n, x) => n + (x.html.match(/study-practice/g) || []).length, 0) > 190,
+   '核心理解、判断步骤、实战经验已分成三类重点色块');
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
 {
   const courseGateSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
@@ -556,7 +565,7 @@ async function typeSearch(kw) {
   ok(/addAll[\s\S]{0,80}catch/.test(sw), 'sw 的 addAll 有 catch');
   {
     const history = JSON.parse(fs.readFileSync(path.join(dir, 'b', 'history.json'), 'utf8'));
-    ok(history.length >= 2 && history.length <= 4 && history.every(tag =>
+    ok(history.length >= 2 && history.length <= 8 && history.every(tag =>
       fs.existsSync(path.join(dir, 'b', tag, 'data', 'data-ref.js'))),
       '保留最近版本的速查数据，旧微信缓存点速查不再请求 404');
     ok(/data\/data-ref\.js\?v=[\s\S]{0,500}fallback=1/.test(app),

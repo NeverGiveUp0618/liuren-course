@@ -133,6 +133,44 @@ blockquote.cite{background:var(--paper);border-left-color:var(--blue);color:var(
 blockquote.warn{background:var(--red-s);border-left-color:var(--red)}
 blockquote.star{background:var(--gold-s);border-left-color:var(--gold)}
 blockquote.tip{background:var(--blue-s);border-left-color:var(--blue)}
+/* 初中级课程：照「命理讲解」的学习层级重排。
+   原来的「核心理解 / 步骤 / 实战提醒」只是普通粗体，手机上很难扫读。 */
+.basic-lead{margin:14px 0 10px;padding:13px 15px;border-left:4px solid var(--blue);
+  border-radius:0 8px 8px 0;background:var(--blue-s)}
+.basic-lead span{display:block;font-size:11px;letter-spacing:.12em;color:var(--blue);margin-bottom:3px}
+.basic-lead b{display:block;font-family:var(--f-disp);font-size:16.5px;line-height:1.75}
+.basic-meta{margin:0 0 14px;padding:7px 11px;border:1px solid var(--line);border-radius:4px;
+  background:var(--surface);color:var(--ink3);font-size:12.5px;line-height:1.7}
+.basic-meta p{margin:2px 0}.basic-meta strong{color:var(--ink2)}
+.basic-overview{margin:14px 0 18px;padding:12px 13px;border:1px solid var(--line);
+  border-radius:6px;background:var(--paper)}
+.basic-overview-h{display:flex;align-items:center;gap:7px;margin-bottom:9px;color:var(--ink2)}
+.basic-overview-h i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  background:var(--gold-s);color:var(--gold);font-style:normal;font-size:12px;font-weight:700}
+.basic-overview-h b{font-family:var(--f-disp);font-size:15px}
+.basic-overview-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.basic-overview-list button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:flex-start;
+  gap:6px;padding:7px 8px;border-radius:4px;background:var(--surface);color:var(--ink2);
+  font-size:12.5px;line-height:1.5}
+.basic-overview-list button:active{background:var(--blue-s)}
+.basic-overview-list em{flex:0 0 auto;font-style:normal;color:var(--gold);font-family:var(--f-mono);font-size:10px}
+.study-card{margin:13px 0;padding:11px 13px 10px;border:1px solid var(--line);
+  border-left-width:4px;border-radius:0 7px 7px 0;background:var(--surface)}
+.study-card .study-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.study-card .study-h i,.study-label i{display:grid;place-items:center;width:24px;height:24px;
+  border-radius:5px;font-style:normal;font-size:12px;font-weight:700}
+.study-card .study-h b{font-family:var(--f-disp);font-size:14.5px}
+.study-card>p,.study-card>ul,.study-card>ol{margin:7px 0 2px}
+.study-core{border-left-color:var(--blue);background:var(--blue-s)}
+.study-core .study-h i{background:var(--blue);color:var(--paper)}
+.study-steps{border-left-color:var(--gold);background:var(--gold-s)}
+.study-steps .study-h i{background:var(--gold);color:var(--paper)}
+.study-practice{border-left-color:var(--green);background:color-mix(in srgb,var(--green) 8%,var(--paper))}
+.study-practice .study-h i{background:var(--green);color:#fff}
+.study-label{display:flex;align-items:center;gap:8px;margin:15px 0 9px;color:var(--ink2)}
+.study-label b{font-family:var(--f-disp);font-size:14.5px}
+.study-pan i{background:var(--red-s);color:var(--red)}
+@media(max-width:480px){.basic-overview-list{grid-template-columns:1fr}}
 .tw{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:3px;background:var(--paper)}
 table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
 th{background:var(--surface);text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);

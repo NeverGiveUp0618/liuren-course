@@ -1070,6 +1070,7 @@ function paintBasicLesson(id) {
   if (!l) { body.innerHTML = '<p class="muted">这一课还没写。</p>'; return; }
   $('#ttl').textContent = '初中级第' + l.num + '课';
   body.innerHTML = l.html;
+  addBasicOverview(body, l);
   startLessonReadDelay('basiclesson', id, K.basicread);
   bindDoc(body); foldLessonSections(body); buildStickyPan(body); buildToc(l);
   list.forEach(function (x, i) { if (x.id === id) k = i; });
@@ -1081,6 +1082,31 @@ function paintBasicLesson(id) {
     var ps = load(K.basicpos, {})[id] || 0;
     window.scrollTo(0, (load(K.basicread, {})[id] || 0) >= 95 ? 0 : ps);
   }
+}
+
+/* 「命理讲解」式的课前内容梳理：不再让读者打开一课后只看到一长串正文。
+   目录项直接打开对应的大标题折叠块。 */
+function addBasicOverview(body, lesson) {
+  var hs = (lesson.heads || []).filter(function (h) { return h && h.a; });
+  if (!hs.length) return;
+  var nav = document.createElement('nav');
+  nav.className = 'basic-overview';
+  nav.setAttribute('aria-label', '本课内容梳理');
+  nav.innerHTML = '<div class="basic-overview-h"><i>纲</i><b>本课内容梳理</b></div>' +
+    '<div class="basic-overview-list">' + hs.map(function (h, i) {
+      return '<button type="button" data-basic-anchor="' + esc(h.a) + '"><em>' +
+        ('0' + (i + 1)).slice(-2) + '</em><span>' + esc(h.t) + '</span></button>';
+    }).join('') + '</div>';
+  var firstH2 = body.querySelector('h2');
+  if (firstH2) body.insertBefore(nav, firstH2); else body.appendChild(nav);
+  $$('[data-basic-anchor]', nav).forEach(function (b) {
+    b.onclick = function () {
+      var target = document.getElementById(b.dataset.basicAnchor);
+      if (!target) return;
+      openLessonFold(target);
+      setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 20);
+    };
+  });
 }
 
 RENDER.lesson = function (id) {

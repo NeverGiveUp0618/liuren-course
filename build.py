@@ -119,6 +119,7 @@ def build_basic_lessons():
         md = read(os.path.join(BASIC_SRC, fn))
         heads = []
         html = mdlite.md2html(md, collect_headings=heads)
+        html = style_basic_lesson(html)
         title = re.search(r'^# (.+)$', md, re.M).group(1).strip()
         short = title.split('·', 1)[-1].strip()
         part = re.search(r'^> \*\*课程分部\*\*：(.+)$', md, re.M)
@@ -136,6 +137,46 @@ def build_basic_lessons():
     if ns != list(range(1, len(out) + 1)):
         sys.exit('✗ 初中级课程编号不连续：%s' % ns)
     return out
+
+
+def style_basic_lesson(html):
+    """把初中级课程已经梳理好的语义标记，渲染成真正的学习层级。
+
+    内容源仍是 Markdown；这里只做表现层分组，不删改老师的规则、步骤和案例。
+    这些标题原先只是一行粗体，手机上会和正文混成一片。
+    """
+    groups = {
+        'core': ('要', {
+            '核心理解', '核心判断', '案例要解决的问题', '案例目的',
+            '天将不能脱离占问定吉凶', '老师明确讲出的原则', '佐证法的用法'
+        }),
+        'steps': ('步', {
+            '老师明确讲出的步骤与层次', '判断步骤', '判断顺序',
+            '占断主线', '用三传看趋势', '同一课分别回答两个问题'
+        }),
+        'practice': ('验', {'实战提醒', '老师的实战经验'}),
+    }
+    for cls, (badge, labels) in groups.items():
+        for label in labels:
+            pat = (r'<p><strong>' + re.escape(label) + r'</strong></p>\s*'
+                   r'(?P<body><(?P<tag>ul|ol|p)>.*?</(?P=tag)>)')
+            repl = ('<section class="study-card study-%s">'
+                    '<div class="study-h"><i>%s</i><b>%s</b></div>\g<body></section>'
+                    % (cls, badge, label))
+            html = re.sub(pat, repl, html, flags=re.S)
+
+    # 课件盘和底下的讲解不包成一整块，避免影响盘面吸顶；
+    # 只给案例起始处一个醒目标签。
+    html = html.replace('<p><strong>课件原盘复排</strong></p>',
+                        '<div class="study-label study-pan"><i>盘</i><b>课件原盘复排</b></div>')
+
+    # 开头一句话是本课的结论卡；课程分部/学习方式降成辅助信息。
+    html = re.sub(
+        r'<p><strong>本课的一句话</strong>：<strong>(.*?)</strong></p>',
+        r'<div class="basic-lead"><span>本课先抓住</span><b>\1</b></div>', html, count=1, flags=re.S)
+    html = re.sub(r'<blockquote>(<p><strong>课程分部</strong>.*?)</blockquote>',
+                  r'<div class="basic-meta">\1</div>', html, count=1, flags=re.S)
+    return html
 
 
 def _refname(t):
@@ -750,7 +791,7 @@ def stamp_assets():
     """⚠️ 2026-10-22：微信 X5 无视 ?v=、按路径缓存——用户在微信里看到的整页都是旧版。
     把样式、脚本、数据包复制进 b/<内容哈希>/，index.html 改指过去：内容一变路径就变，X5 只能拿新的。
     ⚠️ 源文件仍是根目录的 style.css / app.js / data/*.js，**别去改 b/ 里的**。
-    最近四版目录必须保留：用户若仍拿着微信缓存的旧 index，按需点速查或案例时
+    最近八版目录必须保留：用户若仍拿着微信缓存的旧 index，按需点速查或案例时
     还会请求旧哈希路径；立刻删目录会让它误报“网络失败”。
     git 按内容去重，没变的文件换了路径也不会多占仓库。"""
     import hashlib, shutil
@@ -771,7 +812,7 @@ def stamp_assets():
     except Exception:
         history = []
     history = [x for x in history if isinstance(x, str) and x != tag] + [tag]
-    history = history[-4:]
+    history = history[-8:]
     for d in os.listdir(bdir):
         p = os.path.join(bdir, d)
         if os.path.isdir(p) and d not in history:
