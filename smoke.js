@@ -554,6 +554,14 @@ async function typeSearch(kw) {
   ok(/caches\.open\(CACHE\)[\s\S]{0,120}put/.test(sw), '拿到新版照样写进缓存，下次即最新');
   ok(/ignoreSearch:\s*true/.test(sw), 'sw 离线回退忽略 ?query');
   ok(/addAll[\s\S]{0,80}catch/.test(sw), 'sw 的 addAll 有 catch');
+  {
+    const history = JSON.parse(fs.readFileSync(path.join(dir, 'b', 'history.json'), 'utf8'));
+    ok(history.length >= 2 && history.length <= 4 && history.every(tag =>
+      fs.existsSync(path.join(dir, 'b', tag, 'data', 'data-ref.js'))),
+      '保留最近版本的速查数据，旧微信缓存点速查不再请求 404');
+    ok(/data\/data-ref\.js\?v=[\s\S]{0,500}fallback=1/.test(app),
+      '速查旧哈希加载失败时会自动回退根目录最新版');
+  }
 
   console.log('\n== 窄屏不溢出（360px 的安卓在微信里最常见）==');
   {

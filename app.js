@@ -148,9 +148,19 @@ function needRef() {
   if (_refLoading) return _refLoading;
   _refLoading = new Promise(function (res, rej) {
     var el = document.createElement('script');
+    var retried = false;
     el.src = ASSET + 'data/data-ref.js?v=' + VER;      // ⚠️ 同 data-course.js，按需加载必须带 ?v=
     el.onload = function () { res(window.DATA_REF); };
-    el.onerror = function () { _refLoading = null; rej(new Error('速查表加载失败')); };
+    el.onerror = function () {
+      // 用户可能仍拿着微信缓存的旧 index/app，而旧哈希目录已过期。此时退回
+      // 根目录的最新版数据，避免明明联网却显示“网络失败”。
+      if (!retried && ASSET) {
+        retried = true;
+        el.src = 'data/data-ref.js?v=' + VER + '&fallback=1';
+        return;
+      }
+      _refLoading = null; rej(new Error('速查表加载失败'));
+    };
     document.head.appendChild(el);
   });
   return _refLoading;

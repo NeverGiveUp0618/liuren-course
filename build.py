@@ -749,7 +749,9 @@ def write_bodies(kind, items, key, chunk_of):
 def stamp_assets():
     """⚠️ 2026-10-22：微信 X5 无视 ?v=、按路径缓存——用户在微信里看到的整页都是旧版。
     把样式、脚本、数据包复制进 b/<内容哈希>/，index.html 改指过去：内容一变路径就变，X5 只能拿新的。
-    ⚠️ 源文件仍是根目录的 style.css / app.js / data/*.js，**别去改 b/ 里的**（每次构建都重写、旧目录删掉）。
+    ⚠️ 源文件仍是根目录的 style.css / app.js / data/*.js，**别去改 b/ 里的**。
+    最近四版目录必须保留：用户若仍拿着微信缓存的旧 index，按需点速查或案例时
+    还会请求旧哈希路径；立刻删目录会让它误报“网络失败”。
     git 按内容去重，没变的文件换了路径也不会多占仓库。"""
     import hashlib, shutil
     files = ['style.css', 'engine.js', 'app.js', 'pan-detect.js'] + \
@@ -760,10 +762,23 @@ def stamp_assets():
         h.update(f.encode()); h.update(open(os.path.join(HERE, f), 'rb').read())
     tag = h.hexdigest()[:10]
     bdir = os.path.join(HERE, 'b')
-    if os.path.isdir(bdir):
-        for d in os.listdir(bdir):
-            if d != tag:
-                shutil.rmtree(os.path.join(bdir, d))
+    os.makedirs(bdir, exist_ok=True)
+    history_path = os.path.join(bdir, 'history.json')
+    try:
+        history = json.loads(read(history_path))
+        if not isinstance(history, list):
+            history = []
+    except Exception:
+        history = []
+    history = [x for x in history if isinstance(x, str) and x != tag] + [tag]
+    history = history[-4:]
+    for d in os.listdir(bdir):
+        p = os.path.join(bdir, d)
+        if os.path.isdir(p) and d not in history:
+            shutil.rmtree(p)
+    with open(history_path, 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+        f.write('\n')
     dst = os.path.join(bdir, tag)
     for f in files:
         os.makedirs(os.path.dirname(os.path.join(dst, f)), exist_ok=True)
