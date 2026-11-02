@@ -175,6 +175,10 @@ console.log('\n== 附篇 ==');
      '旧版宗门附篇恢复四步流程、逐门折叠、随机真盘与本案推导');
   ok(/LiurenEngine/.test(appSrc) && /《通解》取上神/.test(appSrc),
      '宗门随机盘复用现行《通解》引擎，不复活旧版下神算法');
+  const z9Css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8').replace(/\s/g, '');
+  ok(/\.z9-example\.sanchuan\{[^}]*width:min\(340px,100%\)[^}]*margin:12pxauto/.test(z9Css) &&
+     /\.z9-example\.cr\{[^}]*grid-template-columns:minmax\(0,1fr\)42pxminmax\(0,1fr\)/.test(z9Css),
+     '宗门随机盘三传外框居中，传支固定在三列正中轴');
   ok(!!$('#s-extra'), '附篇屏在 index.html 里');
   ok($$('[data-go="extra"]').length === 1 && $$('[data-go="xarch"]').length === 1, '首页：八要素单列＋附篇列表一个入口');
   ok($$('[data-go="extra"]').every(b => b.dataset.id), '入口都带 data-id');

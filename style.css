@@ -167,7 +167,14 @@ main{overflow-x:clip}
 .z9-example{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .z9-pan-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:4px;background:var(--gold-s)}
 .z9-pan-head b{color:var(--ink)}.z9-pan-head span{font-size:12px;color:var(--gold)}
-.z9-example .sanchuan{margin:12px auto}.z9-example .sike{margin:12px 0}.z9-example .panwrap{margin:13px 0}
+.z9-example .sanchuan{width:min(340px,100%);margin:12px auto}
+/* 外框原本已经居中，但 .cr 继承通用 flex 后，初/中/末、传支、天将全挤在左边，
+   手机上视觉仍像“三传没居中”。改成左右等宽三列，传支永远钉在正中轴。 */
+.z9-example .cr{display:grid;grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);gap:0;width:100%}
+.z9-example .cr .lb{min-width:0;padding-right:11px;text-align:right}
+.z9-example .cr .z{min-width:0;text-align:center}
+.z9-example .cr .ex{min-width:0;padding-left:11px;text-align:left}
+.z9-example .sike{margin:12px 0}.z9-example .panwrap{margin:13px 0}
 .z9-case-derive{margin-top:12px;padding:11px 12px;border-left:3px solid var(--green);border-radius:0 5px 5px 0;background:color-mix(in srgb,var(--green) 8%,var(--paper))}
 .z9-case-derive>b{color:var(--green)}.z9-case-derive p{display:flex;align-items:flex-start;gap:8px;margin:7px 0}
 .z9-case-derive i{display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;font:700 10px/1 var(--f-mono)}
