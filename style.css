@@ -139,6 +139,39 @@ main{overflow-x:clip}
 .doc hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 .doc code{font-family:var(--f-mono);font-size:.86em;background:var(--surface);padding:1px 5px;border-radius:3px}
 .doc a.wiki{color:var(--blue);border-bottom:1px dotted var(--blue);cursor:pointer}
+/* 旧版附篇「宗门九课」：恢复原 App 的流程卡、逐门折叠卡与随机真盘。 */
+.z9-flow-title{margin:16px 0 9px!important;font-family:var(--f-disp);font-weight:700;color:var(--ink2)}
+.z9-step{display:flex;align-items:flex-start;gap:10px;margin:7px 0;padding:10px 12px;
+  border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.z9-num{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;margin-top:3px;
+  border-radius:50%;background:var(--blue);color:#fff;font:700 11px/1 var(--f-mono)}
+.z9-sc{min-width:0;color:var(--ink2);font-size:13px;line-height:1.75}
+.z9-sc p{margin:2px 0}.z9-sc strong{color:var(--ink)}
+.z9-deck{margin:13px 0 24px}.z9-card{margin:8px 0;border:1px solid var(--line);border-radius:6px;background:var(--paper);overflow:clip}
+.z9-card>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px}
+.z9-card>summary::-webkit-details-marker{display:none}.z9-card>summary span{flex:1;min-width:0}
+.z9-card>summary b{display:block;font-family:var(--f-disp);font-size:17px}.z9-card>summary small{display:block;margin-top:1px;color:var(--ink3);font-size:11.5px}
+.z9-card>summary i{font-style:normal;color:var(--blue);font-size:18px}.z9-card[open]>summary{background:var(--surface);border-bottom:1px solid var(--line)}
+.z9-card[open]>summary i{font-size:0}.z9-card[open]>summary i::after{content:'－';font-size:18px}
+.z9-body{padding:12px 14px 15px;color:var(--ink2);font-size:13.5px}.z9-body>p{margin:7px 0}.z9-body>p strong{color:var(--ink)}
+.z9-name-note{margin:0 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--gold) 38%,var(--line));
+  border-radius:6px;background:var(--gold-s);color:var(--ink2)}
+.z9-name-note p{margin:4px 0}.z9-name-title{font-weight:700;color:var(--gold)}
+.z9-name-title::before{content:'名';display:inline-grid;place-items:center;width:21px;height:21px;margin-right:7px;
+  border-radius:50%;background:var(--gold);color:#fff;font-size:10px}
+.z9-mn{margin:10px 0!important;padding:8px 10px;border-left:3px solid var(--gold);border-radius:0 4px 4px 0;background:var(--surface);color:var(--gold)}
+.z9-derive{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.z9-derive-hd{font-weight:700;color:var(--green)}.z9-dstep{position:relative;padding-left:17px}.z9-dstep::before{content:'▸';position:absolute;left:2px;color:var(--green)}
+.z9-deg{padding:8px 10px;border-radius:4px;background:color-mix(in srgb,var(--green) 8%,var(--paper));color:var(--ink2)}
+.z9-random{display:block;width:100%;box-sizing:border-box;margin-top:13px;background:var(--blue-s);border-color:var(--blue);color:var(--blue)}
+.z9-example{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.z9-pan-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-radius:4px;background:var(--gold-s)}
+.z9-pan-head b{color:var(--ink)}.z9-pan-head span{font-size:12px;color:var(--gold)}
+.z9-example .sanchuan{margin:12px auto}.z9-example .sike{margin:12px 0}.z9-example .panwrap{margin:13px 0}
+.z9-case-derive{margin-top:12px;padding:11px 12px;border-left:3px solid var(--green);border-radius:0 5px 5px 0;background:color-mix(in srgb,var(--green) 8%,var(--paper))}
+.z9-case-derive>b{color:var(--green)}.z9-case-derive p{display:flex;align-items:flex-start;gap:8px;margin:7px 0}
+.z9-case-derive i{display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;font:700 10px/1 var(--f-mono)}
+.z9-case-derive small{display:block;margin-top:8px;color:var(--ink3)}
 .src{font-family:var(--f-mono);font-size:11.5px;color:var(--ink3);white-space:nowrap}
 q.yw{quotes:none;color:var(--ink);font-family:var(--f-disp)}
 blockquote{margin:15px 0;padding:12px 14px;border-radius:2px;font-size:14.5px;line-height:1.8;

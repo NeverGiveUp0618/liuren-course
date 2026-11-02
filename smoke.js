@@ -167,6 +167,14 @@ console.log('\n== 附篇 ==');
   // ⚠️ 源流篇不该混进「核心逻辑/起课流程/四大断则」——那段是与 1-11 课重复的总纲摘要
   const ly = E.filter(x => x.id === 'liuyuan')[0];
   ok(ly && !/四大断则|起课流程/.test(ly.text), '源流篇没有混入重复的总纲摘要');
+  const z9 = E.filter(x => x.id === 'x83')[0];
+  ok(z9 && ['元首','重审','知一','涉害','遥克','昴星','别责','八专','伏吟','返吟'].every(n => z9.text.includes(n + '课')),
+     '宗门九课十种基本课体原文完整保留');
+  const appSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+  ok(/restoreZongmenGuide/.test(appSrc) && /randomZongmenPan/.test(appSrc) && /zongmenDeriveHTML/.test(appSrc),
+     '旧版宗门附篇恢复四步流程、逐门折叠、随机真盘与本案推导');
+  ok(/LiurenEngine/.test(appSrc) && /《通解》取上神/.test(appSrc),
+     '宗门随机盘复用现行《通解》引擎，不复活旧版下神算法');
   ok(!!$('#s-extra'), '附篇屏在 index.html 里');
   ok($$('[data-go="extra"]').length === 1 && $$('[data-go="xarch"]').length === 1, '首页：八要素单列＋附篇列表一个入口');
   ok($$('[data-go="extra"]').every(b => b.dataset.id), '入口都带 data-id');
