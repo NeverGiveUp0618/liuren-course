@@ -5,6 +5,53 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
+/* 占断八门入站自检：只在当前页面内放行，刷新后必须重新作答。 */
+(function initEntryGate() {
+  var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
+  var gate = $('#entryGate');
+  if (!gate) return;
+  var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
+  var progress = $('#entryGateProgress'), at = 0, locked = false;
+  document.body.classList.add('entry-locked');
+  function reshuffleOptions() {
+    var before = $$('.entry-gate-option', gate), old = before.map(function (x) { return x.textContent; }).join('|');
+    var next = before.slice(), tries = 0, i, j, t;
+    do {
+      for (i = next.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = next[i]; next[i] = next[j]; next[j] = t; }
+    } while (next.map(function (x) { return x.textContent; }).join('|') === old && ++tries < 8);
+    if (next.length > 1 && next.map(function (x) { return x.textContent; }).join('|') === old) { t = next[0]; next[0] = next[1]; next[1] = t; }
+    next.forEach(function (x) { opts.appendChild(x); });
+  }
+  order.forEach(function (_, i) {
+    var s = document.createElement('i'); s.className = 'entry-gate-step';
+    s.setAttribute('aria-label', '第' + (i + 1) + '门'); progress.appendChild(s);
+  });
+  order.forEach(function (name) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'entry-gate-option'; b.textContent = name;
+    b.onclick = function () {
+      if (locked || b.disabled) return;
+      if (name !== order[at]) {
+        locked = true; card.classList.add('wrong'); msg.textContent = '顺序不对，重新从先锋门开始';
+        setTimeout(function () {
+          at = 0; locked = false; card.classList.remove('wrong');
+          $$('.entry-gate-step', gate).forEach(function (x) { x.classList.remove('on'); });
+          $$('.entry-gate-option', gate).forEach(function (x) { x.disabled = false; x.classList.remove('picked'); });
+          reshuffleOptions(); msg.textContent = '已重新打乱，现在请选择第 1 门';
+        }, 650);
+        return;
+      }
+      b.disabled = true; b.classList.add('picked');
+      $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
+      if (at === order.length) {
+        locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
+        setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
+      } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
+    };
+    opts.appendChild(b);
+  });
+  reshuffleOptions();
+})();
+
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   basicread: 'liuren_basic_course_read', basicpos: 'liuren_basic_course_pos',
@@ -500,6 +547,7 @@ function paintGeOne(G, n) {
     (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
   if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
   if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+  foldLongDocument($('#geBody'));
 }
 
 /* ── 附篇（源流 / 八要素）──────────────────────────────
@@ -513,7 +561,181 @@ function paintExtra(E, id) {
   var it = (E || []).filter(function (x) { return x.id === id; })[0];
   if (!it) return;
   $('#ttl').textContent = it.title.replace(/^大六壬\s*·\s*/, '');
-  $('#extraBody').innerHTML = it.html;
+  var extraBody = $('#extraBody');
+  extraBody.innerHTML = it.html;
+  // extra 已在列表页预载时，RENDER 会同步画一次、Promise 微任务再画一次；innerHTML
+  // 会清掉卡片却不会清 dataset，必须随正文一起重置增强标记。
+  delete extraBody.dataset.z9Restored;
+  if (id === 'x83') restoreZongmenGuide(extraBody);
+  foldLongDocument(extraBody);
+  bindDoc(extraBody);
+}
+
+/* ── 旧版附篇 · 宗门九课 ───────────────────────────────
+   2026-10-22 把旧 App 搬成 markdown 时，只保住了文字；原来的「四步流程、
+   十张折叠卡、随机同类真盘、本案推导」全丢了。这里从已迁入的原文重新识别
+   十课边界，把原界面恢复出来。随机盘只调用现行 engine.js（《通解》取上神、
+   涉害数克害），不再复活旧 App 的下神算法。 */
+var Z9_NAMES = ['元首课', '重审课', '知一课', '涉害课', '遥克课',
+                '昴星课', '别责课', '八专课', '伏吟课', '返吟课'];
+
+function restoreZongmenGuide(root) {
+  if (!root || root.dataset.z9Restored) return;
+  root.dataset.z9Restored = '1';
+  var hs = [].slice.call(root.querySelectorAll('h2'));
+  var head = hs.filter(function (h) { return /九宗门体系与发用流程/.test(h.textContent); })[0];
+  if (!head) return;
+  var stop = null, n = head.nextElementSibling;
+  while (n) {
+    if ((n.tagName === 'H1' && /九宗门发用流程/.test(n.textContent)) ||
+        (n.tagName === 'H2' && n !== head)) { stop = n; break; }
+    n = n.nextElementSibling;
+  }
+
+  // 判断流程：原来是四张带课号的卡，不是散落的 20 多行文字。
+  var flowTitle = head.nextElementSibling;
+  if (flowTitle && /判断流程/.test(flowTitle.textContent)) flowTitle.className = 'z9-flow-title';
+  var cur = flowTitle ? flowTitle.nextElementSibling : null;
+  while (cur && cur !== stop) {
+    if (cur.tagName === 'P' && /^[1-4]$/.test(cur.textContent.trim())) {
+      var after = cur.nextElementSibling, card = document.createElement('div');
+      card.className = 'z9-step';
+      var num = document.createElement('span'); num.className = 'z9-num'; num.textContent = cur.textContent.trim();
+      var body = document.createElement('div'); body.className = 'z9-sc';
+      cur.parentNode.insertBefore(card, cur); card.appendChild(num); card.appendChild(body); cur.remove();
+      while (after && after !== stop && !(after.tagName === 'P' && (/^[1-4]$/.test(after.textContent.trim()) || Z9_NAMES.indexOf(after.textContent.trim()) >= 0 || /九宗门详解/.test(after.textContent)))) {
+        var next = after.nextElementSibling; body.appendChild(after); after = next;
+      }
+      cur = after; continue;
+    }
+    cur = cur.nextElementSibling;
+  }
+
+  // 先在本节范围内固定十个标题节点。不能用 compareDocumentPosition：部分微信
+  // WebView 的精简 DOM 没实现这个方法，会让整段增强在第一张卡前中断。
+  var titleNodes = {}, scan = head.nextElementSibling;
+  while (scan && scan !== stop) {
+    if (scan.tagName === 'P' && Z9_NAMES.indexOf(scan.textContent.trim()) >= 0 && !titleNodes[scan.textContent.trim()]) {
+      titleNodes[scan.textContent.trim()] = scan;
+    }
+    scan = scan.nextElementSibling;
+  }
+  var first = titleNodes[Z9_NAMES[0]];
+  if (!first) return;
+  var deck = document.createElement('div'); deck.className = 'z9-deck';
+  first.parentNode.insertBefore(deck, first);
+  Z9_NAMES.forEach(function (name, nameIndex) {
+    var title = titleNodes[name];
+    if (!title) return;
+    var nextTitle = titleNodes[Z9_NAMES[nameIndex + 1]] || null, walk = title.nextElementSibling;
+    var end = nextTitle || stop;
+    var tag = title.nextElementSibling, details = document.createElement('details');
+    details.className = 'z9-card'; details.dataset.z9 = name.replace(/课$/, '');
+    var summary = document.createElement('summary');
+    summary.innerHTML = '<span><b>' + esc(name) + '</b><small>' + esc(tag && tag !== end ? tag.textContent.trim() : '') + '</small></span><i>＋</i>';
+    var body = document.createElement('div'); body.className = 'z9-body';
+    details.appendChild(summary); details.appendChild(body); deck.appendChild(details);
+    if (tag && tag !== end) { var afterTag = tag.nextElementSibling; title.remove(); tag.remove(); walk = afterTag; }
+    else { walk = title.nextElementSibling; title.remove(); }
+    while (walk && walk !== end) { var nx = walk.nextElementSibling; body.appendChild(walk); walk = nx; }
+    formatZongmenCard(body);
+    var btn = document.createElement('button'); btn.className = 'btn z9-random'; btn.type = 'button';
+    btn.textContent = '随机起一个“' + name + '”真盘 ↺';
+    btn.onclick = function () { randomZongmenPan(details.dataset.z9, btn); };
+    body.appendChild(btn);
+  });
+}
+
+function formatZongmenCard(body) {
+  var ps = [].slice.call(body.children), why = ps.filter(function (p) { return /^为什么叫/.test(p.textContent); })[0];
+  if (why) {
+    var note = document.createElement('div'); note.className = 'z9-name-note'; why.parentNode.insertBefore(note, why);
+    var p = why;
+    while (p) {
+      var nx = p.nextElementSibling; note.appendChild(p);
+      if (/^盘面对应/.test(p.textContent)) break;
+      p = nx;
+    }
+    why.className = 'z9-name-title';
+  }
+  [].slice.call(body.children).forEach(function (p) {
+    if (p.tagName === 'P' && /^记：/.test(p.textContent)) p.className = 'z9-mn';
+  });
+  var dh = [].slice.call(body.children).filter(function (p) { return p.tagName === 'P' && /^📐/.test(p.textContent); })[0];
+  if (dh) {
+    var derive = document.createElement('div'); derive.className = 'z9-derive'; dh.parentNode.insertBefore(derive, dh);
+    var p2 = dh;
+    while (p2) { var nx2 = p2.nextElementSibling; derive.appendChild(p2); p2 = nx2; }
+    dh.className = 'z9-derive-hd';
+    [].slice.call(derive.children).slice(1).forEach(function (p) {
+      p.className = /^💡|^⚠|^举例|^为何/.test(p.textContent.trim()) ? 'z9-deg' : 'z9-dstep';
+    });
+  }
+}
+
+function randomZongmenPan(want, btn) {
+  var E = window.LiurenEngine, body = btn.closest('.z9-body');
+  var old = $('.z9-example', body); if (old) old.remove();
+  var box = document.createElement('div'); box.className = 'z9-example';
+  body.insertBefore(box, btn); box.innerHTML = '<p class="muted center">正在搜索同类真盘…</p>';
+  if (!E) { box.innerHTML = '<p class="muted center">起课引擎未载入，请刷新后重试。</p>'; return; }
+  setTimeout(function () {
+    var days = [], i, j;
+    for (i = 0; i < 10; i++) for (j = 0; j < 12; j++) if (i % 2 === j % 2) days.push(E.G[i] + E.Z[j]);
+    var total = days.length * 144, start = Math.floor(Math.random() * total), found = null;
+    function same(o) { return o && (o.ke === want || (want === '知一' && (o.ke === '知一' || o.ke === '比用'))); }
+    for (i = 0; i < total; i++) {
+      var x = (start + i) % total, d = Math.floor(x / 144), r = x % 144;
+      var o = E.qike(days[d], E.Z[Math.floor(r / 12)], E.Z[r % 12]);
+      if (same(o)) { found = o; break; }
+    }
+    if (!found) { box.innerHTML = '<p class="muted center">这一轮没有找到，请再点一次。</p>'; return; }
+    box.innerHTML = zongmenPanHTML(found) + zongmenDeriveHTML(found, want);
+    bindPan(box); btn.textContent = '换一个“' + want + '课”真盘 ↺';
+  }, 20);
+}
+
+function zongmenPanHTML(o) {
+  var rg = o.rgz.charAt(0), rz = o.rgz.charAt(1), generals = tianjiang(rg, o.zs, o.t).tj;
+  function jiang(z) { var dp = Z.filter(function (d) { return o.t[d] === z; })[0]; return generals[dp] || ''; }
+  var ke = o.sk.slice().reverse().map(function (c) {
+    return '<div class="ke"><span class="tj">' + jiang(c.shang) + '</span><span class="lb">第' + (c.i + 1) + '课</span>' +
+      '<span class="up">' + c.shang + '</span><span class="dn">' + c.xia + '</span></div>';
+  }).join('');
+  var sc = o.chuan.map(function (z, i) {
+    return '<div class="cr"><span class="lb">' + '初中末'.charAt(i) + '传</span><span class="z">' + z + '</span>' +
+      '<span class="ex">' + (jiang(z) || '—') + '</span></div>';
+  }).join('');
+  var label = o.ke + (o.ge ? ' · ' + o.ge : '');
+  return '<div class="z9-pan-head"><b>' + o.rgz + '日 · ' + o.yj + '将 · ' + o.zs + '时</b><span>' + esc(label) + '</span></div>' +
+    '<div class="sanchuan">' + sc + '</div><div class="sike">' + ke + '</div>' +
+    panHTML(o.t, generals, o.rgz + '日<br>' + o.yj + '将 · ' + o.zs + '时<br><b>' + esc(label) + '</b>');
+}
+
+function zongmenDeriveHTML(o, want) {
+  var WX = { 甲:'木',乙:'木',寅:'木',卯:'木',丙:'火',丁:'火',巳:'火',午:'火',戊:'土',己:'土',丑:'土',辰:'土',未:'土',戌:'土',庚:'金',辛:'金',申:'金',酉:'金',壬:'水',癸:'水',子:'水',亥:'水' };
+  var KM = { 木:'土',土:'水',水:'火',火:'金',金:'木' };
+  function ke(a, b) { return KM[WX[a]] === WX[b]; }
+  var down = o.sk.filter(function (c) { return ke(c.xia, c.shang); });
+  var up = o.sk.filter(function (c) { return ke(c.shang, c.xia); });
+  var reason = '';
+  if (o.ke === '伏吟') reason = '月将与占时相同，天地盘重合，先按伏吟法取传。';
+  else if (o.ke === '返吟') reason = '月将与占时相冲，天地盘对冲，先按返吟法取传。';
+  else if (o.ke === '八专') reason = '日干寄宫与日支同宫，四课归并为两课，按八专法取传。';
+  else if (o.ke === '元首') reason = '四课只有一处上克下、没有下贼上，唯一上神发用。';
+  else if (o.ke === '重审') reason = '四课只有一处下贼上，矛盾从下发动，按重审法发用。';
+  else if (o.ke === '比用' || o.ke === '知一') reason = '四课有多处同向克，先按日干阴阳比用，从多候选中知其一。';
+  else if (o.ke === '涉害') reason = '比用后仍有多个候选，再沿途数克害，取涉害最深者。';
+  else if (o.ke === '遥克') reason = '四课上下无正克，改查日干与各课上神的隔空相克（' + (o.ge || '遥克') + '）。';
+  else if (o.ke === '别责') reason = '四课不备且无正克、无遥克，向干合或支合另责一神。';
+  else reason = '四课无正克、无遥克且四课俱全，从酉位按昴星法发用。';
+  var counts = '下贼上 ' + down.length + ' 处，上克下 ' + up.length + ' 处';
+  return '<div class="z9-case-derive"><b>本案逐步推导</b>' +
+    '<p><i>1</i>先查特殊结构：月将 ' + o.yj + '、占时 ' + o.zs + '；日课为 ' + o.rgz + '。</p>' +
+    '<p><i>2</i>逐课扫克：' + counts + '。</p>' +
+    '<p><i>3</i>' + esc(reason) + ' 初传取 <strong>' + o.chuan[0] + '</strong>。</p>' +
+    '<p><i>4</i>依本课取传规则得到：初 <strong>' + o.chuan[0] + '</strong> → 中 <strong>' + o.chuan[1] + '</strong> → 末 <strong>' + o.chuan[2] + '</strong>。</p>' +
+    (want === '知一' && o.ke === '比用' ? '<small>本盘引擎标为“比用”，归在知一课的同一宗门内学习。</small>' : '') + '</div>';
 }
 
 /* ── App 存档（80–92）列表 ─────────────────────────────
@@ -761,6 +983,7 @@ function paintBfOne(B, n) {
     (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
   if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
   if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
+  foldLongDocument($('#bfBody'));
   });
 }
 
@@ -853,6 +1076,7 @@ function paintQuiz(Q, n) {
   if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
   if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
   buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+  foldLongDocument($('#quizBody'));
   });
 }
 
@@ -893,6 +1117,7 @@ function paintMufu(items, n) {
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
     buildStickyPan($('#mfBody'), it.cal);
+    foldLongDocument($('#mfBody'));
   });
 }
 
@@ -960,6 +1185,7 @@ function paintTongjie(items, id) {
     if (prev) $('#tjPrev').onclick = function () { show('tongjie', prev.id); };
     if (next) $('#tjNext').onclick = function () { show('tongjie', next.id); };
     buildStickyPan($('#tjBody'), it.cal);
+    foldLongDocument($('#tjBody'));
   });
 }
 
@@ -1163,6 +1389,32 @@ function foldLessonSections(root) {
     }
   });
 }
+
+/* 附篇、格局、毕法与案例详情同样按“最大的正文标题”折叠。
+   - 文档第一个 h1 是页名，保留常显；后续 h1 与全部 h2 才是分节。
+   - 上一篇／下一篇导航留在折叠外，不能被最后一节一起吞进去。
+   - 仍沿用 lesson-sec，使搜索定位与目录打开章节的逻辑保持一致。 */
+function foldLongDocument(root) {
+  if (!root || [].slice.call(root.children).some(function (el) { return el.classList && el.classList.contains('long-sec'); })) return;
+  var kids = [].slice.call(root.children), firstH1 = kids.filter(function (el) { return el.tagName === 'H1'; })[0];
+  var hs = kids.filter(function (el) { return el.tagName === 'H2' || (el.tagName === 'H1' && el !== firstH1); });
+  function isPager(el) {
+    return el && el.nodeType === 1 && el.classList.contains('row') &&
+      !!el.querySelector('#gePrev,#geNext,#bfPrev,#bfNext,#qPrev,#qNext,#mfPrev,#mfNext,#tjPrev,#tjNext');
+  }
+  function isHead(el) { return hs.indexOf(el) >= 0; }
+  hs.forEach(function (h) {
+    if (!h.parentNode || h.parentNode !== root) return;
+    var details = document.createElement('details');
+    details.className = 'lesson-sec long-sec';
+    var summary = document.createElement('summary'), content = document.createElement('div');
+    content.className = 'lesson-sec-body';
+    root.insertBefore(details, h); details.appendChild(summary); summary.appendChild(h); details.appendChild(content);
+    while (details.nextSibling && !isHead(details.nextSibling) && !isPager(details.nextSibling)) {
+      content.appendChild(details.nextSibling);
+    }
+  });
+}
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
           el && el.parentElement ? el.parentElement.closest('details.lesson-sec') : null;
@@ -1172,6 +1424,7 @@ function openLessonFold(el) {
 RENDER.outline = function () {
   $('#outlineBody').innerHTML = M.outline || '';
   bindDoc($('#outlineBody'));
+  foldLongDocument($('#outlineBody'));
 };
 
 RENDER.lab = function () {

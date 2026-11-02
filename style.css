@@ -125,7 +125,8 @@ main{overflow-x:clip}
 .lesson-sec>summary::-webkit-details-marker{display:none}
 .lesson-sec>summary::after{content:"＋";flex:0 0 auto;color:var(--blue);font-size:18px;line-height:1}
 .lesson-sec[open]>summary::after{content:"－"}
-.doc .lesson-sec>summary h2{flex:1;min-width:0;margin:0;padding:13px 0 13px 11px;border-left:3px solid var(--blue)}
+.doc .lesson-sec>summary h2,.doc .lesson-sec>summary h1{flex:1;min-width:0;margin:0;padding:13px 0 13px 11px;
+  border:0;border-left:3px solid var(--blue);font-family:var(--f-disp);font-size:18.5px;font-weight:600;line-height:1.55}
 .lesson-sec[open]>summary{border-bottom:1px solid var(--line);background:var(--surface)}
 .lesson-sec-body{padding:1px 14px 14px}
 .lesson-sec-body>:first-child{margin-top:14px}

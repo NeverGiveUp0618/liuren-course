@@ -35,6 +35,7 @@ run('data/data-quiz.js');            // 同上，预置绕开按需加载
 run('data/data-mufu.js');
 run('data/data-tongjie.js');
 run('data/data-tongjie-search.js');
+run('data/data-extra.js');
 // ⭐ 2026-10-23 正文拆块：课例、毕法赋的 html 在 data/q/、data/bf/，点开才加载；这里全部预置
 ['q', 'bf', 'mf', 'tj'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
 const BODY = () => window.BODY || {};
@@ -179,6 +180,8 @@ console.log('\n== 附篇 ==');
   ok(/\.z9-example\.sanchuan\{[^}]*width:min\(340px,100%\)[^}]*margin:12pxauto/.test(z9Css) &&
      /\.z9-example\.cr\{[^}]*grid-template-columns:minmax\(0,1fr\)42pxminmax\(0,1fr\)/.test(z9Css),
      '宗门随机盘三传外框居中，传支固定在三列正中轴');
+  ok(/foldLongDocument\(extraBody\)/.test(appSrc) && /lesson-sec long-sec/.test(appSrc),
+     '附篇接入最大标题默认折叠');
   ok(!!$('#s-extra'), '附篇屏在 index.html 里');
   ok($$('[data-go="extra"]').length === 1 && $$('[data-go="xarch"]').length === 1, '首页：八要素单列＋附篇列表一个入口');
   ok($$('[data-go="extra"]').every(b => b.dataset.id), '入口都带 data-id');
@@ -380,6 +383,24 @@ async function typeSearch(kw) {
 }
 
 (async () => {
+  console.log('\n== 长内容页折叠 ==');
+  $('[data-go="xarch"]').onclick();
+  await sleep(10);
+  $('[data-x="x80"]').onclick();
+  await sleep(10);
+  let longFolds = $$('#extraBody > details.long-sec');
+  ok(longFolds.length >= 3 && longFolds.every(d => !d.open),
+     `旧版入门附篇按最大标题默认折叠（${longFolds.length} 节）`);
+  $('#btnBack').onclick();
+  await sleep(10);
+  $('[data-x="x83"]').onclick();
+  await sleep(10);
+  longFolds = $$('#extraBody > details.long-sec');
+  ok(longFolds.length >= 5 && longFolds.every(d => !d.open),
+     `速查合编按最大标题默认折叠（${longFolds.length} 节）`);
+  ok($$('#extraBody .z9-card').length === 10 && $('#extraBody .z9-card').closest('details.long-sec'),
+     '九宗门十张课体卡保留，并收进“九宗门体系”大标题内');
+
   console.log('\n== 吸顶盘（通用页面四课＋三传；王牧夫案例再加年月日时）==');
   // ⚠️ 回到访问过的课走的是 history.go 折叠（popstate 异步），必须等一拍再断言
   $$('#courseList .li[data-id]')[0].onclick();

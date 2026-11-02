@@ -547,6 +547,7 @@ function paintGeOne(G, n) {
     (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
   if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
   if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+  foldLongDocument($('#geBody'));
 }
 
 /* ── 附篇（源流 / 八要素）──────────────────────────────
@@ -566,6 +567,7 @@ function paintExtra(E, id) {
   // 会清掉卡片却不会清 dataset，必须随正文一起重置增强标记。
   delete extraBody.dataset.z9Restored;
   if (id === 'x83') restoreZongmenGuide(extraBody);
+  foldLongDocument(extraBody);
   bindDoc(extraBody);
 }
 
@@ -981,6 +983,7 @@ function paintBfOne(B, n) {
     (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
   if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
   if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
+  foldLongDocument($('#bfBody'));
   });
 }
 
@@ -1073,6 +1076,7 @@ function paintQuiz(Q, n) {
   if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
   if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
   buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+  foldLongDocument($('#quizBody'));
   });
 }
 
@@ -1113,6 +1117,7 @@ function paintMufu(items, n) {
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
     buildStickyPan($('#mfBody'), it.cal);
+    foldLongDocument($('#mfBody'));
   });
 }
 
@@ -1180,6 +1185,7 @@ function paintTongjie(items, id) {
     if (prev) $('#tjPrev').onclick = function () { show('tongjie', prev.id); };
     if (next) $('#tjNext').onclick = function () { show('tongjie', next.id); };
     buildStickyPan($('#tjBody'), it.cal);
+    foldLongDocument($('#tjBody'));
   });
 }
 
@@ -1383,6 +1389,32 @@ function foldLessonSections(root) {
     }
   });
 }
+
+/* 附篇、格局、毕法与案例详情同样按“最大的正文标题”折叠。
+   - 文档第一个 h1 是页名，保留常显；后续 h1 与全部 h2 才是分节。
+   - 上一篇／下一篇导航留在折叠外，不能被最后一节一起吞进去。
+   - 仍沿用 lesson-sec，使搜索定位与目录打开章节的逻辑保持一致。 */
+function foldLongDocument(root) {
+  if (!root || [].slice.call(root.children).some(function (el) { return el.classList && el.classList.contains('long-sec'); })) return;
+  var kids = [].slice.call(root.children), firstH1 = kids.filter(function (el) { return el.tagName === 'H1'; })[0];
+  var hs = kids.filter(function (el) { return el.tagName === 'H2' || (el.tagName === 'H1' && el !== firstH1); });
+  function isPager(el) {
+    return el && el.nodeType === 1 && el.classList.contains('row') &&
+      !!el.querySelector('#gePrev,#geNext,#bfPrev,#bfNext,#qPrev,#qNext,#mfPrev,#mfNext,#tjPrev,#tjNext');
+  }
+  function isHead(el) { return hs.indexOf(el) >= 0; }
+  hs.forEach(function (h) {
+    if (!h.parentNode || h.parentNode !== root) return;
+    var details = document.createElement('details');
+    details.className = 'lesson-sec long-sec';
+    var summary = document.createElement('summary'), content = document.createElement('div');
+    content.className = 'lesson-sec-body';
+    root.insertBefore(details, h); details.appendChild(summary); summary.appendChild(h); details.appendChild(content);
+    while (details.nextSibling && !isHead(details.nextSibling) && !isPager(details.nextSibling)) {
+      content.appendChild(details.nextSibling);
+    }
+  });
+}
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
           el && el.parentElement ? el.parentElement.closest('details.lesson-sec') : null;
@@ -1392,6 +1424,7 @@ function openLessonFold(el) {
 RENDER.outline = function () {
   $('#outlineBody').innerHTML = M.outline || '';
   bindDoc($('#outlineBody'));
+  foldLongDocument($('#outlineBody'));
 };
 
 RENDER.lab = function () {
