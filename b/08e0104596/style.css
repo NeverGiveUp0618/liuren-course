@@ -358,34 +358,34 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .sheet-pan-group{padding:2px 0 18px}
 .sheet-pan-group+.sheet-pan-group{border-top:1px solid var(--line);padding-top:20px}
 /* 熟悉盘式：三传在上、四课居中、天地盘在下；沿用本站现有颜色。 */
-.pan-sheet .sanchuan{width:min(330px,100%);max-width:100%;margin:4px auto 20px;gap:1px}
-.pan-sheet .cr{display:grid;grid-template-columns:36px 34px 34px 38px 34px 34px;
+.pan-sheet .sanchuan,.inline-pan .sanchuan{width:min(330px,100%);max-width:100%;margin:4px auto 20px;gap:1px}
+.pan-sheet .cr,.inline-pan .cr{display:grid;grid-template-columns:36px 34px 34px 38px 34px 34px;
   justify-content:center;gap:4px;padding:4px 2px;background:transparent;border:0;text-align:center}
-.pan-sheet .cr .lb{grid-column:1;min-width:0;font-size:9px;align-self:center}
-.pan-sheet .cr .z{grid-column:4;grid-row:1;font-size:20px;min-width:0}
-.pan-sheet .cr .ex{grid-column:2/7;grid-row:1;display:grid;
+.pan-sheet .cr .lb,.inline-pan .cr .lb{grid-column:1;min-width:0;font-size:9px;align-self:center}
+.pan-sheet .cr .z,.inline-pan .cr .z{grid-column:4;grid-row:1;font-size:20px;min-width:0}
+.pan-sheet .cr .ex,.inline-pan .cr .ex{grid-column:2/7;grid-row:1;display:grid;
   grid-template-columns:34px 34px 38px 34px 34px;align-items:center;gap:4px;color:var(--ink2)}
-.pan-sheet .sx-kin{grid-column:1}.pan-sheet .sx-dun{grid-column:2}
-.pan-sheet .sx-jiang{grid-column:4;color:var(--gold);font-size:17px}
-.pan-sheet .sx-note{grid-column:5;font-size:9px;color:var(--ink3);text-align:left}
-.pan-sheet .sike{margin:8px auto 22px;gap:3px;overflow:visible}
-.pan-sheet .ke{min-width:62px;padding:5px 3px;background:transparent;border:0}
-.pan-sheet .ke .tj{font-size:17px}.pan-sheet .ke .lb{font-size:8px;order:4}
-.pan-sheet .ke .up{font-size:22px}.pan-sheet .ke .dn{font-size:20px;border:0;padding-top:0}
-.pan-sheet .ke .nt{font-size:9px;order:5}
-.pan-sheet .panwrap{margin:8px 0 0}
-.pan-sheet .pan{width:min(520px,100%)}
-.pan-sheet .gong{position:relative;gap:3px;padding:5px 2px}
-.pan-sheet .gong .tj{font-size:16px}.pan-sheet .gline{display:flex;align-items:baseline;gap:4px}
-.pan-sheet .gong .dg{font-family:var(--f-mono);font-size:13px;color:var(--ink3)}
-.pan-sheet .gong .tp{font-size:23px}.pan-sheet .gong .dp{font-size:11px}
-.pan-sheet .gong .dp:before{content:'│';color:var(--line);margin-right:5px}
-.pan-sheet .chuan-mark{position:absolute;top:3px;left:4px;min-width:16px;height:16px;line-height:15px;
+.pan-sheet .sx-kin,.inline-pan .sx-kin{grid-column:1}.pan-sheet .sx-dun,.inline-pan .sx-dun{grid-column:2}
+.pan-sheet .sx-jiang,.inline-pan .sx-jiang{grid-column:4;color:var(--gold);font-size:17px}
+.pan-sheet .sx-note,.inline-pan .sx-note{grid-column:5;font-size:9px;color:var(--ink3);text-align:left}
+.pan-sheet .sike,.inline-pan .sike{margin:8px auto 22px;gap:3px;overflow:visible}
+.pan-sheet .ke,.inline-pan .ke{min-width:62px;padding:5px 3px;background:transparent;border:0}
+.pan-sheet .ke .tj,.inline-pan .ke .tj{font-size:17px}.pan-sheet .ke .lb,.inline-pan .ke .lb{font-size:8px;order:4}
+.pan-sheet .ke .up,.inline-pan .ke .up{font-size:22px}.pan-sheet .ke .dn,.inline-pan .ke .dn{font-size:20px;border:0;padding-top:0}
+.pan-sheet .ke .nt,.inline-pan .ke .nt{font-size:9px;order:5}
+.pan-sheet .panwrap,.inline-pan .panwrap{margin:8px 0 0}
+.pan-sheet .pan,.inline-pan .pan{width:min(520px,100%)}
+.pan-sheet .gong,.inline-pan .gong{position:relative;gap:3px;padding:5px 2px}
+.pan-sheet .gong .tj,.inline-pan .gong .tj{font-size:16px}.pan-sheet .gline,.inline-pan .gline{display:flex;align-items:baseline;gap:4px}
+.pan-sheet .gong .dg,.inline-pan .gong .dg{font-family:var(--f-mono);font-size:13px;color:var(--ink3)}
+.pan-sheet .gong .tp,.inline-pan .gong .tp{font-size:23px}.pan-sheet .gong .dp,.inline-pan .gong .dp{font-size:11px}
+.pan-sheet .gong .dp:before,.inline-pan .gong .dp:before{content:'│';color:var(--line);margin-right:5px}
+.pan-sheet .chuan-mark,.inline-pan .chuan-mark{position:absolute;top:3px;left:4px;min-width:16px;height:16px;line-height:15px;
   border:1px solid var(--ink3);border-radius:50%;background:var(--ground);font-size:8px;color:var(--ink)}
-.pan-sheet .chuan-mark+.chuan-mark{top:21px}
-.pan-sheet .panmid{flex-direction:column;gap:4px;font-size:12px}
-.pan-sheet .panmid b{font-family:var(--f-disp);font-size:23px;font-weight:500;color:var(--ink)}
-.pan-sheet .panmid span{font-family:var(--f-disp);font-size:14px;color:var(--ink3)}
+.pan-sheet .chuan-mark+.chuan-mark,.inline-pan .chuan-mark+.chuan-mark{top:21px}
+.pan-sheet .panmid,.inline-pan .panmid{flex-direction:column;gap:4px;font-size:12px}
+.pan-sheet .panmid b,.inline-pan .panmid b{font-family:var(--f-disp);font-size:23px;font-weight:500;color:var(--ink)}
+.pan-sheet .panmid span,.inline-pan .panmid span{font-family:var(--f-disp);font-size:14px;color:var(--ink3)}
 .toch{font-family:var(--f-disp);font-size:15px;font-weight:600;margin-bottom:10px;color:var(--ink)}
 .toci{all:unset;cursor:pointer;display:block;width:100%;padding:9px 10px;border-radius:4px;
   font-size:14.5px;color:var(--ink2);border-left:2px solid var(--line)}
@@ -693,11 +693,86 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .cr{background:var(--paper);border-color:var(--pan-line)}
 .cr .lb{background:var(--sc-bg);color:var(--sc-ink);border:1px solid var(--sc-bd);border-radius:3px;
   padding:1px 6px;text-align:center;font-weight:700}
-.pan-sheet .ke{background:var(--paper);border:1px solid var(--pan-line);padding:0 3px 5px}
-.pan-sheet .ke .lb{order:-1;font-size:10px;margin:0 -3px 3px;padding:3px 0}
-.pan-sheet .cr .lb{font-size:10px;padding:1px 2px}
+.pan-sheet .ke,.inline-pan .ke{background:var(--paper);border:1px solid var(--pan-line);padding:0 3px 5px}
+.pan-sheet .ke .lb,.inline-pan .ke .lb{order:-1;font-size:10px;margin:0 -3px 3px;padding:3px 0}
+.pan-sheet .cr .lb,.inline-pan .cr .lb{font-size:10px;padding:1px 2px}
 .spc,.spt{background:var(--blue-s);border-radius:3px}
 .spc.day{background:var(--gold-s)}
 .panmid{flex-direction:column;gap:2px}
 .panmid span{font-family:var(--f-disp);font-size:13px;color:var(--ink2);font-weight:500}
 .panmid b{font-family:var(--f-disp);font-size:17px}
+
+/* ===== 排盘细部：照旧版截图（三传→四课→式盘；字用强调蓝；四课无缝表格；三传居中成行）===== */
+.cr .z,.ke .up{color:var(--blue)!important;font-weight:700}
+.sanchuan{gap:0}
+.cr{border:0;border-bottom:1px solid var(--blue-s);border-radius:0;background:transparent;
+  justify-content:center;gap:12px;padding:8px 6px}
+.cr:last-child{border-bottom:0}
+.cr .z{order:1;font-size:26px}
+.cr .ex{order:2;flex:0 1 auto;color:var(--ink2)}
+.cr .lb{order:3;background:transparent;border:0;color:var(--blue);padding:0;min-width:0;font-size:12px}
+.sike{gap:0;width:min(520px,100%);margin-left:auto;margin-right:auto}
+.sike .ke{flex:1;border-radius:0;margin-left:-1px;min-width:0}
+/* 全盘弹层 */
+.pan-sheet .cr,.inline-pan .cr{display:flex;justify-content:center;align-items:center;gap:10px;border:0;
+  border-bottom:1px solid var(--blue-s);padding:7px 4px;background:transparent}
+.pan-sheet .cr:last-child,.inline-pan .cr:last-child{border-bottom:0}
+.pan-sheet .cr .ex,.inline-pan .cr .ex{display:contents}
+.pan-sheet .cr .sx-kin,.inline-pan .cr .sx-kin{order:1;min-width:20px;text-align:center}
+.pan-sheet .cr .sx-dun,.inline-pan .cr .sx-dun{order:2;min-width:20px;text-align:center}
+.pan-sheet .cr .z,.inline-pan .cr .z{order:3;font-size:30px}
+.pan-sheet .cr .sx-note,.inline-pan .cr .sx-note{order:4;min-width:26px}
+.pan-sheet .cr .sx-jiang,.inline-pan .cr .sx-jiang{order:5;min-width:20px;text-align:center}
+.pan-sheet .cr .lb,.inline-pan .cr .lb{order:6;min-width:34px;font-size:12px;text-align:left;background:transparent;border:0;color:var(--blue)}
+.pan-sheet .sike,.inline-pan .sike{gap:0}
+.pan-sheet .ke,.inline-pan .ke{border-radius:0;margin-left:-1px;min-width:0;flex:1}
+.gong.sc{background:var(--sc-bg)}
+
+/* ===== 三传按固定列对齐（六亲｜遁干｜传支｜空亡｜天将｜传名），每行列宽一致，三个大字上下对齐 ===== */
+.pan-sheet .cr,.inline-pan .cr{display:grid;grid-template-columns:24px 24px 46px 34px 24px 46px;justify-content:center;
+  align-items:center;column-gap:6px;padding:7px 4px}
+.pan-sheet .cr .ex,.inline-pan .cr .ex{display:contents}
+.pan-sheet .cr .sx-kin,.inline-pan .cr .sx-kin{grid-area:1/1;text-align:center}
+.pan-sheet .cr .sx-dun,.inline-pan .cr .sx-dun{grid-area:1/2;text-align:center}
+.pan-sheet .cr .z,.inline-pan .cr .z{grid-area:1/3;text-align:center;justify-self:center}
+.pan-sheet .cr .sx-note,.inline-pan .cr .sx-note{grid-area:1/4;text-align:left}
+.pan-sheet .cr .sx-jiang,.inline-pan .cr .sx-jiang{grid-area:1/5;text-align:center}
+.pan-sheet .cr .lb,.inline-pan .cr .lb{grid-area:1/6;text-align:left}
+.pan-sheet .sanchuan,.inline-pan .sanchuan{width:min(360px,100%)}
+.pan-sheet .panmid,.inline-pan .panmid{gap:3px}
+.pan-sheet .panmid b,.inline-pan .panmid b{font-size:19px;font-weight:700;color:var(--blue)}
+.pan-sheet .panmid span,.inline-pan .panmid span{font-size:14px;font-weight:700;color:var(--blue)}
+.pan-sheet .sx-note,.inline-pan .sx-note{font-size:11px;color:var(--ink3)}
+
+/* ===== 表格：不再一个字一行；列有最小宽度，放不下就左右滑动 ===== */
+.tw{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.tw table{width:max-content;min-width:100%}
+.tw td:not(.nw),.tw th:not(.nw){min-width:8em;max-width:26em}
+.tw td:first-child:not(.nw),.tw th:first-child:not(.nw){min-width:5em}
+
+/* ===== 复习卡 ===== */
+.ref-switch{grid-template-columns:repeat(3,1fr)}
+.rv-flow{margin:10px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.rv-flow>summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink2)}
+.rv-stage{display:flex;gap:8px;align-items:flex-start;margin-top:9px}
+.rv-stage>b{flex:0 0 auto;min-width:34px;padding:2px 6px;border-radius:3px;background:var(--blue);color:#fff;font-size:12px;text-align:center}
+.rv-stage>span{display:flex;flex-wrap:wrap;gap:6px}
+.rv-stage button{border:1px solid var(--line);background:var(--blue-s);color:var(--ink);border-radius:12px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+.rv-tip{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 4px;font-size:12.5px;color:var(--ink3)}
+.rv-tip button{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:3px 10px;font-size:12.5px;color:var(--blue);cursor:pointer}
+.refi.rv .rv-q,.refi.rv .rv-a{display:flex;gap:8px;align-items:flex-start;padding:2px 12px 8px}
+.refi.rv .rv-q{cursor:pointer;font-size:14.5px}
+.refi.rv .rv-q>p,.refi.rv .rv-a>p{margin:0}
+.rv i{flex:0 0 auto;font-style:normal;font-size:12px;font-weight:700;border-radius:3px;padding:0 6px;line-height:20px;color:#fff;background:var(--blue)}
+.rv-a i{background:var(--gold)}
+.rv-t{margin:6px 12px 4px;font-weight:700;font-size:13px;color:var(--ink2)}
+.rv-r{margin:8px 12px 4px;padding:8px 10px;border-left:4px solid var(--blue);background:var(--blue-s);border-radius:0 4px 4px 0;font-size:13.5px}
+.rv-r>b{display:block;font-size:12px;color:var(--blue);margin-bottom:2px}
+.rv-r p{margin:2px 0}
+#refList.rv-test .refi.rv:not(.open) .rv-a{display:none}
+.rv-tip>span:first-child button{margin-right:6px}
+.refi.rv .rv-a{padding-bottom:6px}
+/* 初/中/末角标：字在圆圈正中（固定宽高＋flex 居中，行高归零） */
+.pan-sheet .chuan-mark,.inline-pan .chuan-mark{display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;width:16px;min-width:16px;height:16px;padding:0;line-height:1;font-size:10px;
+  font-family:var(--f-body);text-indent:0;letter-spacing:0}
