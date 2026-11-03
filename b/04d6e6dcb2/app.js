@@ -234,7 +234,7 @@ function mmGo(v) { show('lesson', v); }
 function renderMindmap(box, mm) {
   if (!mm || !mm.branches) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="mm-bar"><button class="on" data-m="g">图</button><button data-m="l">列表</button>' +
-    '<span class="mm-tip">拖动平移 · 双指/滚轮缩放 · 点节点看要点</span><button class="mm-fit">复位</button></div>' +
+    '<input class="mm-q" type="search" placeholder="搜关键词" title="拖动平移 · 双指/滚轮缩放 · 点节点看要点"><span class="mm-prog"></span><button class="mm-fit">复位</button></div>' +
     '<div class="mm-view"><svg class="mm-svg"></svg></div><div class="mm-list" hidden></div>';
   var view = $('.mm-view', box), svg = $('.mm-svg', box), list = $('.mm-list', box);
   renderMindmapList(list, mm);
@@ -245,6 +245,10 @@ function renderMindmap(box, mm) {
     };
   });
   var NS = 'http://www.w3.org/2000/svg', open = {}, T = { x: 0, y: 0, k: 1 }, fitted = false;
+  var doneKey = 'mm-done:' + location.pathname, done = {};
+  try { done = JSON.parse(localStorage.getItem(doneKey) || '{}') || {}; } catch (e) { done = {}; }
+  function saveDone() { try { localStorage.setItem(doneKey, JSON.stringify(done)); } catch (e) {} }
+  function qwords() { return (($('.mm-q', box) || {}).value || '').trim().split(/\s+/).filter(Boolean); }
   function el(tag, attrs, txt) {
     var e = document.createElementNS(NS, tag);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -270,20 +274,23 @@ function renderMindmap(box, mm) {
     var g = el('g', {}), FS = 13, KH = 26, GAP = 40;
     // 1) 建树：根→大块→节点→（要点 / 章节小标题→更细） ；open 控制展开
     function build() {
-      var root = { t: mm.title, d: 0, ch: [], key: 'r' };
+      var W = qwords(), root = { t: mm.title, d: 0, ch: [], key: 'r' };
       mm.branches.forEach(function (b, bi) {
         var B = { t: b.t, sub: b.range, d: 1, c: bi % 5, key: 'b' + bi, ch: [], par: root }; root.ch.push(B);
         b.nodes.forEach(function (n, ni) {
-          var key = bi + '-' + ni, N = { t: n.t, d: 2, c: bi % 5, key: key, ch: [], par: B, tog: true, on: !!open[key] };
+          var key = bi + '-' + ni, hay = n.t + n.kw.join('') + (n.sec || []).map(function (x) { return x.t + (x.sub || []).join(''); }).join(''),
+            hit = W.length > 0 && W.every(function (w) { return hay.indexOf(w) >= 0; }),
+            N = { t: (done[key] ? '✓ ' : '') + n.t, d: 2, c: bi % 5, key: key, ch: [], par: B, tog: true, on: !!open[key] || hit, dim: W.length > 0 && !hit, dn: !!done[key] };
           B.ch.push(N);
           if (!N.on) return;
           n.kw.forEach(function (k) { N.ch.push({ t: k, d: 3, c: bi % 5, kind: 'kw', ch: [], par: N }); });
           (n.sec || []).forEach(function (s, si) {
-            var sk = key + '/' + si, has = !!(s.sub && s.sub.length), S = { t: s.t, d: 3, c: bi % 5, kind: has ? 'sec' : 'kw', key: sk, ch: [], par: N, tog: has, on: !!open[sk] };
+            var sk = key + '/' + si, has = !!(s.sub && s.sub.length), S = { t: s.t, d: 3, c: bi % 5, kind: has ? 'sec' : 'kw', key: sk, ch: [], par: N, tog: has, on: !!open[sk] || (W.length > 0 && W.every(function (w) { return (s.t + (s.sub || []).join('')).indexOf(w) >= 0; })) };
             N.ch.push(S);
             if (S.on) s.sub.forEach(function (u) { S.ch.push({ t: u, d: 4, c: bi % 5, kind: 'kw', ch: [], par: S }); });
           });
           links(n).forEach(function (l) { N.ch.push({ t: l.t, d: 3, c: bi % 5, kind: 'go', v: l.v, ch: [], par: N }); });
+          N.ch.push({ t: done[key] ? '✓ 已复习（点此取消）' : '标记为已复习', d: 3, c: bi % 5, kind: 'done', nk: key, ch: [], par: N });
         });
       });
       return root;
@@ -318,15 +325,16 @@ function renderMindmap(box, mm) {
         gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 1, 'text-anchor': 'middle', class: 'mm-t1' }, n.t));
         gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 28, 'text-anchor': 'middle', class: 'mm-t3' }, n.sub));
       } else if (n.d === 2) {
-        gg.setAttribute('class', 'mm-nd' + (n.on ? ' on' : '')); gg.style.cursor = 'pointer';
+        gg.setAttribute('class', 'mm-nd' + (n.on ? ' on' : '') + (n.dn ? ' dn' : '') + (n.dim ? ' dim' : '')); gg.style.cursor = 'pointer';
         gg.appendChild(el('rect', { x: x, y: n.y - 15, width: n.w, height: 30, rx: 8, class: 'mm-no', style: st }));
         gg.appendChild(el('text', { x: x + (n.w - 20) / 2 + 2, y: n.y + 5, 'text-anchor': 'middle', class: 'mm-t2' }, n.t));
         gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); });
         mark(gg, n, x + n.w - 13);
       } else {
-        var cls = n.kind === 'go' ? 'mm-gob' : n.kind === 'sec' ? 'mm-sec' + (n.on ? ' on' : '') : 'mm-kw';
+        var cls = n.kind === 'done' ? 'mm-donebtn' : n.kind === 'go' ? 'mm-gob' : n.kind === 'sec' ? 'mm-sec' + (n.on ? ' on' : '') : 'mm-kw';
         gg.appendChild(el('rect', { x: x, y: n.y - 11, width: n.w, height: 22, rx: 11, class: cls, style: st }));
         gg.appendChild(el('text', { x: x + 9, y: n.y + 4, class: n.kind === 'go' ? 'mm-t5' : (n.kind === 'sec' && n.on ? 'mm-t5' : 'mm-t4') }, n.t));
+        if (n.kind === 'done') { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (moved) return; if (done[n.nk]) delete done[n.nk]; else done[n.nk] = 1; saveDone(); draw(); }); }
         if (n.kind === 'go') { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (!moved) mmGo(n.v); }); }
         if (n.tog) mark(gg, n, x + n.w - 13);
         if (n.kind === 'sec' && n.tog) { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); }); }
@@ -334,6 +342,8 @@ function renderMindmap(box, mm) {
       g.appendChild(gg);
     });
     svg.appendChild(g);
+    var tot = 0; mm.branches.forEach(function (b) { tot += b.nodes.length; });
+    var pg = $('.mm-prog', box); if (pg) pg.textContent = '已复习 ' + Object.keys(done).length + '/' + tot;
     var right = 0; nodes.forEach(function (n) { right = Math.max(right, xs[n.d] + n.w); });
     svg._g = g; svg._bb = { w: right, h: y, fitW: xs[3] };
     apply();
@@ -371,6 +381,7 @@ function renderMindmap(box, mm) {
   view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up); view.addEventListener('pointerleave', up);
   view.addEventListener('wheel', function (e) { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
   $('.mm-fit', box).onclick = fit;
+  $('.mm-q', box).oninput = function () { draw(); };
   draw();
   // 容器首次可见后再适配（details 折叠时宽度为 0）
   var tries = 0;
@@ -1086,8 +1097,10 @@ function renderXf(D) {
   hit.forEach(function (r) {
     var g = r.lib + ' · ' + r.grp;
     if (g !== cur2) { cur2 = g; html += '<div class="refg">' + esc(g) + '</div>'; }
-    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
-      '</b></button><div class="refb">' + r.html +
+    var pv = r.text.replace(/^要点\s*/, '').split('怎么用')[0].trim();
+    if (pv.length > 60) pv = pv.slice(0, 58) + '…';
+    html += '<div class="refi xfi xl' + Math.max(0, libs.map(function (l) { return l.name; }).indexOf(r.lib)) + '"><button class="refh"><div class="rh-m"><b>' + esc(r.name) +
+      '</b>' + (pv ? '<p class="rh-p">' + esc(pv) + '</p>' : '') + '</div></button><div class="refb">' + r.html +
       '<p class="src">〔出处〕' + esc(r.src) + '</p></div></div>';
   });
   $('#xfList').innerHTML = html;
@@ -1123,11 +1136,16 @@ function jsPoem(p) {
   // 诗按句号断行，读起来才像诗；原文里逗号不动
   return esc(p).split('。').filter(Boolean).map(function (x) { return x + '。'; }).join('<br>');
 }
+function jsChips(p) {
+  if (!p || !p.length) return '';
+  var show = p.slice(0, 6).map(function (c) { return '<span>' + c[0] + '加' + c[1] + '</span>'; }).join('');
+  return '<p class="rh-c">' + show + (p.length > 6 ? '<span class="more">等 ' + p.length + ' 格</span>' : '') + '</p>';
+}
 function jsEntryHTML(D, e, open) {
   var pairs = e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   var also = e.also.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-js="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' + esc(pairs || '—') + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b>' + jsChips(e.p) + '</div></button>' +
     '<div class="refb">' +
     (pairs ? '<p class="jsk">相加：' + esc(pairs) + '</p>' : '') +
     (also ? '<p class="jsk">又见：' + esc(also) + '</p>' : '') +
@@ -1139,8 +1157,8 @@ function jsEntryHTML(D, e, open) {
 }
 function jsEntryBHTML(e, open) {
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-jsb="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' +
-    esc(e.cond.split(/[，。（]/)[0]) + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b><p class="rh-p">' +
+    esc(e.cond.split(/[，。（]/)[0]) + '</p></div></button>' +
     '<div class="refb">' +
     '<p class="jsk">条件：' + esc(e.cond) + '</p>' +
     '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
@@ -1692,6 +1710,9 @@ function foldLongDocument(root) {
       content.appendChild(details.nextSibling);
     }
   });
+  // 整篇只有一节时没必要折叠，直接展开（如格局详解里的单条课格）
+  var secs = [].slice.call(root.children).filter(function (el) { return el.classList && el.classList.contains('long-sec'); });
+  if (secs.length === 1) secs[0].open = true;
 }
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
@@ -2533,11 +2554,11 @@ function upgradeLegacyPans(root) {
 (function () {
   var timer = 0, queue = [];
   function flush() {
-    timer = 0; window.__pf = (window.__pf || 0) + 1;
+    timer = 0;
     var els = queue; queue = [];
     els.forEach(function (el) {
-      if (!el.isConnected) return;
-      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) { window.__panErr = String(e && e.stack || e).slice(0, 400); }
+      if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
+      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
     });
   }
   function need(n) {
@@ -2546,10 +2567,11 @@ function upgradeLegacyPans(root) {
     return ps.some(function (p) { return !p.closest('.sheet-pan-group'); });
   }
   new MutationObserver(function (ms) {
-    window.__po = (window.__po || 0) + 1;
     ms.forEach(function (m) {
       [].forEach.call(m.addedNodes, function (n) {
-        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+        if (!need(n)) return;
+        var t = n.classList.contains('panwrap') ? n.parentNode : n;
+        if (t) queue.push(t);
       });
     });
     if (queue.length && !timer) timer = setTimeout(flush, 30);
