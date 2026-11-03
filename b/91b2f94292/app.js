@@ -212,6 +212,71 @@ function needRef() {
   });
   return _refLoading;
 }
+var _reviewLoading = null;
+function needReview() {
+  if (window.DATA_REVIEW) return Promise.resolve(window.DATA_REVIEW);
+  if (_reviewLoading) return _reviewLoading;
+  _reviewLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script'), retried = false;
+    el.src = ASSET + 'data/data-review.js?v=' + VER;
+    el.onload = function () { res(window.DATA_REVIEW); };
+    el.onerror = function () {
+      if (!retried && ASSET) { retried = true; el.src = 'data/data-review.js?v=' + VER + '&fallback=1'; return; }
+      _reviewLoading = null; rej(new Error('复习卡加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _reviewLoading;
+}
+/* 十一步断课流程（第 17 课）：复习时当目录用，点每一步直达对应课。 */
+var FLOW = [
+  ['起盘', [['①定四柱', 'L01'], ['②定月将、起天盘', 'L02'], ['③定贵人、排十二天将', 'L03'], ['④日干寄宫、起四课', 'L04'],
+            ['⑤九宗门取三传', 'L05'], ['⑥遁干六亲旬空年命', 'L07']]],
+  ['立局', [['⑦立太极点', 'L14'], ['⑧扫七处', 'L13']]],
+  ['读事', [['⑨定类神', 'L12'], ['⑩读三传', 'L15']]],
+  ['落断', [['⑪定应期', 'L16']]]
+];
+function renderReview(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim(), words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) { return (r.title + r.text).indexOf(w) >= 0; });
+  });
+  var html = '';
+  if (!words.length) {
+    html += '<details class="rv-flow" open><summary>十一步断课流程 · 点一步直达那一课</summary>' + FLOW.map(function (st) {
+      return '<div class="rv-stage"><b>' + st[0] + '</b><span>' + st[1].map(function (x) {
+        return '<button data-go="' + x[1] + '">' + esc(x[0]) + '</button>'; }).join('') + '</span></div>';
+    }).join('') + '</details>';
+    html += '<div class="rv-tip">先看「问」，在心里答一遍，再点开对答案。<button id="rvAll">全部展开</button></div>';
+  }
+  if (!hit.length) { out.innerHTML = html + '<p class="muted">没找到。换个词试试。</p>'; return; }
+  var cur = '';
+  hit.forEach(function (r) {
+    var g = r.kind === 'main' ? '大六壬通解课程' : '大六壬初中级课程';
+    if (g !== cur) { cur = g; html += '<div class="refpart">' + g + '</div>'; }
+    html += '<div class="refi rv"><button class="refh"><b>' + esc(r.title) + '</b></button>' +
+      '<div class="rv-q"><i>问</i>' + r.q + '</div>' +
+      '<div class="refb"><div class="rv-a"><i>答</i>' + r.concl + '</div>' +
+      (r.table ? '<div class="rv-t">' + esc(r.tt) + '</div>' + r.table : '') +
+      (r.rule ? '<div class="rv-r"><b>' + esc(r.rt) + '</b>' + r.rule + '</div>' : '') +
+      '<button class="refj" data-id="' + r.id + '" data-k="' + r.kind + '">到第 ' + r.num + ' 课看全文 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  $$('.rv-stage button', out).forEach(function (b) { b.onclick = function () { show('lesson', b.dataset.go); }; });
+  var all_ = $('#rvAll', out);
+  if (all_) all_.onclick = function () {
+    var open = all_.textContent === '全部展开';
+    $$('.refi.rv', out).forEach(function (d) { d.classList.toggle('open', open); });
+    all_.textContent = open ? '全部收起' : '全部展开';
+  };
+  $$('.refi', out).forEach(function (d) {
+    var head = d.querySelector('.refh'), q = d.querySelector('.rv-q');
+    head.onclick = function () { d.classList.toggle('open'); };
+    if (q) q.onclick = head.onclick;
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show(j.dataset.k === 'basic' ? 'basiclesson' : 'lesson', j.dataset.id); };
+  });
+}
 var _basicRefLoading = null;
 function needBasicRef() {
   if (window.DATA_BASIC_REF) return Promise.resolve(window.DATA_BASIC_REF);
@@ -1639,7 +1704,7 @@ function decoratePanSheet(box, sourceBody) {
         if (!z) return;
         var shortLab = lab ? lab.textContent.replace('传', '') : '';
         (marks[z.textContent.trim()] = marks[z.textContent.trim()] || []).push(shortLab);
-        if (!ex) return;
+        if (!ex || $('.sx-kin', ex)) return;   // 已装饰过（课文里的盘再被全盘弹层复制时）
         var vals = ex.textContent.trim().split(/[　]+/).filter(Boolean);
         var kinMap = { '父母': '父', '兄弟': '兄', '子孙': '子', '妻财': '财', '官鬼': '官' };
         var kinFull = vals.filter(function (v) { return kinMap[v]; })[0] || '',
@@ -1663,7 +1728,7 @@ function decoratePanSheet(box, sourceBody) {
         ex.innerHTML = '<span class="sx-kin">' + esc(kin) + '</span>' +
           '<span class="sx-dun">' + esc(dunGan) + '</span>' +
           '<span class="sx-jiang">' + esc(jiang) + '</span>' +
-          (notes.length ? '<span class="sx-note">' + esc(notes.join('·')) + '</span>' : '');
+          (notes.length ? '<span class="sx-note" title="' + esc(notes.join('·')) + '">' + (/空/.test(notes.join('')) ? '空' : esc(notes.join('·'))) + '</span>' : '');
       });
     }
 
@@ -1671,10 +1736,10 @@ function decoratePanSheet(box, sourceBody) {
     var dun = xunDun(dayGan, dayZhi);
     $$('.gong', pan).forEach(function (gong) {
       var tp = $('.tp', gong), dp = $('.dp', gong), tj = $('.tj', gong);
-      if (!tp || !dp) return;
+      if (!tp || !dp || $('.gline', gong)) return;
       var z = tp.textContent.trim(), line = document.createElement('span');
       line.className = 'gline';
-      var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || '○';
+      var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || (dayGan && dayZhi ? '○' : '');
       tp.parentNode.insertBefore(line, tp); line.appendChild(dg); line.appendChild(tp);
       if (tj) tj.title = TJFULL[tj.textContent.trim()] || tj.textContent.trim();
       if ((marks[z] || []).length) gong.classList.add('sc');
@@ -1691,7 +1756,7 @@ function decoratePanSheet(box, sourceBody) {
       ge = p.textContent.replace(/^格\s*[：:]?\s*/, '').split(/[·，。]/)[0].trim();
       return true;
     });
-    if (mid && (dayGan || dayZhi || ge)) {
+    if (mid && !mid.querySelector('span') && (dayGan || dayZhi || ge)) {
       mid.innerHTML = (dayGan || dayZhi ? '<b>' + esc(dayGan + dayZhi + '日') + '</b>' : '') +
         (ge ? '<span>' + esc(ge) + '</span>' : '');
     }
@@ -1770,7 +1835,28 @@ function buildToc(l) {
 }
 
 /* 正文里的式盘：点一格，中间说出这一格怎么读 */
+/* 课文里的式盘中宫原来是空的：从盘上方紧邻的文字里读出日柱／月将／占时填上（读不到就留空，不编）。 */
+function fillPanMid(root) {
+  $$('.panwrap', root).forEach(function (w) {
+    var mid = $('.panmid', w);
+    if (!mid || mid.textContent.trim()) return;
+    var txt = '', el = w.previousElementSibling, n = 0;
+    while (el && n < 8) {
+      txt = el.textContent + ' ' + txt;
+      if (/^H[1-6]$/.test(el.tagName)) break;
+      el = el.previousElementSibling; n++;
+    }
+    var Zc = '子丑寅卯辰巳午未申酉戌亥', Gc = '甲乙丙丁戊己庚辛壬癸';
+    var d = txt.match(new RegExp('([' + Gc + '][' + Zc + '])日'));
+    var j = txt.match(new RegExp('月将[：:]\\s*([' + Zc + '])')) || txt.match(new RegExp('([' + Zc + '])[土木火金水]?将'));
+    var t = txt.match(new RegExp('占时[：:]\\s*([' + Zc + '])')) || txt.match(new RegExp('[' + Gc + '](['  + Zc + '])时'));
+    if (!d && !j && !t) return;
+    mid.innerHTML = (d ? '<b>' + d[1] + '日</b>' : '') + (j ? '<span>' + j[1] + '将</span>' : '') +
+      (t ? '<span>' + t[1] + '时</span>' : '');
+  });
+}
 function bindPan(root) {
+  fillPanMid(root);
   $$('.pan .gong', root).forEach(function (g) {
     g.onclick = function () {
       var p = g.closest('.pan'), mid = $('.panmid', p);
@@ -1784,7 +1870,58 @@ function bindPan(root) {
     };
   });
 }
+/* 课文里的盘原稿顺序是 天地盘→四课→三传；统一改成旧版习惯的 三传→四课→式盘。
+   「单元」＝盘块＋它上方的小标签段（如「天地盘」「四课」「三传」）；只重排相邻的完整一组，原文不动。 */
+function reorderPans(root) {
+  var RANK = { sanchuan: 0, sike: 1, panwrap: 2 };
+  function kind(el) {
+    if (!el || !el.classList) return null;
+    return el.classList.contains('sanchuan') ? 'sanchuan' : el.classList.contains('sike') ? 'sike' :
+           el.classList.contains('panwrap') ? 'panwrap' : null;
+  }
+  function isLabel(el) {
+    return el && el.tagName === 'P' && el.textContent.trim().length <= 40 &&
+      /^(天地盘|四课|三传)/.test(el.textContent.trim()) && !kind(el);
+  }
+  var parents = [];
+  $$('.panwrap, .sike, .sanchuan', root).forEach(function (el) {
+    if (el.parentNode && parents.indexOf(el.parentNode) < 0) parents.push(el.parentNode);
+  });
+  parents.forEach(function (par) {
+    var kids = [].slice.call(par.children), i = 0;
+    while (i < kids.length) {
+      // 收集连续的单元：[标签]+盘块
+      var units = [], j = i;
+      while (j < kids.length) {
+        var lab = null, k = j;
+        if (isLabel(kids[k]) && kind(kids[k + 1])) { lab = kids[k]; k++; }
+        if (!kind(kids[k])) break;
+        units.push({ els: lab ? [lab, kids[k]] : [kids[k]], kind: kind(kids[k]) });
+        j = k + 1;
+      }
+      var kinds = units.map(function (u) { return u.kind; });
+      if (units.length >= 2 && new Set(kinds).size === units.length) {
+        var sorted = units.slice().sort(function (a, b) { return RANK[a.kind] - RANK[b.kind]; });
+        var same = sorted.every(function (u, n) { return u === units[n]; });
+        if (!same) {
+          var anchor = units[units.length - 1].els.slice(-1)[0].nextSibling;
+          sorted.forEach(function (u) { u.els.forEach(function (e) { par.insertBefore(e, anchor); }); });
+        }
+        if (kinds.length === 3) {            // 三传/四课/式盘齐了：包成一组，套上与全盘弹层相同的装饰
+          var wrap = document.createElement('div');
+          wrap.className = 'sheet-pan-group inline-pan';
+          par.insertBefore(wrap, sorted[0].els[0]);
+          sorted.forEach(function (u) { u.els.forEach(function (e) { wrap.appendChild(e); }); });
+        }
+      }
+      i = Math.max(j, i + 1);
+    }
+  });
+}
 function bindDoc(root) {
+  fillPanMid(root);
+  reorderPans(root);
+  decoratePanSheet(root, root);
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
@@ -1821,7 +1958,8 @@ RENDER.ref = function () {
         REF_MODE = b.dataset.refMode;
         $$('.ref-switch button').forEach(function (x) { x.classList.toggle('on', x === b); });
         box.value = '';
-        box.placeholder = REF_MODE === 'basic'
+        box.placeholder = REF_MODE === 'review' ? '搜复习卡，如：三传 贵人 月将 应期'
+          : REF_MODE === 'basic'
           ? '搜初中级要点，如：涉害 旺衰 求财 应期'
           : '搜表名或表里的字，如：寄宫 驿马 涉害';
         paintRef();
@@ -1832,6 +1970,14 @@ RENDER.ref = function () {
   paintRef();
 };
 function paintRef() {
+  if (REF_MODE === 'review') {
+    if (window.DATA_REVIEW) { renderReview(window.DATA_REVIEW); return; }
+    $('#refList').innerHTML = '<p class="muted">正在取复习卡…</p>';
+    needReview().then(renderReview).catch(function () {
+      $('#refList').innerHTML = '<p class="muted">复习卡加载失败，检查网络后重试。</p>';
+    });
+    return;
+  }
   if (REF_MODE === 'basic') {
     if (window.DATA_BASIC_REF) { renderBasicRef(window.DATA_BASIC_REF); return; }
     $('#refList').innerHTML = '<p class="muted">正在取初中级速查…</p>';

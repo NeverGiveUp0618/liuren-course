@@ -749,3 +749,26 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .tw table{width:max-content;min-width:100%}
 .tw td:not(.nw),.tw th:not(.nw){min-width:8em;max-width:26em}
 .tw td:first-child:not(.nw),.tw th:first-child:not(.nw){min-width:5em}
+
+/* ===== 复习卡 ===== */
+.ref-switch{grid-template-columns:repeat(3,1fr)}
+.rv-flow{margin:10px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.rv-flow>summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink2)}
+.rv-stage{display:flex;gap:8px;align-items:flex-start;margin-top:9px}
+.rv-stage>b{flex:0 0 auto;min-width:34px;padding:2px 6px;border-radius:3px;background:var(--blue);color:#fff;font-size:12px;text-align:center}
+.rv-stage>span{display:flex;flex-wrap:wrap;gap:6px}
+.rv-stage button{border:1px solid var(--line);background:var(--blue-s);color:var(--ink);border-radius:12px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+.rv-tip{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 4px;font-size:12.5px;color:var(--ink3)}
+.rv-tip button{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:3px 10px;font-size:12.5px;color:var(--blue);cursor:pointer}
+.refi.rv .rv-q,.refi.rv .rv-a{display:flex;gap:8px;align-items:flex-start;padding:2px 12px 8px}
+.refi.rv .rv-q{cursor:pointer;font-size:14.5px}
+.refi.rv .rv-q>p,.refi.rv .rv-a>p{margin:0}
+.rv i{flex:0 0 auto;font-style:normal;font-size:12px;font-weight:700;border-radius:3px;padding:0 6px;line-height:20px;color:#fff;background:var(--blue)}
+.rv-a i{background:var(--gold)}
+.rv-t{margin:6px 12px 4px;font-weight:700;font-size:13px;color:var(--ink2)}
+.rv-r{margin:8px 12px 4px;padding:8px 10px;border-left:4px solid var(--blue);background:var(--blue-s);border-radius:0 4px 4px 0;font-size:13.5px}
+.rv-r>b{display:block;font-size:12px;color:var(--blue);margin-bottom:2px}
+.rv-r p{margin:2px 0}
+#refList.rv-test .refi.rv:not(.open) .rv-a{display:none}
+.rv-tip>span:first-child button{margin-right:6px}
+.refi.rv .rv-a{padding-bottom:6px}

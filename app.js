@@ -212,6 +212,77 @@ function needRef() {
   });
   return _refLoading;
 }
+var _reviewLoading = null;
+function needReview() {
+  if (window.DATA_REVIEW) return Promise.resolve(window.DATA_REVIEW);
+  if (_reviewLoading) return _reviewLoading;
+  _reviewLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script'), retried = false;
+    el.src = ASSET + 'data/data-review.js?v=' + VER;
+    el.onload = function () { res(window.DATA_REVIEW); };
+    el.onerror = function () {
+      if (!retried && ASSET) { retried = true; el.src = 'data/data-review.js?v=' + VER + '&fallback=1'; return; }
+      _reviewLoading = null; rej(new Error('复习卡加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _reviewLoading;
+}
+/* 十一步断课流程（第 17 课）：复习时当目录用，点每一步直达对应课。 */
+var FLOW = [
+  ['起盘', [['①定四柱', 'L01'], ['②定月将、起天盘', 'L02'], ['③定贵人、排十二天将', 'L03'], ['④日干寄宫、起四课', 'L04'],
+            ['⑤九宗门取三传', 'L05'], ['⑥遁干六亲旬空年命', 'L07']]],
+  ['立局', [['⑦立太极点', 'L14'], ['⑧扫七处', 'L13']]],
+  ['读事', [['⑨定类神', 'L12'], ['⑩读三传', 'L15']]],
+  ['落断', [['⑪定应期', 'L16']]]
+];
+var RV_TEST = false;   // false＝速览（默认，刷完课程快速过要点）；true＝自测（先遮住答案）
+function renderReview(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim(), words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) { return (r.title + r.text).indexOf(w) >= 0; });
+  });
+  var html = '';
+  if (!words.length) {
+    html += '<details class="rv-flow" open><summary>十一步断课流程 · 点一步直达那一课</summary>' + FLOW.map(function (st) {
+      return '<div class="rv-stage"><b>' + st[0] + '</b><span>' + st[1].map(function (x) {
+        return '<button data-go="' + x[1] + '">' + esc(x[0]) + '</button>'; }).join('') + '</span></div>';
+    }).join('') + '</details>';
+    html += '<div class="rv-tip"><span><button id="rvMode">' + (RV_TEST ? '改为速览' : '改为自测') + '</button></span>' +
+      '<span>' + (RV_TEST ? '先答「问」，再点开看答案' : '速览：问与结论全显示，点开看总表') + '</span><button id="rvAll">全部展开</button></div>';
+  }
+  if (!hit.length) { out.innerHTML = html + '<p class="muted">没找到。换个词试试。</p>'; return; }
+  var cur = '';
+  hit.forEach(function (r) {
+    var g = r.kind === 'main' ? '大六壬通解课程' : '大六壬初中级课程';
+    if (g !== cur) { cur = g; html += '<div class="refpart">' + g + '</div>'; }
+    html += '<div class="refi rv"><button class="refh"><b>' + esc(r.title) + '</b></button>' +
+      '<div class="rv-q"><i>问</i>' + r.q + '</div>' +
+      '<div class="rv-a"><i>答</i>' + r.concl + '</div>' +
+      '<div class="refb">' +
+      (r.table ? '<div class="rv-t">' + esc(r.tt) + '</div>' + r.table : '') +
+      (r.rule ? '<div class="rv-r"><b>' + esc(r.rt) + '</b>' + r.rule + '</div>' : '') +
+      '<button class="refj" data-id="' + r.id + '" data-k="' + r.kind + '">到第 ' + r.num + ' 课看全文 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  out.classList.toggle('rv-test', RV_TEST);
+  var md_ = $('#rvMode', out);
+  if (md_) md_.onclick = function () { RV_TEST = !RV_TEST; renderReview(all); };
+  $$('.rv-stage button', out).forEach(function (b) { b.onclick = function () { show('lesson', b.dataset.go); }; });
+  var all_ = $('#rvAll', out);
+  if (all_) all_.onclick = function () {
+    var open = all_.textContent === '全部展开';
+    $$('.refi.rv', out).forEach(function (d) { d.classList.toggle('open', open); });
+    all_.textContent = open ? '全部收起' : '全部展开';
+  };
+  $$('.refi', out).forEach(function (d) {
+    var head = d.querySelector('.refh'), q = d.querySelector('.rv-q');
+    head.onclick = function () { d.classList.toggle('open'); };
+    if (q) q.onclick = head.onclick;
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show(j.dataset.k === 'basic' ? 'basiclesson' : 'lesson', j.dataset.id); };
+  });
+}
 var _basicRefLoading = null;
 function needBasicRef() {
   if (window.DATA_BASIC_REF) return Promise.resolve(window.DATA_BASIC_REF);
@@ -1893,7 +1964,8 @@ RENDER.ref = function () {
         REF_MODE = b.dataset.refMode;
         $$('.ref-switch button').forEach(function (x) { x.classList.toggle('on', x === b); });
         box.value = '';
-        box.placeholder = REF_MODE === 'basic'
+        box.placeholder = REF_MODE === 'review' ? '搜复习卡，如：三传 贵人 月将 应期'
+          : REF_MODE === 'basic'
           ? '搜初中级要点，如：涉害 旺衰 求财 应期'
           : '搜表名或表里的字，如：寄宫 驿马 涉害';
         paintRef();
@@ -1904,6 +1976,14 @@ RENDER.ref = function () {
   paintRef();
 };
 function paintRef() {
+  if (REF_MODE === 'review') {
+    if (window.DATA_REVIEW) { renderReview(window.DATA_REVIEW); return; }
+    $('#refList').innerHTML = '<p class="muted">正在取复习卡…</p>';
+    needReview().then(renderReview).catch(function () {
+      $('#refList').innerHTML = '<p class="muted">复习卡加载失败，检查网络后重试。</p>';
+    });
+    return;
+  }
   if (REF_MODE === 'basic') {
     if (window.DATA_BASIC_REF) { renderBasicRef(window.DATA_BASIC_REF); return; }
     $('#refList').innerHTML = '<p class="muted">正在取初中级速查…</p>';

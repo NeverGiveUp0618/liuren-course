@@ -41,6 +41,7 @@ run('data/data-extra.js');
 ['q', 'bf', 'mf', 'tj'].forEach(k => fs.readdirSync(path.join(dir, 'data', k)).sort().forEach(f => run('data/' + k + '/' + f)));
 const BODY = () => window.BODY || {};
 run('data/data-ge.js');
+run('data/data-review.js');
 run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
@@ -56,7 +57,12 @@ console.log('\n== 初中级速查 ==');
   ok(new Set(BR.map(x => x.part)).size === 6, '按六个课程分部分组');
   ok(BR.every(x => x.name && x.html && x.text && x.lesson), '每条都有标题、正文、搜索文本和课程出处');
   ok(!BR.some(x => /class="tw"/.test(x.html)), '速查不重复展示天地盘、四课、三传表');
-  ok($$('.ref-switch button').length === 2, '速查页有通解／初中级两个入口');
+  ok($$('.ref-switch button').length === 3, '速查页有通解／初中级／复习卡三个入口');
+  {
+    const RV = window.DATA_REVIEW || [];
+    ok(RV.length === 45 && RV.filter(x => x.kind === 'main').length === 25 && RV.filter(x => x.kind === 'basic').length === 20, '复习卡 45 张：通解 25＋初中级 20');
+    ok(RV.every(x => x.q && x.concl && x.title && x.id), '每张复习卡都有问、答、课名、课号');
+  }
 })();
 
 

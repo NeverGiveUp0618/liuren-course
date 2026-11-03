@@ -182,6 +182,57 @@ def style_basic_lesson(html):
     return html
 
 
+def _callout(md, kind):
+    """取 `> [!kind] 标题` 这个提示框：返回 (标题, 正文md)；没有则 (None, None)。"""
+    m = re.search(r'^> \[!%s\][ \t]*(.*)\n((?:>.*\n?)*)' % kind, md, re.M)
+    if not m:
+        return None, None
+    body = '\n'.join(re.sub(r'^>\s?', '', l) for l in m.group(2).split('\n')).strip()
+    return m.group(1).strip(), body
+
+
+def _first_table(md):
+    """「先看总表…」那一行之后紧跟的表格；返回 (小标题, 表md)。"""
+    m = re.search(r'^\*\*(先看总表[^*]*)\*\*\s*\n\s*\n((?:\|.*\n?)+)', md, re.M)
+    return (m.group(1), m.group(2).strip()) if m else (None, None)
+
+
+def build_review():
+    """复习卡：每课一张——本课问题（先想）→ 点开看结论＋总表＋规则。
+    全部从课文里的提示框和「先看总表」自动抽，不另写一份内容。"""
+    items = []
+    srcs = [('main', os.path.join(HERE, 'content'), r'^(\d\d)-.+\.md$'),
+            ('basic', BASIC_SRC, r'^B(\d\d)-.+\.md$')]
+    for kind, d, pat in srcs:
+        if not os.path.isdir(d):
+            continue
+        for fn_ in sorted(os.listdir(d)):
+            m = re.match(pat, fn_)
+            if not m or (kind == 'main' and not (1 <= int(m.group(1)) <= 25)):
+                continue
+            md = read(os.path.join(d, fn_))
+            _, q = _callout(md, 'question')
+            _, concl = _callout(md, 'conclusion')
+            if kind == 'basic' and not concl:
+                mm = re.search(r'\*\*本课的一句话\*\*：\*\*(.+?)\*\*', md)
+                concl = mm.group(1) if mm else None
+            tt, tab = _first_table(md)
+            rt, rule = _callout(md, 'rule')
+            if not (q and concl):
+                continue
+            title_m = re.search(r'^# (.+)$', md, re.M)
+            title = re.sub(r'^大六壬初中级课程\s*', '', title_m.group(1).strip()) if title_m else fn_
+            items.append({
+                'kind': kind, 'num': int(m.group(1)), 'title': title,
+                'id': ('L%s' if kind == 'main' else 'B%s') % m.group(1),
+                'q': mdlite.md2html(q), 'concl': mdlite.md2html(concl),
+                'tt': (tt or '').replace('先看总表：', ''), 'table': mdlite.md2html(tab) if tab else '',
+                'rt': rt or '', 'rule': mdlite.md2html(rule) if rule else '',
+                'text': mdlite.strip_md('\n'.join(x for x in [q, concl, tab or '', rule or ''] if x)),
+            })
+    return items
+
+
 def _refname(t):
     """表名要短到能在一行里扫过去：去掉「一、」这类序号，冒号后的解释也去掉。
     ⚠️ 只有冒号前还剩得下东西才切——「例：2007年…」切完只剩「例」，那还不如留全句。"""
@@ -951,6 +1002,7 @@ def main():
     ref = build_ref(lessons_md)
     counts['ref'] = len(ref)
     basic_ref = build_basic_ref()
+    review = build_review()
     counts['basicRef'] = len(basic_ref)
     ge = build_ge()
     counts['ge'] = len(ge)
@@ -994,6 +1046,8 @@ def main():
     s12 = write_js('data-tongjie-search.js', 'DATA_TONGJIE_SEARCH', tjsearch)
     s13 = write_js('data-basic-course.js', 'DATA_BASIC_COURSE', basic_lessons)
     s14 = write_js('data-basic-ref.js', 'DATA_BASIC_REF', basic_ref)
+    s15 = write_js('data-review.js', 'DATA_REVIEW', review)
+    print('  复习卡 %d 张（通解 %d／初中级 %d）' % (len(review), sum(1 for x in review if x['kind'] == 'main'), sum(1 for x in review if x['kind'] == 'basic')))
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
