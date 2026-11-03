@@ -173,7 +173,7 @@ def style_basic_lesson(html):
     # 开头一句话是本课的结论卡；课程分部/学习方式降成辅助信息。
     html = re.sub(
         r'<p><strong>本课的一句话</strong>：<strong>(.*?)</strong></p>',
-        r'<div class="basic-lead"><span>本课先抓住</span><b>\1</b></div>', html, count=1, flags=re.S)
+        r'<div class="basic-lead"><span>结论</span><b>\1</b></div>', html, count=1, flags=re.S)
     html = re.sub(r'<blockquote>(<p><strong>课程分部</strong>.*?)</blockquote>',
                   r'<div class="basic-meta">\1</div>', html, count=1, flags=re.S)
     return html

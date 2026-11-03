@@ -209,6 +209,10 @@ def _anchor(t):
     return t or 'h'
 
 
+_CO_LABEL = {'question': '本课问题', 'conclusion': '结论', 'rule': '规则', 'doubt': '存疑',
+             'pitfall': '易错', 'mnemonic': '口诀', 'pre': '前置', 'summary': '本课小结'}
+
+
 def md2html(text, heading_offset=0, collect_headings=None):
     lines = text.replace('\r\n', '\n').split('\n')
     out = []
@@ -218,6 +222,18 @@ def md2html(text, heading_offset=0, collect_headings=None):
         s = line.strip()
         if not s:
             i += 1
+            continue
+        # 折叠块：:::fold 标题 … :::（原书全文等，内容一字不删，只是默认收起）
+        if s.startswith(':::fold'):
+            ftitle = s[len(':::fold'):].strip() or '展开'
+            i += 1
+            buf = []
+            while i < n and lines[i].strip() != ':::':
+                buf.append(lines[i])
+                i += 1
+            i += 1
+            out.append('<details class="fold"><summary>%s</summary>%s</details>'
+                       % (_inline(ftitle), md2html('\n'.join(buf), heading_offset)))
             continue
         # 代码块（课题四柱那种预排文本）
         if s.startswith('```'):
@@ -275,6 +291,15 @@ def md2html(text, heading_offset=0, collect_headings=None):
             while i < n and lines[i].lstrip().startswith('>'):
                 buf.append(re.sub(r'^\s*>\s?', '', lines[i]))
                 i += 1
+            # 固定样式提示框：> [!question] 标题 ／ [!conclusion] ／ [!rule] ／ [!doubt] ／ [!pitfall] ／ [!mnemonic]
+            mco = re.match(r'\[!(\w+)\]\s*(.*)$', buf[0].strip()) if buf else None
+            if mco and mco.group(1) in _CO_LABEL:
+                kind = mco.group(1)
+                title = mco.group(2).strip() or _CO_LABEL[kind]
+                body = md2html('\n'.join(buf[1:]), heading_offset) if len(buf) > 1 else ''
+                out.append('<div class="co co-%s"><div class="co-t">%s</div>%s</div>'
+                           % (kind, _inline(title), body))
+                continue
             inner = md2html('\n'.join(buf), heading_offset)
             j = ''.join(buf)
             cls = ('warn' if '⚠' in j else 'star' if '⭐' in j

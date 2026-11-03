@@ -195,9 +195,9 @@ blockquote.star{background:var(--gold-s);border-left-color:var(--gold)}
 blockquote.tip{background:var(--blue-s);border-left-color:var(--blue)}
 /* 初中级课程：照「命理讲解」的学习层级重排。
    原来的「核心理解 / 步骤 / 实战提醒」只是普通粗体，手机上很难扫读。 */
-.basic-lead{margin:14px 0 10px;padding:13px 15px;border-left:4px solid var(--blue);
-  border-radius:0 8px 8px 0;background:var(--blue-s)}
-.basic-lead span{display:block;font-size:11px;letter-spacing:.12em;color:var(--blue);margin-bottom:3px}
+.basic-lead{margin:14px 0 10px;padding:11px 14px 12px;border:1px solid var(--gold);border-left-width:4px;
+  border-radius:6px;background:var(--gold-s)}
+.basic-lead span{display:inline-block;font-size:12px;letter-spacing:.14em;line-height:20px;padding:0 8px;border-radius:3px;color:#fff;background:var(--gold);font-weight:600;margin-bottom:4px}
 .basic-lead b{display:block;font-family:var(--f-disp);font-size:16.5px;line-height:1.75}
 .basic-meta{margin:0 0 14px;padding:7px 11px;border:1px solid var(--line);border-radius:4px;
   background:var(--surface);color:var(--ink3);font-size:12.5px;line-height:1.7}
@@ -634,3 +634,45 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .qbar .chip.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sbox input{border-radius:12px}
 #courseList .mi,#basicCourseList .mi{display:block;width:100%;box-sizing:border-box}
+
+/* ===== 课文结构化提示框（仿命理精讲：问题→结论→总表→一问一节）===== */
+.co{margin:14px 0;padding:11px 14px 12px;border-radius:6px;border:1px solid var(--line);
+  background:var(--surface);font-size:15px;line-height:1.85;color:var(--ink)}
+.co>:last-child{margin-bottom:0}
+.co p{margin:5px 0}
+.co-t{display:inline-block;margin-bottom:4px;padding:0 8px;border-radius:3px;font-size:12px;
+  letter-spacing:.14em;line-height:20px;font-weight:600;color:#fff;background:var(--ink3)}
+.co-question{background:var(--blue-s);border-color:transparent}
+.co-question .co-t{background:var(--blue)}
+.co-conclusion{background:var(--gold-s);border:1px solid var(--gold);border-left-width:4px}
+.co-conclusion .co-t{background:var(--gold)}
+.co-conclusion{font-size:15.5px;font-weight:500}
+.co-rule{background:var(--paper);border-left:4px solid var(--blue)}
+.co-rule .co-t{background:var(--blue)}
+.co-doubt{background:var(--paper);border:1px dashed var(--gold);border-left:4px solid var(--gold)}
+.co-doubt .co-t{background:var(--gold)}
+.co-pitfall{background:var(--red-s);border-color:transparent;border-left:4px solid var(--red)}
+.co-pitfall .co-t{background:var(--red)}
+.co-mnemonic{background:var(--paper);text-align:center;font-family:var(--f-disp);letter-spacing:.06em;
+  border:1px solid var(--line)}
+.co-mnemonic .co-t{background:var(--g2)}
+.co-pre,.co-summary{background:var(--surface)}
+.co-summary{border-left:4px solid var(--g2)}
+.co-summary .co-t{background:var(--g2)}
+.co-pre{font-size:14px;color:var(--ink2);padding:7px 12px}
+.co-pre .co-t{background:var(--ink3)}
+/* 折叠的原书全文 */
+details.fold{margin:12px 0;border:1px dashed var(--line);border-radius:6px;background:var(--paper)}
+details.fold>summary{cursor:pointer;padding:8px 12px;font-size:13.5px;color:var(--blue);list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"▸ ";}
+details.fold[open]>summary::before{content:"▾ ";}
+details.fold[open]>summary{border-bottom:1px dashed var(--line)}
+details.fold>:not(summary){margin-left:12px;margin-right:12px}
+/* 引文：出处缩成右下角小字，原文用衬线 */
+.doc blockquote.cite{font-size:14.5px}
+.doc blockquote.cite .src{display:block;text-align:right;margin-top:2px}
+/* 宽屏：正文列收窄，表格与盘仍可铺满 */
+@media(min-width:821px){
+  .doc>p,.doc>ul,.doc>ol,.doc>blockquote,.doc>.co,.doc>details.fold{max-width:46em}
+}
