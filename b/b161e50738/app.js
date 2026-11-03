@@ -212,6 +212,27 @@ function needRef() {
   });
   return _refLoading;
 }
+var _basicRefLoading = null;
+function needBasicRef() {
+  if (window.DATA_BASIC_REF) return Promise.resolve(window.DATA_BASIC_REF);
+  if (_basicRefLoading) return _basicRefLoading;
+  _basicRefLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    var retried = false;
+    el.src = ASSET + 'data/data-basic-ref.js?v=' + VER;
+    el.onload = function () { res(window.DATA_BASIC_REF); };
+    el.onerror = function () {
+      if (!retried && ASSET) {
+        retried = true;
+        el.src = 'data/data-basic-ref.js?v=' + VER + '&fallback=1';
+        return;
+      }
+      _basicRefLoading = null; rej(new Error('初中级速查加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _basicRefLoading;
+}
 var _geLoading = null;
 function needGe() {
   if (window.DATA_GE) return Promise.resolve(window.DATA_GE);
@@ -465,6 +486,7 @@ RENDER.home = function () {
   $('#hPan').textContent = c.pan || 0;
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
+  var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
@@ -547,6 +569,7 @@ function paintGeOne(G, n) {
     (next ? '<button class="btn" id="geNext">' + esc(next.name) + ' ›</button>' : '') + '</div>';
   if (prev) $('#gePrev').onclick = function () { show('ge', prev.n); };
   if (next) $('#geNext').onclick = function () { show('ge', next.n); };
+  foldLongDocument($('#geBody'));
 }
 
 /* ── 附篇（源流 / 八要素）──────────────────────────────
@@ -566,6 +589,7 @@ function paintExtra(E, id) {
   // 会清掉卡片却不会清 dataset，必须随正文一起重置增强标记。
   delete extraBody.dataset.z9Restored;
   if (id === 'x83') restoreZongmenGuide(extraBody);
+  foldLongDocument(extraBody);
   bindDoc(extraBody);
 }
 
@@ -981,6 +1005,7 @@ function paintBfOne(B, n) {
     (next ? '<button class="btn" id="bfNext">第 ' + next.n + ' 法 ›</button>' : '') + '</div>';
   if (prev) $('#bfPrev').onclick = function () { show('bifa', prev.n); };
   if (next) $('#bfNext').onclick = function () { show('bifa', next.n); };
+  foldLongDocument($('#bfBody'));
   });
 }
 
@@ -1073,6 +1098,7 @@ function paintQuiz(Q, n) {
   if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
   if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
   buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
+  foldLongDocument($('#quizBody'));
   });
 }
 
@@ -1113,6 +1139,7 @@ function paintMufu(items, n) {
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
     buildStickyPan($('#mfBody'), it.cal);
+    foldLongDocument($('#mfBody'));
   });
 }
 
@@ -1180,6 +1207,7 @@ function paintTongjie(items, id) {
     if (prev) $('#tjPrev').onclick = function () { show('tongjie', prev.id); };
     if (next) $('#tjNext').onclick = function () { show('tongjie', next.id); };
     buildStickyPan($('#tjBody'), it.cal);
+    foldLongDocument($('#tjBody'));
   });
 }
 
@@ -1383,6 +1411,32 @@ function foldLessonSections(root) {
     }
   });
 }
+
+/* 附篇、格局、毕法与案例详情同样按“最大的正文标题”折叠。
+   - 文档第一个 h1 是页名，保留常显；后续 h1 与全部 h2 才是分节。
+   - 上一篇／下一篇导航留在折叠外，不能被最后一节一起吞进去。
+   - 仍沿用 lesson-sec，使搜索定位与目录打开章节的逻辑保持一致。 */
+function foldLongDocument(root) {
+  if (!root || [].slice.call(root.children).some(function (el) { return el.classList && el.classList.contains('long-sec'); })) return;
+  var kids = [].slice.call(root.children), firstH1 = kids.filter(function (el) { return el.tagName === 'H1'; })[0];
+  var hs = kids.filter(function (el) { return el.tagName === 'H2' || (el.tagName === 'H1' && el !== firstH1); });
+  function isPager(el) {
+    return el && el.nodeType === 1 && el.classList.contains('row') &&
+      !!el.querySelector('#gePrev,#geNext,#bfPrev,#bfNext,#qPrev,#qNext,#mfPrev,#mfNext,#tjPrev,#tjNext');
+  }
+  function isHead(el) { return hs.indexOf(el) >= 0; }
+  hs.forEach(function (h) {
+    if (!h.parentNode || h.parentNode !== root) return;
+    var details = document.createElement('details');
+    details.className = 'lesson-sec long-sec';
+    var summary = document.createElement('summary'), content = document.createElement('div');
+    content.className = 'lesson-sec-body';
+    root.insertBefore(details, h); details.appendChild(summary); summary.appendChild(h); details.appendChild(content);
+    while (details.nextSibling && !isHead(details.nextSibling) && !isPager(details.nextSibling)) {
+      content.appendChild(details.nextSibling);
+    }
+  });
+}
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
           el && el.parentElement ? el.parentElement.closest('details.lesson-sec') : null;
@@ -1392,6 +1446,7 @@ function openLessonFold(el) {
 RENDER.outline = function () {
   $('#outlineBody').innerHTML = M.outline || '';
   bindDoc($('#outlineBody'));
+  foldLongDocument($('#outlineBody'));
 };
 
 RENDER.lab = function () {
@@ -1750,6 +1805,7 @@ function bindDoc(root) {
   });
 }
 
+var REF_MODE = 'main';
 RENDER.ref = function () {
   var box = $('#rq');
   if (!box._bound) {
@@ -1757,9 +1813,32 @@ RENDER.ref = function () {
     var t = null;
     box.oninput = function () { clearTimeout(t); t = setTimeout(paintRef, 160); };
   }
+  $$('.ref-switch button').forEach(function (b) {
+    if (!b._bound) {
+      b._bound = true;
+      b.onclick = function () {
+        REF_MODE = b.dataset.refMode;
+        $$('.ref-switch button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        box.value = '';
+        box.placeholder = REF_MODE === 'basic'
+          ? '搜初中级要点，如：涉害 旺衰 求财 应期'
+          : '搜表名或表里的字，如：寄宫 驿马 涉害';
+        paintRef();
+      };
+    }
+    b.classList.toggle('on', b.dataset.refMode === REF_MODE);
+  });
   paintRef();
 };
 function paintRef() {
+  if (REF_MODE === 'basic') {
+    if (window.DATA_BASIC_REF) { renderBasicRef(window.DATA_BASIC_REF); return; }
+    $('#refList').innerHTML = '<p class="muted">正在取初中级速查…</p>';
+    needBasicRef().then(renderBasicRef).catch(function () {
+      $('#refList').innerHTML = '<p class="muted">初中级速查加载失败，检查网络后重试。</p>';
+    });
+    return;
+  }
   // 数据已在手就同步画，别让读者看见一帧空白（与课文、搜索的处理一致）
   if (window.DATA_REF) { renderRef(window.DATA_REF); return; }
   $('#refList').innerHTML = '<p class="muted">正在取速查表…</p>';
@@ -1794,6 +1873,36 @@ function renderRef(all) {
     };
     var j = d.querySelector('.refj');
     if (j) j.onclick = function (e) { e.stopPropagation(); show('lesson', j.dataset.id); };
+  });
+}
+function renderBasicRef(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) {
+      return (r.name + r.part + r.lesson + r.text).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) { out.innerHTML = '<p class="muted">没找到这条要点。换个词试试。</p>'; return; }
+  var html = '', curPart = '', curNum = -1;
+  hit.forEach(function (r) {
+    if (r.part !== curPart) {
+      curPart = r.part;
+      html += '<div class="refpart">' + esc(r.part) + '</div>';
+    }
+    if (r.num !== curNum) {
+      curNum = r.num;
+      html += '<div class="refg basic"><i>' + r.num + '</i><span>' + esc(r.lesson) + '</span></div>';
+    }
+    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
+      '</b><span>第 ' + r.num + ' 课</span></button><div class="refb">' + r.html +
+      '<button class="refj" data-id="B' + ('0' + r.num).slice(-2) + '">到初中级第 ' + r.num + ' 课看上下文 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  $$('.refi', out).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show('basiclesson', j.dataset.id); };
   });
 }
 

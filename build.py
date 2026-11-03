@@ -43,6 +43,9 @@ def one_line(md):
     m = re.search(r'\*\*本课的一句话\*\*：\*\*(.+?)\*\*', md)
     if m:
         return m.group(1).strip()
+    m = re.search(r'\[!conclusion\][^\n]*\n>\s*\*\*(.+?)\*\*', md)
+    if m:
+        return m.group(1).strip()
     m = re.search(r'\*\*一句话\*\*：(.+)', md)
     return m.group(1).strip() if m else ''
 
