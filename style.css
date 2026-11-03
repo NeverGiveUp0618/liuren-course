@@ -776,3 +776,8 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pan-sheet .chuan-mark,.inline-pan .chuan-mark{display:flex;align-items:center;justify-content:center;
   box-sizing:border-box;width:16px;min-width:16px;height:16px;padding:0;line-height:1;font-size:10px;
   font-family:var(--f-body);text-indent:0;letter-spacing:0}
+
+/* ===== 标题自适应：均衡断行；小注与标签缩小、不拆开 ===== */
+.doc h1,.doc h2,.doc h3,.doc h4{text-wrap:balance}
+.doc h2 code,.doc h3 code,.doc h4 code{font-size:.62em;white-space:nowrap;vertical-align:.15em;margin-left:.25em}
+.doc .ht{font-size:.68em;font-weight:400;color:var(--ink3);white-space:nowrap;margin-left:.3em;letter-spacing:0}
