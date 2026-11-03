@@ -743,3 +743,9 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pan-sheet .panmid b,.inline-pan .panmid b{font-size:19px;font-weight:700;color:var(--blue)}
 .pan-sheet .panmid span,.inline-pan .panmid span{font-size:14px;font-weight:700;color:var(--blue)}
 .pan-sheet .sx-note,.inline-pan .sx-note{font-size:11px;color:var(--ink3)}
+
+/* ===== 表格：不再一个字一行；列有最小宽度，放不下就左右滑动 ===== */
+.tw{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.tw table{width:max-content;min-width:100%}
+.tw td:not(.nw),.tw th:not(.nw){min-width:8em;max-width:26em}
+.tw td:first-child:not(.nw),.tw th:first-child:not(.nw){min-width:5em}
