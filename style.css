@@ -701,3 +701,29 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .panmid{flex-direction:column;gap:2px}
 .panmid span{font-family:var(--f-disp);font-size:13px;color:var(--ink2);font-weight:500}
 .panmid b{font-family:var(--f-disp);font-size:17px}
+
+/* ===== 排盘细部：照旧版截图（三传→四课→式盘；字用强调蓝；四课无缝表格；三传居中成行）===== */
+.cr .z,.ke .up{color:var(--blue)!important;font-weight:700}
+.sanchuan{gap:0}
+.cr{border:0;border-bottom:1px solid var(--blue-s);border-radius:0;background:transparent;
+  justify-content:center;gap:12px;padding:8px 6px}
+.cr:last-child{border-bottom:0}
+.cr .z{order:1;font-size:26px}
+.cr .ex{order:2;flex:0 1 auto;color:var(--ink2)}
+.cr .lb{order:3;background:transparent;border:0;color:var(--blue);padding:0;min-width:0;font-size:12px}
+.sike{gap:0;width:min(520px,100%);margin-left:auto;margin-right:auto}
+.sike .ke{flex:1;border-radius:0;margin-left:-1px;min-width:0}
+/* 全盘弹层 */
+.pan-sheet .cr{display:flex;justify-content:center;align-items:center;gap:10px;border:0;
+  border-bottom:1px solid var(--blue-s);padding:7px 4px;background:transparent}
+.pan-sheet .cr:last-child{border-bottom:0}
+.pan-sheet .cr .ex{display:contents}
+.pan-sheet .cr .sx-kin{order:1;min-width:20px;text-align:center}
+.pan-sheet .cr .sx-dun{order:2;min-width:20px;text-align:center}
+.pan-sheet .cr .z{order:3;font-size:30px}
+.pan-sheet .cr .sx-note{order:4;min-width:26px}
+.pan-sheet .cr .sx-jiang{order:5;min-width:20px;text-align:center}
+.pan-sheet .cr .lb{order:6;min-width:34px;font-size:12px;text-align:left;background:transparent;border:0;color:var(--blue)}
+.pan-sheet .sike{gap:0}
+.pan-sheet .ke{border-radius:0;margin-left:-1px;min-width:0;flex:1}
+.gong.sc{background:var(--sc-bg)}
