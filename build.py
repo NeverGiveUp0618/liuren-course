@@ -182,6 +182,21 @@ def style_basic_lesson(html):
     return html
 
 
+def build_mindmap():
+    """总览导图：content/导图.json 是源（手写骨架），这里只校验课号并输出。"""
+    fp = os.path.join(HERE, 'content', '导图.json')
+    if not os.path.exists(fp):
+        return {}
+    mm = json.loads(read(fp))
+    ok = set('L%02d' % n for n in range(1, 26))
+    for b in mm['branches']:
+        for n in b['nodes']:
+            for k in ('go', 'go2'):
+                if n.get(k) and n[k] not in ok:
+                    sys.exit('✗ 导图里的课号不存在：%s（%s）' % (n[k], n['t']))
+    return mm
+
+
 def _callout(md, kind):
     """取 `> [!kind] 标题` 这个提示框：返回 (标题, 正文md)；没有则 (None, None)。"""
     m = re.search(r'^> \[!%s\][ \t]*(.*)\n((?:>.*\n?)*)' % kind, md, re.M)
@@ -1047,6 +1062,7 @@ def main():
     s13 = write_js('data-basic-course.js', 'DATA_BASIC_COURSE', basic_lessons)
     s14 = write_js('data-basic-ref.js', 'DATA_BASIC_REF', basic_ref)
     s15 = write_js('data-review.js', 'DATA_REVIEW', review)
+    s16 = write_js('data-mindmap.js', 'DATA_MINDMAP', build_mindmap())
     print('  复习卡 %d 张（通解 %d／初中级 %d）' % (len(review), sum(1 for x in review if x['kind'] == 'main'), sum(1 for x in review if x['kind'] == 'basic')))
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))

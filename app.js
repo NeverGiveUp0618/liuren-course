@@ -212,6 +212,40 @@ function needRef() {
   });
   return _refLoading;
 }
+var _mindmapLoading = null;
+function needMindmap() {
+  if (window.DATA_MINDMAP) return Promise.resolve(window.DATA_MINDMAP);
+  if (_mindmapLoading) return _mindmapLoading;
+  _mindmapLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script'), retried = false;
+    el.src = ASSET + 'data/data-mindmap.js?v=' + VER;
+    el.onload = function () { res(window.DATA_MINDMAP); };
+    el.onerror = function () {
+      if (!retried && ASSET) { retried = true; el.src = 'data/data-mindmap.js?v=' + VER + '&fallback=1'; return; }
+      _mindmapLoading = null; rej(new Error('导图加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _mindmapLoading;
+}
+/* 总览导图：根→5 大块→节点；节点点开看关键词，再点「进入」跳课文。 */
+function renderMindmap(box, mm) {
+  if (!mm || !mm.branches) { box.innerHTML = ''; return; }
+  var html = '<div class="mm-root"><b>' + esc(mm.title) + '</b><p>' + esc(mm.intro) + '</p></div>';
+  mm.branches.forEach(function (b, i) {
+    html += '<div class="mm-b mm-c' + (i % 5) + ' open"><button class="mm-bh"><b>' + esc(b.t) + '</b><span>' + esc(b.range) + '</span></button><div class="mm-ns">';
+    b.nodes.forEach(function (n) {
+      html += '<div class="mm-n"><button class="mm-nt">' + esc(n.t) + '</button><div class="mm-d"><span>' +
+        n.kw.map(esc).join('</span><span>') + '</span><button class="mm-go" data-go="' + n.go + '">进入' + (n.go2 ? '（上）' : '') + ' ›</button>' +
+        (n.go2 ? '<button class="mm-go" data-go="' + n.go2 + '">进入（下） ›</button>' : '') + '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  box.innerHTML = html;
+  $$('.mm-bh', box).forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; });
+  $$('.mm-nt', box).forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; });
+  $$('.mm-go', box).forEach(function (g) { g.onclick = function () { show('lesson', g.dataset.go); }; });
+}
 var _reviewLoading = null;
 function needReview() {
   if (window.DATA_REVIEW) return Promise.resolve(window.DATA_REVIEW);
@@ -244,6 +278,7 @@ function renderReview(all) {
   });
   var html = '';
   if (!words.length) {
+    html += '<details class="rv-flow rv-mm" open><summary>总览导图 · 先有整体思路</summary><div id="mmBox"></div></details>';
     html += '<details class="rv-flow" open><summary>十一步断课流程 · 点一步直达那一课</summary>' + FLOW.map(function (st) {
       return '<div class="rv-stage"><b>' + st[0] + '</b><span>' + st[1].map(function (x) {
         return '<button data-go="' + x[1] + '">' + esc(x[0]) + '</button>'; }).join('') + '</span></div>';
@@ -266,6 +301,8 @@ function renderReview(all) {
   });
   out.innerHTML = html;
   out.classList.toggle('rv-test', RV_TEST);
+  var mmb = $('#mmBox', out);
+  if (mmb) needMindmap().then(function (mm) { renderMindmap(mmb, mm); });
   var md_ = $('#rvMode', out);
   if (md_) md_.onclick = function () { RV_TEST = !RV_TEST; renderReview(all); };
   $$('.rv-stage button', out).forEach(function (b) { b.onclick = function () { show('lesson', b.dataset.go); }; });
