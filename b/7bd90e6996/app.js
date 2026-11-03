@@ -1677,6 +1677,7 @@ function decoratePanSheet(box, sourceBody) {
       var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || '○';
       tp.parentNode.insertBefore(line, tp); line.appendChild(dg); line.appendChild(tp);
       if (tj) tj.title = TJFULL[tj.textContent.trim()] || tj.textContent.trim();
+      if ((marks[z] || []).length) gong.classList.add('sc');
       (marks[z] || []).forEach(function (m) {
         var badge = document.createElement('span'); badge.className = 'chuan-mark'; badge.textContent = m;
         gong.appendChild(badge);
@@ -1769,7 +1770,28 @@ function buildToc(l) {
 }
 
 /* 正文里的式盘：点一格，中间说出这一格怎么读 */
+/* 课文里的式盘中宫原来是空的：从盘上方紧邻的文字里读出日柱／月将／占时填上（读不到就留空，不编）。 */
+function fillPanMid(root) {
+  $$('.panwrap', root).forEach(function (w) {
+    var mid = $('.panmid', w);
+    if (!mid || mid.textContent.trim()) return;
+    var txt = '', el = w.previousElementSibling, n = 0;
+    while (el && n < 8) {
+      txt = el.textContent + ' ' + txt;
+      if (/^H[1-6]$/.test(el.tagName)) break;
+      el = el.previousElementSibling; n++;
+    }
+    var Zc = '子丑寅卯辰巳午未申酉戌亥', Gc = '甲乙丙丁戊己庚辛壬癸';
+    var d = txt.match(new RegExp('([' + Gc + '][' + Zc + '])日'));
+    var j = txt.match(new RegExp('月将[：:]\\s*([' + Zc + '])')) || txt.match(new RegExp('([' + Zc + '])[土木火金水]?将'));
+    var t = txt.match(new RegExp('占时[：:]\\s*([' + Zc + '])')) || txt.match(new RegExp('[' + Gc + '([' + Zc + '])时'));
+    if (!d && !j && !t) return;
+    mid.innerHTML = (d ? '<b>' + d[1] + '日</b>' : '') + (j ? '<span>' + j[1] + '将</span>' : '') +
+      (t ? '<span>' + t[1] + '时</span>' : '');
+  });
+}
 function bindPan(root) {
+  fillPanMid(root);
   $$('.pan .gong', root).forEach(function (g) {
     g.onclick = function () {
       var p = g.closest('.pan'), mid = $('.panmid', p);

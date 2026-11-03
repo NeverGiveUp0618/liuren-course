@@ -1677,6 +1677,7 @@ function decoratePanSheet(box, sourceBody) {
       var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || '○';
       tp.parentNode.insertBefore(line, tp); line.appendChild(dg); line.appendChild(tp);
       if (tj) tj.title = TJFULL[tj.textContent.trim()] || tj.textContent.trim();
+      if ((marks[z] || []).length) gong.classList.add('sc');
       (marks[z] || []).forEach(function (m) {
         var badge = document.createElement('span'); badge.className = 'chuan-mark'; badge.textContent = m;
         gong.appendChild(badge);

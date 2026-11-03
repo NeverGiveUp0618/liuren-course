@@ -676,3 +676,25 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 @media(min-width:821px){
   .doc>p,.doc>ul,.doc>ol,.doc>blockquote,.doc>.co,.doc>details.fold{max-width:46em}
 }
+
+/* ===== 排盘色块（还原旧版「六壬神课」App 的式盘样式）=====
+   式盘每格有底色；初/中/末三传所在的格是粉色高亮；中宫是带强调色边框的色块；
+   四课每列顶上有一条表头色带；三传的「初/中/末」标签与粉色宫格同色，一眼对应。 */
+:root{--sc-bg:#FFF3F0;--sc-bd:#E6A99F;--sc-ink:#B0382A}
+:root[data-theme="red"]{--sc-bg:#FBE9E4;--sc-bd:#DDA095}
+.pan{background:var(--paper)}
+.gong{background:var(--blue-s)}
+.gong.sc{background:var(--sc-bg);box-shadow:inset 0 0 0 1.5px var(--sc-bd)}
+.panmid{background:var(--paper);border:2px solid var(--blue);color:var(--blue);font-weight:700}
+.panmid b{color:var(--blue)}
+.ke{padding:0 6px 8px;overflow:hidden;background:var(--paper);border-color:var(--pan-line)}
+.ke .lb{order:-1;margin:0 -6px 4px;padding:3px 0;background:var(--blue-s);color:var(--gold);
+  font-weight:700;letter-spacing:.08em;border-bottom:1px solid var(--pan-line)}
+.cr{background:var(--paper);border-color:var(--pan-line)}
+.cr .lb{background:var(--sc-bg);color:var(--sc-ink);border:1px solid var(--sc-bd);border-radius:3px;
+  padding:1px 6px;text-align:center;font-weight:700}
+.pan-sheet .ke{background:var(--paper);border:1px solid var(--pan-line);padding:0 3px 5px}
+.pan-sheet .ke .lb{order:-1;font-size:10px;margin:0 -3px 3px;padding:3px 0}
+.pan-sheet .cr .lb{font-size:10px;padding:1px 2px}
+.spc,.spt{background:var(--blue-s);border-radius:3px}
+.spc.day{background:var(--gold-s)}
