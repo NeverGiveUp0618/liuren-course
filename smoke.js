@@ -886,7 +886,7 @@ async function typeSearch(kw) {
     const css2 = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
     const tabs = $$('.tabbar button');
     ok(tabs.length === 4, `底栏 4 个 tab（${tabs.map(b => b.querySelector('span').textContent).join(' ')}）`);
-    ok(tabs.every(b => ['home', 'courses', 'qlist', 'ref'].includes(b.dataset.tab)),
+    ok(tabs.every(b => ['home', 'courses', 'caselist', 'ref'].includes(b.dataset.tab)),
        '四个 tab 指向的都是真实的根屏');
     // ⚠️ 这条是这次改动的起因：套壳在五术堂里时，本站返回键曾被 CSS 藏掉，
     //    而套壳那条「返回首页」是回导航首页、不是回本站 —— 别再把它藏回去。

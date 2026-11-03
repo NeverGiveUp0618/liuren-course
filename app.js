@@ -655,13 +655,13 @@ var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解课程', lesson: '',
                basiccourse: '大六壬初中级课程', basiclesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
-               qlist: '课例题库', quiz: '课例',
+               qlist: '课例题库', quiz: '课例', caselist: '案例',
                mflist: '王牧夫入门案例', mufu: '王牧夫案例',
                tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
-var ROOTS = { home: 1, courses: 1, qlist: 1, ref: 1 };
+var ROOTS = { home: 1, courses: 1, qlist: 1, caselist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -757,6 +757,8 @@ RENDER.home = function () {
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
+  var cm = $('#cMufu'); if (cm) cm.textContent = c.mufu || '—';
+  var ct = $('#cTongjie'); if (ct) ct.textContent = c.tongjie || '—';
   var mtc = $('#mTongjieCourse'); if (mtc) mtc.textContent = c.lesson || '—';
   var mbc = $('#mBasicCourse'); if (mbc) mbc.textContent = c.basicLesson || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
@@ -2301,7 +2303,7 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '王牧夫', '通解案例', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
@@ -2311,8 +2313,6 @@ function startSources(onMore) {
   needBasicCourse().then(add(function (r) { SRC['初中级课文'] = []; r.forEach(function (l) { put('初中级课文', { g: '初中级课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['basiclesson', l.id], body: '#basicLessonBody' }); }); })).catch(function () {});
   needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
   needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
-  needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
-  needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
   needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
   Promise.all([needTongjie(), needTongjieSearch()]).then(add(function (pair) {
     var full = {}; (pair[1] || []).forEach(function (x) { full[x.id] = x.text; });

@@ -875,3 +875,6 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pan-derive{margin:6px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .pan-derive>summary{cursor:pointer;padding:8px 12px;font-size:13px;color:var(--blue);font-weight:600}
 .pan-derive .z9-case-derive{margin:0;border:0;padding:4px 12px 10px}
+
+.mi[hidden]{display:none}
+.case-card{margin:0 0 12px}
