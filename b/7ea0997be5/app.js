@@ -1692,6 +1692,9 @@ function foldLongDocument(root) {
       content.appendChild(details.nextSibling);
     }
   });
+  // 整篇只有一节时没必要折叠，直接展开（如格局详解里的单条课格）
+  var secs = [].slice.call(root.children).filter(function (el) { return el.classList && el.classList.contains('long-sec'); });
+  if (secs.length === 1) secs[0].open = true;
 }
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
@@ -2536,7 +2539,7 @@ function upgradeLegacyPans(root) {
     timer = 0;
     var els = queue; queue = [];
     els.forEach(function (el) {
-      if (!el.isConnected) return;
+      if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
       try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
     });
   }
@@ -2548,7 +2551,9 @@ function upgradeLegacyPans(root) {
   new MutationObserver(function (ms) {
     ms.forEach(function (m) {
       [].forEach.call(m.addedNodes, function (n) {
-        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+        if (!need(n)) return;
+        var t = n.classList.contains('panwrap') ? n.parentNode : n;
+        if (t) queue.push(t);
       });
     });
     if (queue.length && !timer) timer = setTimeout(flush, 30);
