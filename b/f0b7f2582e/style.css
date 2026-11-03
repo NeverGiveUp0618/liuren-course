@@ -195,9 +195,9 @@ blockquote.star{background:var(--gold-s);border-left-color:var(--gold)}
 blockquote.tip{background:var(--blue-s);border-left-color:var(--blue)}
 /* 初中级课程：照「命理讲解」的学习层级重排。
    原来的「核心理解 / 步骤 / 实战提醒」只是普通粗体，手机上很难扫读。 */
-.basic-lead{margin:14px 0 10px;padding:13px 15px;border-left:4px solid var(--blue);
-  border-radius:0 8px 8px 0;background:var(--blue-s)}
-.basic-lead span{display:block;font-size:11px;letter-spacing:.12em;color:var(--blue);margin-bottom:3px}
+.basic-lead{margin:14px 0 10px;padding:11px 14px 12px;border:1px solid var(--gold);border-left-width:4px;
+  border-radius:6px;background:var(--gold-s)}
+.basic-lead span{display:inline-block;font-size:12px;letter-spacing:.14em;line-height:20px;padding:0 8px;border-radius:3px;color:#fff;background:var(--gold);font-weight:600;margin-bottom:4px}
 .basic-lead b{display:block;font-family:var(--f-disp);font-size:16.5px;line-height:1.75}
 .basic-meta{margin:0 0 14px;padding:7px 11px;border:1px solid var(--line);border-radius:4px;
   background:var(--surface);color:var(--ink3);font-size:12.5px;line-height:1.7}
