@@ -225,13 +225,18 @@ def build_ref(lessons_md):
                     continue
                 # 表名：紧邻上一行若是短说明（**xxx** 或以：结尾）就用它，否则用小标题
                 lead = ''
+                skip_ref = False
                 for j in range(start - 1, max(-1, start - 3), -1):
                     t = lines[j].strip()
                     if not t:
                         continue
+                    if '先看总表' in t:     # 课首总表是课内摘要，别混进「速查」
+                        skip_ref = True
                     if len(t) <= 40 and not t.startswith(('|', '>', '-', '#')):
                         lead = re.sub(r'[*`（(].*', '', t).strip('：: ')
                     break
+                if skip_ref:
+                    continue
                 # ⭐ 盘类的表按结构特征直接命名——同一节里三张盘若都取上方那句引导语，
                 #    会出现三个同名条目（第 1 课就是「先看一眼完整的课」×3）。
                 head = block[0]

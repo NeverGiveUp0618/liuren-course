@@ -553,18 +553,23 @@ async function typeSearch(kw) {
   console.log('\n== 搜索跳转要滚到那一处，不是回课文顶部 ==');
   await typeSearch('中气');
   scrolls = [];
-  $$('#sres .sr')[0].onclick();
-  ok(!!$('#lessonBody mark.hit'), '命中处套上了 mark.hit');
+  {
+    // 选一篇还没进过历史栈的课来点：若目标已在栈里，show() 走 history.go，返回栈的断言就不是测的这件事
+    const cand = $$('#sres .sr[data-id^="L"]');
+    (cand[cand.length - 1] || $$('#sres .sr')[0]).onclick();
+  }
+  await sleep(80);   // 目标课若已在历史栈里，show() 走 history.go，是异步的
+  ok(!!$('#lessonBody mark.hit, #basicLessonBody mark.hit'), '命中处套上了 mark.hit');
   ok(scrolls.includes('into'), '滚到了命中处');
 
   console.log('\n== 路由与返回栈 ==');
-  ok($('#s-lesson').classList.contains('active'), '当前在课文屏');
+  ok($('#s-lesson').classList.contains('active') || $('#s-basiclesson').classList.contains('active'), '当前在课文屏');
   window.history.back();
   await sleep(30);
   ok($('#s-search').classList.contains('active'), '返回回到搜索屏（栈没被截断）');
   window.history.forward();
   await sleep(30);
-  ok($('#s-lesson').classList.contains('active'), '前进还能回到课文（popstate 没截断 forward 侧）');
+  ok($('#s-lesson').classList.contains('active') || $('#s-basiclesson').classList.contains('active'), '前进还能回到课文（popstate 没截断 forward 侧）');
 
   console.log('\n== 阅读进度 ==');
   window.scrollY = 400;
