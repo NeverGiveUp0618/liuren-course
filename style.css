@@ -289,6 +289,11 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .readout b{color:var(--ink)}
 /* 搜索 */
 .sbox{margin:12px 0 16px}
+.ref-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}
+.ref-switch button{border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink2);
+  padding:11px 8px;font:600 14px/1.25 var(--f-body);cursor:pointer}
+.ref-switch button.on{border-color:var(--blue);background:var(--blue-s);color:var(--blue)}
+.ref-switch button:focus-visible{outline:2px solid var(--blue)}
 /* ⚠️ 原先只写了 #q（全文搜索），速查 #rq、象法 #xq、金锁玉匙 #jsq 三个框一直是浏览器默认的窄框——统一按 .sbox 选 */
 .sbox input{width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;
   background:var(--paper);color:var(--ink);font-family:var(--f-body);box-sizing:border-box}
@@ -602,6 +607,9 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .refg i{font-style:normal;flex:none;min-width:28px;height:28px;padding:0 6px;border-radius:8px;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--blue),var(--acc2));color:#fff;font-family:var(--f-disp);font-size:14px}
 .refg:has(i)::before{display:none}
+.refpart{margin:24px 0 10px;padding:9px 12px;border-left:5px solid #7665b5;border-radius:8px;
+  background:color-mix(in srgb,#7665b5 10%,var(--paper));color:#6552a6;font-weight:700}
+.refg.basic i{background:linear-gradient(135deg,#7665b5,#9a86d2)}
 .refi{border-radius:12px;margin-bottom:8px}
 .refh{padding:12px 14px;align-items:center}
 .refh b{font-size:15px}

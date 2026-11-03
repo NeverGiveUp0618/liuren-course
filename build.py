@@ -258,6 +258,61 @@ def build_ref(lessons_md):
     return out
 
 
+def build_basic_ref():
+    """把初中级课程按「一个二级标题＝一张速查卡」重组。
+
+    初中级课文不是表格课，不能复用 build_ref() 只抽表格的办法。
+    这里直接取课文里已经梳理好的「核心理解／判断步骤／实战提醒」，
+    只去掉已在课文中单独展示的天地盘、四课、三传表和讲稿出处。
+    这样速查与课文只有一份内容源，后续修课文会自动同步。
+    """
+    out = []
+    if not os.path.isdir(BASIC_SRC):
+        return out
+    pan_labels = {'课件原盘复排', '天地盘', '四课', '三传'}
+    for fn in sorted(os.listdir(BASIC_SRC)):
+        m = re.match(r'^B(\d\d)-(.+)\.md$', fn)
+        if not m:
+            continue
+        num = int(m.group(1))
+        md = read(os.path.join(BASIC_SRC, fn))
+        title_m = re.search(r'^# (.+)$', md, re.M)
+        title = title_m.group(1).strip() if title_m else fn[:-3]
+        part_m = re.search(r'^> \*\*课程分部\*\*：(.+)$', md, re.M)
+        part = part_m.group(1).strip() if part_m else '初中级课程'
+        heads = list(re.finditer(r'^##\s+(.+)$', md, re.M))
+        for i, h in enumerate(heads):
+            end = heads[i + 1].start() if i + 1 < len(heads) else len(md)
+            name = re.sub(r'^[一二三四五六七八九十〇\d]+\s*[.、．]\s*', '', h.group(1)).strip()
+            lines = md[h.end():end].strip().split('\n')
+            kept = []
+            skip_table = False
+            for line in lines:
+                s = line.strip()
+                if s.startswith('|'):
+                    skip_table = True
+                    continue
+                if skip_table and not s:
+                    skip_table = False
+                    continue
+                skip_table = False
+                label = re.match(r'^\*\*([^*]+)\*\*\s*$', s)
+                if label and label.group(1).strip() in pan_labels:
+                    continue
+                if s.startswith('<small>') and s.endswith('</small>'):
+                    continue
+                kept.append(line)
+            body_md = '\n'.join(kept).strip()
+            text = mdlite.strip_md(body_md).strip()
+            if len(text) < 12:
+                continue
+            out.append({
+                'num': num, 'lesson': title, 'part': part, 'name': name,
+                'html': mdlite.md2html(body_md), 'text': text,
+            })
+    return out
+
+
 def build_ge():
     """98-格局详解.md → 一格一条，供「格局」屏按格名查。
     ⚠️ 这不是课，也不进速查表——速查表长在课文里，这里是中册格局汇总的详解。"""
@@ -887,6 +942,8 @@ def main():
 
     ref = build_ref(lessons_md)
     counts['ref'] = len(ref)
+    basic_ref = build_basic_ref()
+    counts['basicRef'] = len(basic_ref)
     ge = build_ge()
     counts['ge'] = len(ge)
     for l in lessons:
@@ -928,6 +985,7 @@ def main():
     s11 = write_js('data-tongjie.js', 'DATA_TONGJIE', tjitems)
     s12 = write_js('data-tongjie-search.js', 'DATA_TONGJIE_SEARCH', tjsearch)
     s13 = write_js('data-basic-course.js', 'DATA_BASIC_COURSE', basic_lessons)
+    s14 = write_js('data-basic-ref.js', 'DATA_BASIC_REF', basic_ref)
     print('  课 %d / 计划 %d　式盘 %d　出处 %d　速查表 %d'
           % (counts['lesson'], counts['planned'], counts['pan'], counts['cite'], counts['ref']))
     print('  data-course.js %7.1f KB' % (s1 / 1024))
@@ -942,6 +1000,7 @@ def main():
           % (s11 / 1024, len(tjitems), ntj, stj / 1024))
     print('  data-tongjie-search.js %.1f KB（只在全站搜索时加载）' % (s12 / 1024))
     print('  data-basic-course.js %.1f KB（初中级课程 %d 课）' % (s13 / 1024, len(basic_lessons)))
+    print('  data-basic-ref.js %.1f KB（初中级速查 %d 条）' % (s14 / 1024, len(basic_ref)))
     print('  data-ge.js     %7.1f KB（格局详解 %d 格）' % (s5 / 1024, counts['ge']))
     print('  data-bifa.js   %7.1f KB（毕法赋 %d 法 / %d 格）'
           % (s6 / 1024, counts['bifa'], counts['bifage']))

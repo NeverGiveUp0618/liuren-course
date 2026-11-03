@@ -212,6 +212,27 @@ function needRef() {
   });
   return _refLoading;
 }
+var _basicRefLoading = null;
+function needBasicRef() {
+  if (window.DATA_BASIC_REF) return Promise.resolve(window.DATA_BASIC_REF);
+  if (_basicRefLoading) return _basicRefLoading;
+  _basicRefLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    var retried = false;
+    el.src = ASSET + 'data/data-basic-ref.js?v=' + VER;
+    el.onload = function () { res(window.DATA_BASIC_REF); };
+    el.onerror = function () {
+      if (!retried && ASSET) {
+        retried = true;
+        el.src = 'data/data-basic-ref.js?v=' + VER + '&fallback=1';
+        return;
+      }
+      _basicRefLoading = null; rej(new Error('初中级速查加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _basicRefLoading;
+}
 var _geLoading = null;
 function needGe() {
   if (window.DATA_GE) return Promise.resolve(window.DATA_GE);
@@ -465,6 +486,7 @@ RENDER.home = function () {
   $('#hPan').textContent = c.pan || 0;
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
+  var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
@@ -1783,6 +1805,7 @@ function bindDoc(root) {
   });
 }
 
+var REF_MODE = 'main';
 RENDER.ref = function () {
   var box = $('#rq');
   if (!box._bound) {
@@ -1790,9 +1813,32 @@ RENDER.ref = function () {
     var t = null;
     box.oninput = function () { clearTimeout(t); t = setTimeout(paintRef, 160); };
   }
+  $$('.ref-switch button').forEach(function (b) {
+    if (!b._bound) {
+      b._bound = true;
+      b.onclick = function () {
+        REF_MODE = b.dataset.refMode;
+        $$('.ref-switch button').forEach(function (x) { x.classList.toggle('on', x === b); });
+        box.value = '';
+        box.placeholder = REF_MODE === 'basic'
+          ? '搜初中级要点，如：涉害 旺衰 求财 应期'
+          : '搜表名或表里的字，如：寄宫 驿马 涉害';
+        paintRef();
+      };
+    }
+    b.classList.toggle('on', b.dataset.refMode === REF_MODE);
+  });
   paintRef();
 };
 function paintRef() {
+  if (REF_MODE === 'basic') {
+    if (window.DATA_BASIC_REF) { renderBasicRef(window.DATA_BASIC_REF); return; }
+    $('#refList').innerHTML = '<p class="muted">正在取初中级速查…</p>';
+    needBasicRef().then(renderBasicRef).catch(function () {
+      $('#refList').innerHTML = '<p class="muted">初中级速查加载失败，检查网络后重试。</p>';
+    });
+    return;
+  }
   // 数据已在手就同步画，别让读者看见一帧空白（与课文、搜索的处理一致）
   if (window.DATA_REF) { renderRef(window.DATA_REF); return; }
   $('#refList').innerHTML = '<p class="muted">正在取速查表…</p>';
@@ -1827,6 +1873,36 @@ function renderRef(all) {
     };
     var j = d.querySelector('.refj');
     if (j) j.onclick = function (e) { e.stopPropagation(); show('lesson', j.dataset.id); };
+  });
+}
+function renderBasicRef(all) {
+  var out = $('#refList'), kw = $('#rq').value.trim();
+  var words = kw.split(/\s+/).filter(Boolean);
+  var hit = (all || []).filter(function (r) {
+    return words.every(function (w) {
+      return (r.name + r.part + r.lesson + r.text).indexOf(w) >= 0;
+    });
+  });
+  if (!hit.length) { out.innerHTML = '<p class="muted">没找到这条要点。换个词试试。</p>'; return; }
+  var html = '', curPart = '', curNum = -1;
+  hit.forEach(function (r) {
+    if (r.part !== curPart) {
+      curPart = r.part;
+      html += '<div class="refpart">' + esc(r.part) + '</div>';
+    }
+    if (r.num !== curNum) {
+      curNum = r.num;
+      html += '<div class="refg basic"><i>' + r.num + '</i><span>' + esc(r.lesson) + '</span></div>';
+    }
+    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
+      '</b><span>第 ' + r.num + ' 课</span></button><div class="refb">' + r.html +
+      '<button class="refj" data-id="B' + ('0' + r.num).slice(-2) + '">到初中级第 ' + r.num + ' 课看上下文 ›</button></div></div>';
+  });
+  out.innerHTML = html;
+  $$('.refi', out).forEach(function (d) {
+    d.querySelector('.refh').onclick = function () { d.classList.toggle('open'); };
+    var j = d.querySelector('.refj');
+    if (j) j.onclick = function (e) { e.stopPropagation(); show('basiclesson', j.dataset.id); };
   });
 }
 

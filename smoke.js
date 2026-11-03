@@ -28,6 +28,7 @@ const run = f => window.eval(fs.readFileSync(path.join(dir, f), 'utf8').replace(
 run('data/data-meta.js');
 run('data/data-course.js');          // 预置，绕开按需加载（另有断言查 ?v=）
 run('data/data-basic-course.js');
+run('data/data-basic-ref.js');
 run('engine.js');            // 起课引擎（起盘台要用）
 run('pan-detect.js');        // 起盘台的成格／毕法判定（页面里按需加载，这里预置）
 run('data/data-ref.js');
@@ -44,6 +45,19 @@ run('app.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
 const M = window.DATA_META, C = window.DATA_COURSE, BC = window.DATA_BASIC_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
+
+// ── 初中级速查 ─────────────────────────────────────────────────
+console.log('\n== 初中级速查 ==');
+(function () {
+  const BR = window.DATA_BASIC_REF || [];
+  ok(BR.length >= 250 && M.counts.basicRef === BR.length,
+     `初中级速查不少于 250 条，且 meta 计数一致（实得 ${BR.length}）`);
+  ok(new Set(BR.map(x => x.num)).size === 20, '20 节初中级课程全部进入速查');
+  ok(new Set(BR.map(x => x.part)).size === 6, '按六个课程分部分组');
+  ok(BR.every(x => x.name && x.html && x.text && x.lesson), '每条都有标题、正文、搜索文本和课程出处');
+  ok(!BR.some(x => /class="tw"/.test(x.html)), '速查不重复展示天地盘、四课、三传表');
+  ok($$('.ref-switch button').length === 2, '速查页有通解／初中级两个入口');
+})();
 
 
 // ── 象法速查（2026-08-30 从 liuren-game 的 XF_FA/XF_LEI/XF_BZG 迁入）──
