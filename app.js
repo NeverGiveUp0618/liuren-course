@@ -1639,7 +1639,7 @@ function decoratePanSheet(box, sourceBody) {
         if (!z) return;
         var shortLab = lab ? lab.textContent.replace('传', '') : '';
         (marks[z.textContent.trim()] = marks[z.textContent.trim()] || []).push(shortLab);
-        if (!ex) return;
+        if (!ex || $('.sx-kin', ex)) return;   // 已装饰过（课文里的盘再被全盘弹层复制时）
         var vals = ex.textContent.trim().split(/[　]+/).filter(Boolean);
         var kinMap = { '父母': '父', '兄弟': '兄', '子孙': '子', '妻财': '财', '官鬼': '官' };
         var kinFull = vals.filter(function (v) { return kinMap[v]; })[0] || '',
@@ -1663,7 +1663,7 @@ function decoratePanSheet(box, sourceBody) {
         ex.innerHTML = '<span class="sx-kin">' + esc(kin) + '</span>' +
           '<span class="sx-dun">' + esc(dunGan) + '</span>' +
           '<span class="sx-jiang">' + esc(jiang) + '</span>' +
-          (notes.length ? '<span class="sx-note">' + esc(notes.join('·')) + '</span>' : '');
+          (notes.length ? '<span class="sx-note" title="' + esc(notes.join('·')) + '">' + (/空/.test(notes.join('')) ? '空' : esc(notes.join('·'))) + '</span>' : '');
       });
     }
 
@@ -1671,10 +1671,10 @@ function decoratePanSheet(box, sourceBody) {
     var dun = xunDun(dayGan, dayZhi);
     $$('.gong', pan).forEach(function (gong) {
       var tp = $('.tp', gong), dp = $('.dp', gong), tj = $('.tj', gong);
-      if (!tp || !dp) return;
+      if (!tp || !dp || $('.gline', gong)) return;
       var z = tp.textContent.trim(), line = document.createElement('span');
       line.className = 'gline';
-      var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || '○';
+      var dg = document.createElement('span'); dg.className = 'dg'; dg.textContent = dun[z] || (dayGan && dayZhi ? '○' : '');
       tp.parentNode.insertBefore(line, tp); line.appendChild(dg); line.appendChild(tp);
       if (tj) tj.title = TJFULL[tj.textContent.trim()] || tj.textContent.trim();
       if ((marks[z] || []).length) gong.classList.add('sc');
@@ -1691,7 +1691,7 @@ function decoratePanSheet(box, sourceBody) {
       ge = p.textContent.replace(/^格\s*[：:]?\s*/, '').split(/[·，。]/)[0].trim();
       return true;
     });
-    if (mid && (dayGan || dayZhi || ge)) {
+    if (mid && !mid.querySelector('span') && (dayGan || dayZhi || ge)) {
       mid.innerHTML = (dayGan || dayZhi ? '<b>' + esc(dayGan + dayZhi + '日') + '</b>' : '') +
         (ge ? '<span>' + esc(ge) + '</span>' : '');
     }
@@ -1842,13 +1842,21 @@ function reorderPans(root) {
           var anchor = units[units.length - 1].els.slice(-1)[0].nextSibling;
           sorted.forEach(function (u) { u.els.forEach(function (e) { par.insertBefore(e, anchor); }); });
         }
+        if (kinds.length === 3) {            // 三传/四课/式盘齐了：包成一组，套上与全盘弹层相同的装饰
+          var wrap = document.createElement('div');
+          wrap.className = 'sheet-pan-group inline-pan';
+          par.insertBefore(wrap, sorted[0].els[0]);
+          sorted.forEach(function (u) { u.els.forEach(function (e) { wrap.appendChild(e); }); });
+        }
       }
       i = Math.max(j, i + 1);
     }
   });
 }
 function bindDoc(root) {
+  fillPanMid(root);
   reorderPans(root);
+  decoratePanSheet(root, root);
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
