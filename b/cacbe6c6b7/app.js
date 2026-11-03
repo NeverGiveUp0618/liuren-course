@@ -212,6 +212,188 @@ function needRef() {
   });
   return _refLoading;
 }
+var _mindmapLoading = null;
+function needMindmap() {
+  if (window.DATA_MINDMAP) return Promise.resolve(window.DATA_MINDMAP);
+  if (_mindmapLoading) return _mindmapLoading;
+  _mindmapLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script'), retried = false;
+    el.src = ASSET + 'data/data-mindmap.js?v=' + VER;
+    el.onload = function () { res(window.DATA_MINDMAP); };
+    el.onerror = function () {
+      if (!retried && ASSET) { retried = true; el.src = 'data/data-mindmap.js?v=' + VER + '&fallback=1'; return; }
+      _mindmapLoading = null; rej(new Error('导图加载失败'));
+    };
+    document.head.appendChild(el);
+  });
+  return _mindmapLoading;
+}
+/* 总览导图：根→5 大块→节点；节点点开看关键词，再点「进入」跳课文。 */
+function mmGo(v) { show('lesson', v); }
+/* 导图（图形版）：左→右的树，带连线；可拖动、双指/滚轮缩放；点节点展开关键词。 */
+function renderMindmap(box, mm) {
+  if (!mm || !mm.branches) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="mm-bar"><button class="on" data-m="g">图</button><button data-m="l">列表</button>' +
+    '<span class="mm-tip">拖动平移 · 双指/滚轮缩放 · 点节点看要点</span><button class="mm-fit">复位</button></div>' +
+    '<div class="mm-view"><svg class="mm-svg"></svg></div><div class="mm-list" hidden></div>';
+  var view = $('.mm-view', box), svg = $('.mm-svg', box), list = $('.mm-list', box);
+  renderMindmapList(list, mm);
+  $$('.mm-bar [data-m]', box).forEach(function (b) {
+    b.onclick = function () {
+      $$('.mm-bar [data-m]', box).forEach(function (x) { x.classList.toggle('on', x === b); });
+      view.hidden = b.dataset.m !== 'g'; list.hidden = b.dataset.m === 'g';
+    };
+  });
+  var NS = 'http://www.w3.org/2000/svg', open = {}, T = { x: 0, y: 0, k: 1 }, fitted = false;
+  function el(tag, attrs, txt) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function tw(s, fs) { var w = 0; for (var i = 0; i < s.length; i++) w += s.charCodeAt(i) > 255 ? fs : fs * 0.58; return w; }
+  function links(n) {
+    var r = [];
+    [['go', n.go], ['go2', n.go2]].forEach(function (p, i) {
+      if (p[1] == null || p[1] === '') return;
+      r.push({ v: p[1], t: (typeof p[1] === 'number') ? '进入第 ' + p[1] + ' 章 ›' : '进入' + (n.go2 ? (i ? '（下）' : '（上）') : '') + ' ›' });
+    });
+    return r;
+  }
+  function wrap(s, n) { var o = []; s = s.replace(/：/, '：\n').split('\n'); s.forEach(function (p) { for (var i = 0; i < p.length; i += n) o.push(p.slice(i, i + n)); }); return o; }
+  function mark(gg, n, cx) {
+    gg.appendChild(el('circle', { cx: cx, cy: n.y, r: 7, class: 'mm-mk' + (n.on ? ' on' : '') }));
+    gg.appendChild(el('path', { d: 'M' + (cx - 3.5) + ',' + n.y + 'h7' + (n.on ? '' : 'M' + cx + ',' + (n.y - 3.5) + 'v7'), class: 'mm-mkp' + (n.on ? ' on' : '') }));
+  }
+  function draw() {
+    svg.innerHTML = '';
+    var g = el('g', {}), FS = 13, KH = 26, GAP = 40;
+    // 1) 建树：根→大块→节点→（要点 / 章节小标题→更细） ；open 控制展开
+    function build() {
+      var root = { t: mm.title, d: 0, ch: [], key: 'r' };
+      mm.branches.forEach(function (b, bi) {
+        var B = { t: b.t, sub: b.range, d: 1, c: bi % 5, key: 'b' + bi, ch: [], par: root }; root.ch.push(B);
+        b.nodes.forEach(function (n, ni) {
+          var key = bi + '-' + ni, N = { t: n.t, d: 2, c: bi % 5, key: key, ch: [], par: B, tog: true, on: !!open[key] };
+          B.ch.push(N);
+          if (!N.on) return;
+          n.kw.forEach(function (k) { N.ch.push({ t: k, d: 3, c: bi % 5, kind: 'kw', ch: [], par: N }); });
+          (n.sec || []).forEach(function (s, si) {
+            var sk = key + '/' + si, has = !!(s.sub && s.sub.length), S = { t: s.t, d: 3, c: bi % 5, kind: has ? 'sec' : 'kw', key: sk, ch: [], par: N, tog: has, on: !!open[sk] };
+            N.ch.push(S);
+            if (S.on) s.sub.forEach(function (u) { S.ch.push({ t: u, d: 4, c: bi % 5, kind: 'kw', ch: [], par: S }); });
+          });
+          links(n).forEach(function (l) { N.ch.push({ t: l.t, d: 3, c: bi % 5, kind: 'go', v: l.v, ch: [], par: N }); });
+        });
+      });
+      return root;
+    }
+    var root = build(), maxd = {};
+    var FSZ = [15, 14, 13, 12, 12];
+    (function walk(n) { n.w = tw(n.t, FSZ[n.d]) + (n.d === 0 ? 24 : n.d < 3 ? 24 : 18) + (n.tog ? 20 : 0); maxd[n.d] = Math.max(maxd[n.d] || 0, n.w); n.ch.forEach(walk); })(root);
+    var xs = [0];
+    for (var d = 1; d <= 4; d++) xs[d] = xs[d - 1] + (maxd[d - 1] || 0) + GAP;
+    var y = 0;
+    (function place(n) {
+      if (!n.ch.length) { var h = n.d <= 2 ? 40 : KH; n.y = y + h / 2; y += h; if (n.d === 1) y += 0; return; }
+      n.ch.forEach(place);
+      n.y = (n.ch[0].y + n.ch[n.ch.length - 1].y) / 2;
+      if (n.d === 1) y += 14;
+    })(root);
+    var lines = [], nodes = [];
+    (function coll(n) { n.ch.forEach(function (c) { lines.push([n, c]); coll(c); }); nodes.push(n); })(root);
+    lines.forEach(function (p) {
+      var a = p[0], b = p[1], ax = xs[a.d] + maxd[a.d] * 0 + a.w, bx = xs[b.d], m = (ax + bx) / 2, c = b.c == null ? 0 : b.c;
+      g.appendChild(el('path', { d: 'M' + ax + ',' + a.y + 'C' + m + ',' + a.y + ' ' + m + ',' + b.y + ' ' + bx + ',' + b.y, class: 'mm-ln', style: '--c:var(--mm' + c + ')' }));
+    });
+    nodes.forEach(function (n) {
+      var x = xs[n.d], c = n.c == null ? 0 : n.c, st = '--c:var(--mm' + c + ')', gg = el('g', {});
+      if (n.d === 0) {
+        var ls = wrap(n.t, 9), rh = ls.length * 20 + 16, rw = 0; ls.forEach(function (l) { rw = Math.max(rw, tw(l, 15)); });
+        n.w = rw + 24;
+        gg.appendChild(el('rect', { x: x, y: n.y - rh / 2, width: n.w, height: rh, rx: 8, class: 'mm-rt' }));
+        ls.forEach(function (l, i) { gg.appendChild(el('text', { x: x + n.w / 2, y: n.y - rh / 2 + 23 + i * 20, 'text-anchor': 'middle', class: 'mm-t0' }, l)); });
+      } else if (n.d === 1) {
+        gg.appendChild(el('rect', { x: x, y: n.y - 17, width: n.w, height: 34, rx: 8, class: 'mm-br', style: st }));
+        gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 1, 'text-anchor': 'middle', class: 'mm-t1' }, n.t));
+        gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 28, 'text-anchor': 'middle', class: 'mm-t3' }, n.sub));
+      } else if (n.d === 2) {
+        gg.setAttribute('class', 'mm-nd' + (n.on ? ' on' : '')); gg.style.cursor = 'pointer';
+        gg.appendChild(el('rect', { x: x, y: n.y - 15, width: n.w, height: 30, rx: 8, class: 'mm-no', style: st }));
+        gg.appendChild(el('text', { x: x + (n.w - 20) / 2 + 2, y: n.y + 5, 'text-anchor': 'middle', class: 'mm-t2' }, n.t));
+        gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); });
+        mark(gg, n, x + n.w - 13);
+      } else {
+        var cls = n.kind === 'go' ? 'mm-gob' : n.kind === 'sec' ? 'mm-sec' + (n.on ? ' on' : '') : 'mm-kw';
+        gg.appendChild(el('rect', { x: x, y: n.y - 11, width: n.w, height: 22, rx: 11, class: cls, style: st }));
+        gg.appendChild(el('text', { x: x + 9, y: n.y + 4, class: n.kind === 'go' ? 'mm-t5' : (n.kind === 'sec' && n.on ? 'mm-t5' : 'mm-t4') }, n.t));
+        if (n.kind === 'go') { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (!moved) mmGo(n.v); }); }
+        if (n.tog) mark(gg, n, x + n.w - 13);
+        if (n.kind === 'sec' && n.tog) { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); }); }
+      }
+      g.appendChild(gg);
+    });
+    svg.appendChild(g);
+    var right = 0; nodes.forEach(function (n) { right = Math.max(right, xs[n.d] + n.w); });
+    svg._g = g; svg._bb = { w: right, h: y, fitW: xs[3] };
+    apply();
+  }
+  function apply() { if (svg._g) svg._g.setAttribute('transform', 'translate(' + T.x + ',' + T.y + ') scale(' + T.k + ')'); }
+  function fit() {
+    var W = view.clientWidth || 340, H = view.clientHeight || 460, bb = svg._bb;
+    var k = Math.min(1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 默认只摆到「要点」列之前，宽度按前三列估
+    T.k = Math.max(0.35, k); T.x = 8; T.y = 8; apply();
+  }
+  var moved = false, pts = {}, last = null;
+  function dist() { var a = Object.keys(pts).map(function (k) { return pts[k]; }); return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); }
+  function zoomAt(cx, cy, f) {
+    var r = view.getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
+    var nk = Math.max(0.25, Math.min(3, T.k * f)); f = nk / T.k;
+    T.x = px - (px - T.x) * f; T.y = py - (py - T.y) * f; T.k = nk; apply();
+  }
+  view.addEventListener('pointerdown', function (e) {
+    pts[e.pointerId] = { x: e.clientX, y: e.clientY }; last = { x: e.clientX, y: e.clientY }; moved = false;
+    if (Object.keys(pts).length === 2) view._d = dist();
+  });
+  view.addEventListener('pointermove', function (e) {
+    if (!pts[e.pointerId]) return;
+    var n = Object.keys(pts).length;
+    pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (n === 2) {
+      var d = dist(); if (view._d) { var a = Object.keys(pts).map(function (k) { return pts[k]; }); zoomAt((a[0].x + a[1].x) / 2, (a[0].y + a[1].y) / 2, d / view._d); }
+      view._d = d; moved = true; return;
+    }
+    var dx = e.clientX - last.x, dy = e.clientY - last.y;
+    if (!moved && Math.hypot(dx, dy) < 4) return;
+    moved = true; T.x += dx; T.y += dy; last = { x: e.clientX, y: e.clientY }; apply();
+  });
+  function up(e) { delete pts[e.pointerId]; view._d = 0; last = { x: e.clientX, y: e.clientY }; setTimeout(function () { if (!Object.keys(pts).length) moved = false; }, 30); }
+  view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up); view.addEventListener('pointerleave', up);
+  view.addEventListener('wheel', function (e) { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+  $('.mm-fit', box).onclick = fit;
+  draw();
+  // 容器首次可见后再适配（details 折叠时宽度为 0）
+  var tries = 0;
+  (function wait() { if (view.clientWidth > 0 || tries++ > 20) { if (!fitted) { fitted = true; fit(); } } else setTimeout(wait, 150); })();
+}
+
+function renderMindmapList(box, mm) {
+  if (!mm || !mm.branches) { box.innerHTML = ''; return; }
+  var html = '<div class="mm-root"><b>' + esc(mm.title) + '</b><p>' + esc(mm.intro) + '</p></div>';
+  mm.branches.forEach(function (b, i) {
+    html += '<div class="mm-b mm-c' + (i % 5) + ' open"><button class="mm-bh"><b>' + esc(b.t) + '</b><span>' + esc(b.range) + '</span></button><div class="mm-ns">';
+    b.nodes.forEach(function (n) {
+      html += '<div class="mm-n"><button class="mm-nt">' + esc(n.t) + '</button><div class="mm-d"><span>' +
+        n.kw.map(esc).join('</span><span>') + '</span><button class="mm-go" data-go="' + n.go + '">进入' + (n.go2 ? '（上）' : '') + ' ›</button>' +
+        (n.go2 ? '<button class="mm-go" data-go="' + n.go2 + '">进入（下） ›</button>' : '') + '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  box.innerHTML = html;
+  $$('.mm-bh', box).forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; });
+  $$('.mm-nt', box).forEach(function (h) { h.onclick = function () { h.parentNode.classList.toggle('open'); }; });
+  $$('.mm-go', box).forEach(function (g) { g.onclick = function () { show('lesson', g.dataset.go); }; });
+}
 var _reviewLoading = null;
 function needReview() {
   if (window.DATA_REVIEW) return Promise.resolve(window.DATA_REVIEW);
@@ -244,6 +426,7 @@ function renderReview(all) {
   });
   var html = '';
   if (!words.length) {
+    html += '<details class="rv-flow rv-mm" open><summary>总览导图 · 先有整体思路</summary><div id="mmBox"></div></details>';
     html += '<details class="rv-flow" open><summary>十一步断课流程 · 点一步直达那一课</summary>' + FLOW.map(function (st) {
       return '<div class="rv-stage"><b>' + st[0] + '</b><span>' + st[1].map(function (x) {
         return '<button data-go="' + x[1] + '">' + esc(x[0]) + '</button>'; }).join('') + '</span></div>';
@@ -266,6 +449,8 @@ function renderReview(all) {
   });
   out.innerHTML = html;
   out.classList.toggle('rv-test', RV_TEST);
+  var mmb = $('#mmBox', out);
+  if (mmb) needMindmap().then(function (mm) { renderMindmap(mmb, mm); });
   var md_ = $('#rvMode', out);
   if (md_) md_.onclick = function () { RV_TEST = !RV_TEST; renderReview(all); };
   $$('.rv-stage button', out).forEach(function (b) { b.onclick = function () { show('lesson', b.dataset.go); }; });
@@ -1924,7 +2109,26 @@ function reorderPans(root) {
     }
   });
 }
+
+/* 标题自适应：标题末尾的「（2026-08-06 追加）」「（面授班）」这类小注缩成小字、整体不拆开；
+   标题本身用 balance 均衡断行，不再因为小注就孤零零换一行。 */
+function tidyHeadings(root) {
+  $$('h1, h2, h3, h4', root).forEach(function (h) {
+    if (h.querySelector('.ht')) return;
+    var host = h.querySelector('.mht') || h, n = host.lastChild;
+    while (n && n.nodeType === 1 && /^(CODE|SPAN)$/.test(n.tagName) && !n.textContent.trim()) n = n.previousSibling;
+    if (!n || n.nodeType !== 3) return;
+    var m = n.nodeValue.match(/^([\s\S]*?\S)\s*([（(][^（()）]{1,18}[）)])\s*$/);
+    if (!m || m[1].replace(/[^一-龥A-Za-z0-9]/g, '').length < 3) return;
+    n.nodeValue = m[1] + ' ';
+    var sm = document.createElement('small');
+    sm.className = 'ht';
+    sm.textContent = m[2];
+    n.parentNode.insertBefore(sm, n.nextSibling);
+  });
+}
 function bindDoc(root) {
+  tidyHeadings(root);
   fillPanMid(root);
   reorderPans(root);
   decoratePanSheet(root, root);
