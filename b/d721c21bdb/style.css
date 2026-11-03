@@ -827,3 +827,54 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 
 .mm-mk{fill:#fff;stroke:var(--c,var(--mm0));stroke-width:1.3}.mm-mk.on{fill:rgba(255,255,255,.9)}.mm-mkp{fill:none;stroke:var(--mm0);stroke-width:1.8;stroke-linecap:round}
 .mm-nd .mm-mk,.mm-nd .mm-mkp{--c:inherit}
+
+/* ===== 象法速查 / 金锁玉匙：卡片版式 ===== */
+.refh{align-items:center}
+.rh-m{flex:1;min-width:0}
+.rh-m b{display:block;font-size:15.5px;line-height:1.4}
+.rh-p{margin:3px 0 0;font-size:12.5px;line-height:1.55;color:var(--ink3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.refi.open .rh-p{display:none}
+.rh-c{margin:5px 0 0;display:flex;flex-wrap:wrap;gap:4px}
+.refh .rh-c span{white-space:nowrap;font-family:inherit;font-size:11.5px;padding:1px 8px;border-radius:10px;background:var(--blue-s);color:var(--blue)}
+.refh .rh-c span.more{background:transparent;color:var(--ink3)}
+.refi.open .rh-c{display:none}
+.jsn{flex:none;font-style:normal;min-width:30px;height:30px;padding:0 6px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7665b5,#9a86d2);margin-right:2px}
+.refi.xfi{--lc:var(--blue);border-left:4px solid var(--lc);box-shadow:0 1px 3px rgba(60,40,120,.05)}
+.refi.xl1{--lc:#2E7D5A}.refi.xl2{--lc:#B07A1A}
+.refi.xfi.open{border-color:var(--lc)}
+.refi.xfi.open .refh b{color:var(--lc)}
+.refi.xfi .refb{border-top:1px dashed var(--line);margin:0 13px;padding:10px 0 12px}
+.refi.xfi .refb ul{margin:0;padding:0;list-style:none}
+.refi.xfi .refb li{margin:0 0 8px;line-height:1.75;font-size:14px}
+.refi.xfi .refb li strong{display:inline-block;margin-right:6px;padding:0 8px;border-radius:10px;font-size:11.5px;font-weight:600;color:#fff;background:var(--lc)}
+.refi.xfi .refb .src{margin:6px 0 0;font-size:11.5px;color:var(--ink3)}
+.refi.jse .refb{border-top:1px dashed var(--line);margin:0 13px;padding:10px 0 12px}
+.refi.jse .jspoem{margin:10px 0;padding:12px 14px;border-radius:10px;background:var(--blue-s);border-left:3px solid var(--blue);text-align:left}
+.refi.jse .jsk{display:inline-block;margin:0 6px 6px 0;padding:2px 10px;border-radius:10px;background:var(--surface);font-size:12.5px}
+
+/* 导图：搜索 / 已复习 */
+.mm-q{flex:1;min-width:0;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:14px;background:var(--paper,var(--bg2));color:var(--ink);font-size:12.5px}
+.mm-prog{font-size:11.5px;color:var(--ink3);white-space:nowrap}
+.mm-nd.dim{opacity:.28}
+.mm-nd.dn .mm-no{fill:#e3f3ea;stroke:#2E7D5A}.mm-nd.dn .mm-t2{fill:#1f6b49}
+.mm-nd.dn.on .mm-no{fill:#2E7D5A}.mm-nd.dn.on .mm-t2{fill:#fff}
+.mm-donebtn{fill:transparent;stroke:#2E7D5A;stroke-width:1.2;stroke-dasharray:3 2}
+
+/* ===== 列表卡片化（毕法赋/格局/课例行）与宽屏两栏 ===== */
+.gerow{display:grid;grid-template-columns:auto 1fr auto;column-gap:11px;align-items:center;margin:0 0 8px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.gerow .gn{grid-row:1/3;grid-column:1;min-width:30px;height:30px;padding:0 5px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,#7665b5,#9a86d2);color:#fff;font-size:13px;font-weight:700;font-family:inherit;text-align:center}
+.gerow .gt{grid-column:2;grid-row:1;font-size:15px;line-height:1.4}
+.gerow .gl{grid-column:2;grid-row:2;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gerow::after{content:"›";grid-column:3;grid-row:1/3;color:var(--ink3);font-size:18px}
+.qrow .qn{min-width:26px;height:22px;line-height:22px;padding:0 5px;border-radius:7px;background:var(--blue-s);text-align:center}
+@media (min-width:1000px){
+  #refList,#xfList,#jsList,#bfRows,#geRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;align-items:start}
+  #refList>*:not(.refi),#xfList>*:not(.refi),#jsList>*:not(.refi),#bfRows>.refg,#geRows>.refg{grid-column:1/-1}
+}
+
+.pan-derive{margin:6px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.pan-derive>summary{cursor:pointer;padding:8px 12px;font-size:13px;color:var(--blue);font-weight:600}
+.pan-derive .z9-case-derive{margin:0;border:0;padding:4px 12px 10px}
+
+.mi[hidden]{display:none}
+.case-card{margin:0 0 12px}

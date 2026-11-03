@@ -234,7 +234,7 @@ function mmGo(v) { show('lesson', v); }
 function renderMindmap(box, mm) {
   if (!mm || !mm.branches) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="mm-bar"><button class="on" data-m="g">图</button><button data-m="l">列表</button>' +
-    '<span class="mm-tip">拖动平移 · 双指/滚轮缩放 · 点节点看要点</span><button class="mm-fit">复位</button></div>' +
+    '<input class="mm-q" type="search" placeholder="搜关键词" title="拖动平移 · 双指/滚轮缩放 · 点节点看要点"><span class="mm-prog"></span><button class="mm-fit">复位</button></div>' +
     '<div class="mm-view"><svg class="mm-svg"></svg></div><div class="mm-list" hidden></div>';
   var view = $('.mm-view', box), svg = $('.mm-svg', box), list = $('.mm-list', box);
   renderMindmapList(list, mm);
@@ -245,6 +245,10 @@ function renderMindmap(box, mm) {
     };
   });
   var NS = 'http://www.w3.org/2000/svg', open = {}, T = { x: 0, y: 0, k: 1 }, fitted = false;
+  var doneKey = 'mm-done:' + location.pathname, done = {};
+  try { done = JSON.parse(localStorage.getItem(doneKey) || '{}') || {}; } catch (e) { done = {}; }
+  function saveDone() { try { localStorage.setItem(doneKey, JSON.stringify(done)); } catch (e) {} }
+  function qwords() { return (($('.mm-q', box) || {}).value || '').trim().split(/\s+/).filter(Boolean); }
   function el(tag, attrs, txt) {
     var e = document.createElementNS(NS, tag);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -270,20 +274,23 @@ function renderMindmap(box, mm) {
     var g = el('g', {}), FS = 13, KH = 26, GAP = 40;
     // 1) 建树：根→大块→节点→（要点 / 章节小标题→更细） ；open 控制展开
     function build() {
-      var root = { t: mm.title, d: 0, ch: [], key: 'r' };
+      var W = qwords(), root = { t: mm.title, d: 0, ch: [], key: 'r' };
       mm.branches.forEach(function (b, bi) {
         var B = { t: b.t, sub: b.range, d: 1, c: bi % 5, key: 'b' + bi, ch: [], par: root }; root.ch.push(B);
         b.nodes.forEach(function (n, ni) {
-          var key = bi + '-' + ni, N = { t: n.t, d: 2, c: bi % 5, key: key, ch: [], par: B, tog: true, on: !!open[key] };
+          var key = bi + '-' + ni, hay = n.t + n.kw.join('') + (n.sec || []).map(function (x) { return x.t + (x.sub || []).join(''); }).join(''),
+            hit = W.length > 0 && W.every(function (w) { return hay.indexOf(w) >= 0; }),
+            N = { t: (done[key] ? '✓ ' : '') + n.t, d: 2, c: bi % 5, key: key, ch: [], par: B, tog: true, on: !!open[key] || hit, dim: W.length > 0 && !hit, dn: !!done[key] };
           B.ch.push(N);
           if (!N.on) return;
           n.kw.forEach(function (k) { N.ch.push({ t: k, d: 3, c: bi % 5, kind: 'kw', ch: [], par: N }); });
           (n.sec || []).forEach(function (s, si) {
-            var sk = key + '/' + si, has = !!(s.sub && s.sub.length), S = { t: s.t, d: 3, c: bi % 5, kind: has ? 'sec' : 'kw', key: sk, ch: [], par: N, tog: has, on: !!open[sk] };
+            var sk = key + '/' + si, has = !!(s.sub && s.sub.length), S = { t: s.t, d: 3, c: bi % 5, kind: has ? 'sec' : 'kw', key: sk, ch: [], par: N, tog: has, on: !!open[sk] || (W.length > 0 && W.every(function (w) { return (s.t + (s.sub || []).join('')).indexOf(w) >= 0; })) };
             N.ch.push(S);
             if (S.on) s.sub.forEach(function (u) { S.ch.push({ t: u, d: 4, c: bi % 5, kind: 'kw', ch: [], par: S }); });
           });
           links(n).forEach(function (l) { N.ch.push({ t: l.t, d: 3, c: bi % 5, kind: 'go', v: l.v, ch: [], par: N }); });
+          N.ch.push({ t: done[key] ? '✓ 已复习（点此取消）' : '标记为已复习', d: 3, c: bi % 5, kind: 'done', nk: key, ch: [], par: N });
         });
       });
       return root;
@@ -318,15 +325,16 @@ function renderMindmap(box, mm) {
         gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 1, 'text-anchor': 'middle', class: 'mm-t1' }, n.t));
         gg.appendChild(el('text', { x: x + n.w / 2, y: n.y + 28, 'text-anchor': 'middle', class: 'mm-t3' }, n.sub));
       } else if (n.d === 2) {
-        gg.setAttribute('class', 'mm-nd' + (n.on ? ' on' : '')); gg.style.cursor = 'pointer';
+        gg.setAttribute('class', 'mm-nd' + (n.on ? ' on' : '') + (n.dn ? ' dn' : '') + (n.dim ? ' dim' : '')); gg.style.cursor = 'pointer';
         gg.appendChild(el('rect', { x: x, y: n.y - 15, width: n.w, height: 30, rx: 8, class: 'mm-no', style: st }));
         gg.appendChild(el('text', { x: x + (n.w - 20) / 2 + 2, y: n.y + 5, 'text-anchor': 'middle', class: 'mm-t2' }, n.t));
         gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); });
         mark(gg, n, x + n.w - 13);
       } else {
-        var cls = n.kind === 'go' ? 'mm-gob' : n.kind === 'sec' ? 'mm-sec' + (n.on ? ' on' : '') : 'mm-kw';
+        var cls = n.kind === 'done' ? 'mm-donebtn' : n.kind === 'go' ? 'mm-gob' : n.kind === 'sec' ? 'mm-sec' + (n.on ? ' on' : '') : 'mm-kw';
         gg.appendChild(el('rect', { x: x, y: n.y - 11, width: n.w, height: 22, rx: 11, class: cls, style: st }));
         gg.appendChild(el('text', { x: x + 9, y: n.y + 4, class: n.kind === 'go' ? 'mm-t5' : (n.kind === 'sec' && n.on ? 'mm-t5' : 'mm-t4') }, n.t));
+        if (n.kind === 'done') { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (moved) return; if (done[n.nk]) delete done[n.nk]; else done[n.nk] = 1; saveDone(); draw(); }); }
         if (n.kind === 'go') { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (!moved) mmGo(n.v); }); }
         if (n.tog) mark(gg, n, x + n.w - 13);
         if (n.kind === 'sec' && n.tog) { gg.style.cursor = 'pointer'; gg.addEventListener('click', function () { if (moved) return; open[n.key] = !open[n.key]; draw(); }); }
@@ -334,6 +342,8 @@ function renderMindmap(box, mm) {
       g.appendChild(gg);
     });
     svg.appendChild(g);
+    var tot = 0; mm.branches.forEach(function (b) { tot += b.nodes.length; });
+    var pg = $('.mm-prog', box); if (pg) pg.textContent = '已复习 ' + Object.keys(done).length + '/' + tot;
     var right = 0; nodes.forEach(function (n) { right = Math.max(right, xs[n.d] + n.w); });
     svg._g = g; svg._bb = { w: right, h: y, fitW: xs[3] };
     apply();
@@ -341,7 +351,7 @@ function renderMindmap(box, mm) {
   function apply() { if (svg._g) svg._g.setAttribute('transform', 'translate(' + T.x + ',' + T.y + ') scale(' + T.k + ')'); }
   function fit() {
     var W = view.clientWidth || 340, H = view.clientHeight || 460, bb = svg._bb;
-    var k = Math.min(1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 默认只摆到「要点」列之前，宽度按前三列估
+    var k = Math.min(W > 900 ? 1.7 : 1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 宽屏允许放大，别缩在左上角留大片空白   // 默认只摆到「要点」列之前，宽度按前三列估
     T.k = Math.max(0.35, k); T.x = 8; T.y = 8; apply();
   }
   var moved = false, pts = {}, last = null;
@@ -371,6 +381,7 @@ function renderMindmap(box, mm) {
   view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up); view.addEventListener('pointerleave', up);
   view.addEventListener('wheel', function (e) { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
   $('.mm-fit', box).onclick = fit;
+  $('.mm-q', box).oninput = function () { draw(); };
   draw();
   // 容器首次可见后再适配（details 折叠时宽度为 0）
   var tries = 0;
@@ -644,13 +655,13 @@ var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解课程', lesson: '',
                basiccourse: '大六壬初中级课程', basiclesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
-               qlist: '课例题库', quiz: '课例',
+               qlist: '课例题库', quiz: '课例', caselist: '案例',
                mflist: '王牧夫入门案例', mufu: '王牧夫案例',
                tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
                jinsuo: '金锁玉匙' };
-var ROOTS = { home: 1, courses: 1, qlist: 1, ref: 1 };
+var ROOTS = { home: 1, courses: 1, qlist: 1, caselist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -746,6 +757,8 @@ RENDER.home = function () {
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
+  var cm = $('#cMufu'); if (cm) cm.textContent = c.mufu || '—';
+  var ct = $('#cTongjie'); if (ct) ct.textContent = c.tongjie || '—';
   var mtc = $('#mTongjieCourse'); if (mtc) mtc.textContent = c.lesson || '—';
   var mbc = $('#mBasicCourse'); if (mbc) mbc.textContent = c.basicLesson || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
@@ -1086,8 +1099,10 @@ function renderXf(D) {
   hit.forEach(function (r) {
     var g = r.lib + ' · ' + r.grp;
     if (g !== cur2) { cur2 = g; html += '<div class="refg">' + esc(g) + '</div>'; }
-    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
-      '</b></button><div class="refb">' + r.html +
+    var pv = r.text.replace(/^要点\s*/, '').split('怎么用')[0].trim();
+    if (pv.length > 60) pv = pv.slice(0, 58) + '…';
+    html += '<div class="refi xfi xl' + Math.max(0, libs.map(function (l) { return l.name; }).indexOf(r.lib)) + '"><button class="refh"><div class="rh-m"><b>' + esc(r.name) +
+      '</b>' + (pv ? '<p class="rh-p">' + esc(pv) + '</p>' : '') + '</div></button><div class="refb">' + r.html +
       '<p class="src">〔出处〕' + esc(r.src) + '</p></div></div>';
   });
   $('#xfList').innerHTML = html;
@@ -1123,11 +1138,16 @@ function jsPoem(p) {
   // 诗按句号断行，读起来才像诗；原文里逗号不动
   return esc(p).split('。').filter(Boolean).map(function (x) { return x + '。'; }).join('<br>');
 }
+function jsChips(p) {
+  if (!p || !p.length) return '';
+  var show = p.slice(0, 6).map(function (c) { return '<span>' + c[0] + '加' + c[1] + '</span>'; }).join('');
+  return '<p class="rh-c">' + show + (p.length > 6 ? '<span class="more">等 ' + p.length + ' 格</span>' : '') + '</p>';
+}
 function jsEntryHTML(D, e, open) {
   var pairs = e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   var also = e.also.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-js="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' + esc(pairs || '—') + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b>' + jsChips(e.p) + '</div></button>' +
     '<div class="refb">' +
     (pairs ? '<p class="jsk">相加：' + esc(pairs) + '</p>' : '') +
     (also ? '<p class="jsk">又见：' + esc(also) + '</p>' : '') +
@@ -1139,8 +1159,8 @@ function jsEntryHTML(D, e, open) {
 }
 function jsEntryBHTML(e, open) {
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-jsb="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' +
-    esc(e.cond.split(/[，。（]/)[0]) + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b><p class="rh-p">' +
+    esc(e.cond.split(/[，。（]/)[0]) + '</p></div></button>' +
     '<div class="refb">' +
     '<p class="jsk">条件：' + esc(e.cond) + '</p>' +
     '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
@@ -1692,6 +1712,9 @@ function foldLongDocument(root) {
       content.appendChild(details.nextSibling);
     }
   });
+  // 整篇只有一节时没必要折叠，直接展开（如格局详解里的单条课格）
+  var secs = [].slice.call(root.children).filter(function (el) { return el.classList && el.classList.contains('long-sec'); });
+  if (secs.length === 1) secs[0].open = true;
 }
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
@@ -2133,6 +2156,7 @@ function bindDoc(root) {
   fillPanMid(root);
   reorderPans(root);
   decoratePanSheet(root, root);
+  addPanDerive(root);
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
@@ -2279,7 +2303,7 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '王牧夫', '通解案例', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
@@ -2289,8 +2313,6 @@ function startSources(onMore) {
   needBasicCourse().then(add(function (r) { SRC['初中级课文'] = []; r.forEach(function (l) { put('初中级课文', { g: '初中级课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['basiclesson', l.id], body: '#basicLessonBody' }); }); })).catch(function () {});
   needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
   needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
-  needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
-  needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
   needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
   Promise.all([needTongjie(), needTongjieSearch()]).then(add(function (pair) {
     var full = {}; (pair[1] || []).forEach(function (x) { full[x.id] = x.text; });
@@ -2528,18 +2550,38 @@ function upgradeLegacyPans(root) {
   });
 }
 
+
+/* 课例盘下面补「看怎么取的三传」：用起课引擎按这张盘自己的日柱与天地盘位置复算，
+   且必须与盘上已有的三传完全一致才显示（不一致说明取法口径不同，宁可不显示也不误导）。 */
+function addPanDerive(root) {
+  var E = window.LiurenEngine; if (!E) return;
+  $$('.sheet-pan-group.inline-pan', root).forEach(function (grp) {
+    if (grp.dataset.dv || grp.closest('.stickypan, .pan-sheet, #labPan, .z9-body')) return;
+    grp.dataset.dv = '1';
+    var mid = $('.panmid b', grp), m = mid && mid.textContent.match(/^([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])日/);
+    if (!m) return;
+    var zi = [].filter.call($$('.gong', grp), function (g) { var d = $('.dp', g); return d && d.textContent.trim() === '子'; })[0];
+    var t0 = zi && $('.tp', zi) && $('.tp', zi).textContent.trim();
+    if (!t0) return;
+    var shown = $$('.sanchuan .cr .z', grp).map(function (z) { return z.textContent.trim(); }).join('');
+    var o = E.qike(m[1], t0, '子');
+    if (!o || o.chuan.join('') !== shown) return;
+    var html = zongmenDeriveHTML(o, o.ke).replace(/<p><i>1<\/i>[^]*?<\/p>/,
+      '<p><i>1</i>先查特殊结构：天盘相对地盘的位置（地盘子位上是 ' + t0 + '），日课为 ' + m[1] + '。</p>');
+    grp.insertAdjacentHTML('afterend', '<details class="pan-derive"><summary>看怎么取的三传（逐步推导）</summary>' + html + '</details>');
+  });
+}
+
 /* 兜底：毕法赋/格局/课例题库等屏是按需加载的块，不经过 bindDoc。
    凡是新插入页面、含「未整理」的盘（.panwrap 不在 .sheet-pan-group 里），统一补上 三传→四课→式盘 的整理与色块装饰。 */
 (function () {
   var timer = 0, queue = [];
   function flush() {
-    (window.__pl = window.__pl || []).push('F0');
-    timer = 0; window.__pf = (window.__pf || 0) + 1;
+    timer = 0;
     var els = queue; queue = [];
-    window.__pl = (window.__pl || []); window.__pl.push('flush:' + els.map(function (e) { return (e.id || e.className || e.tagName) + (e.isConnected ? '+' : '-'); }).join(','));
     els.forEach(function (el) {
-      if (!el.isConnected) return;
-      window.__pl.push('el ' + (el.id || el.className)); try { fillPanMid(el); window.__pl.push('a'); upgradeLegacyPans(el); window.__pl.push('b'); reorderPans(el); window.__pl.push('c'); decoratePanSheet(el, el); window.__pl.push('d'); bindPan(el); } catch (e) { window.__pl.push('ERR ' + e); window.__panErr = String(e && e.stack || e).slice(0, 400); }
+      if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
+      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); addPanDerive(el); bindPan(el); } catch (e) {}
     });
   }
   function need(n) {
@@ -2548,13 +2590,13 @@ function upgradeLegacyPans(root) {
     return ps.some(function (p) { return !p.closest('.sheet-pan-group'); });
   }
   new MutationObserver(function (ms) {
-    window.__po = (window.__po || 0) + 1;
     ms.forEach(function (m) {
       [].forEach.call(m.addedNodes, function (n) {
-        (window.__pl = window.__pl || []).push('add:' + (n.tagName || n.nodeType) + '.' + (n.className || '') + ':' + need(n) + '@' + (m.target.id || m.target.className));
-        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+        if (!need(n)) return;
+        var t = n.classList.contains('panwrap') ? n.parentNode : n;
+        if (t) queue.push(t);
       });
     });
-    if (queue.length) { clearTimeout(timer); timer = setTimeout(flush, 30); window.__pl.push('sched'); }
+    if (queue.length && !timer) timer = setTimeout(flush, 30);
   }).observe(document.body, { childList: true, subtree: true });
 })();
