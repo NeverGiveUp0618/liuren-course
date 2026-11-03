@@ -2536,7 +2536,7 @@ function upgradeLegacyPans(root) {
     timer = 0;
     var els = queue; queue = [];
     els.forEach(function (el) {
-      if (!el.isConnected) return;
+      if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
       try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
     });
   }
@@ -2548,7 +2548,9 @@ function upgradeLegacyPans(root) {
   new MutationObserver(function (ms) {
     ms.forEach(function (m) {
       [].forEach.call(m.addedNodes, function (n) {
-        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+        if (!need(n)) return;
+        var t = n.classList.contains('panwrap') ? n.parentNode : n;
+        if (t) queue.push(t);
       });
     });
     if (queue.length && !timer) timer = setTimeout(flush, 30);
