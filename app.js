@@ -2079,6 +2079,7 @@ function reorderPans(root) {
     if (el.parentNode && parents.indexOf(el.parentNode) < 0) parents.push(el.parentNode);
   });
   parents.forEach(function (par) {
+    if (par.classList.contains('sheet-pan-group')) return;   // 已整理过的组，不再重复包
     var kids = [].slice.call(par.children), i = 0;
     while (i < kids.length) {
       // 收集连续的单元：[标签]+盘块
@@ -2472,3 +2473,84 @@ if ('serviceWorker' in navigator) {
 
 // 测试钩子（smoke.js 用）：首页不再有「起课练习」入口（并进综合训练），测试直接走路由
 window.__go = function (scr, id) { show(scr, id || null); };
+
+
+/* 毕法赋详解里的盘是旧写法：「盘 庚寅日 月将 酉 加占时 午」＋四课＋天地盘＋一行「三传 申 → 亥 → 寅」，没有三传块、没有天将。
+   这里用起课引擎按日干支/月将/占时复算整盘（与书上三传逐字核对，不符就原样保留），换成统一的 三传→四课→式盘 色块样式。 */
+function upgradeLegacyPans(root) {
+  var E = window.LiurenEngine; if (!E) return;
+  var ZC = '[子丑寅卯辰巳午未申酉戌亥]';
+  var WX = { 甲:'木',乙:'木',寅:'木',卯:'木',丙:'火',丁:'火',巳:'火',午:'火',戊:'土',己:'土',丑:'土',辰:'土',未:'土',戌:'土',庚:'金',辛:'金',申:'金',酉:'金',壬:'水',癸:'水',子:'水',亥:'水' };
+  var SH = { 木:'火',火:'土',土:'金',金:'水',水:'木' }, KM = { 木:'土',土:'水',水:'火',火:'金',金:'木' };
+  function kin(dg, z) {
+    var a = WX[dg], b = WX[z];
+    return a === b ? '兄弟' : SH[a] === b ? '子孙' : SH[b] === a ? '父母' : KM[a] === b ? '妻财' : '官鬼';
+  }
+  $$('p', root).forEach(function (hp) {
+    var st = hp.firstElementChild;
+    if (!st || st.tagName !== 'STRONG' || st.textContent.trim() !== '盘' || hp.dataset.up) return;
+    var m = hp.textContent.match(new RegExp('([甲乙丙丁戊己庚辛壬癸]' + ZC + ')日.*?月将\\s*(' + ZC + ')\\s*加占时\\s*(' + ZC + ')'));
+    if (!m) return;
+    var els = [], n = hp.nextElementSibling, san = null;
+    while (n && els.length < 6) {
+      var isLab = n.tagName === 'P' && /^(天地盘|四课)$/.test(n.textContent.trim());
+      if (n.tagName === 'P' && /^三传/.test(n.textContent.trim())) { san = n; break; }
+      if (isLab || n.classList.contains('sike') || n.classList.contains('panwrap')) { els.push(n); n = n.nextElementSibling; continue; }
+      break;
+    }
+    var sike = els.filter(function (e) { return e.classList.contains('sike'); })[0];
+    var pw = els.filter(function (e) { return e.classList.contains('panwrap'); })[0];
+    var cm = san && san.textContent.match(new RegExp('三传\\s*(' + ZC + ')\\s*→\\s*(' + ZC + ')\\s*→\\s*(' + ZC + ')'));
+    hp.dataset.up = '1';
+    if (!sike || !pw || !cm) return;
+    var o = E.qike(m[1], m[2], m[3]);
+    if (!o || o.chuan.join('') !== cm[1] + cm[2] + cm[3]) return;   // 与书不符：保持原样，不硬改
+    var rg = o.rgz.charAt(0), rz = o.rgz.charAt(1), gens = tianjiang(rg, o.zs, o.t).tj, dun = xunDun(rg, rz);
+    function jiang(z) { var dp = Z.filter(function (d) { return o.t[d] === z; })[0]; return gens[dp] || ''; }
+    var sc = o.chuan.map(function (z, i) {
+      var ex = (dun[z] || '') + '　' + kin(rg, z) + '　' + (jiang(z) || '—') + (dun[z] ? '' : '　空亡');
+      return '<div class="cr"><span class="lb">' + '初中末'.charAt(i) + '传</span><span class="z w-' + ({ 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' })[WX[z]] + '">' + z + '</span><span class="ex">' + ex + '</span></div>';
+    }).join('');
+    $$('.ke', sike).forEach(function (k) {
+      var lb = $('.lb', k), mm = lb && lb.textContent.match(/第(\d)课/);
+      if (!mm || $('.tj', k)) return;
+      var tj = document.createElement('span'); tj.className = 'tj'; tj.textContent = jiang(o.sk[+mm[1] - 1].shang);
+      k.insertBefore(tj, k.firstChild);
+    });
+    var tmp = document.createElement('div'); tmp.innerHTML = panHTML(o.t, gens, '');
+    var wrap = document.createElement('div'); wrap.className = 'sheet-pan-group inline-pan';
+    wrap.innerHTML = '<div class="sanchuan">' + sc + '</div>';
+    wrap.appendChild(sike); wrap.appendChild(tmp.firstChild);
+    hp.parentNode.insertBefore(wrap, hp.nextSibling);
+    els.forEach(function (e) { if (e !== sike && e !== pw && e.parentNode) e.parentNode.removeChild(e); });
+    pw.parentNode && pw.parentNode.removeChild(pw);
+    san.parentNode.removeChild(san);
+  });
+}
+
+/* 兜底：毕法赋/格局/课例题库等屏是按需加载的块，不经过 bindDoc。
+   凡是新插入页面、含「未整理」的盘（.panwrap 不在 .sheet-pan-group 里），统一补上 三传→四课→式盘 的整理与色块装饰。 */
+(function () {
+  var timer = 0, queue = [];
+  function flush() {
+    timer = 0;
+    var els = queue; queue = [];
+    els.forEach(function (el) {
+      if (!el.isConnected) return;
+      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
+    });
+  }
+  function need(n) {
+    if (n.nodeType !== 1) return false;
+    var ps = n.classList.contains('panwrap') ? [n] : [].slice.call(n.querySelectorAll('.panwrap'));
+    return ps.some(function (p) { return !p.closest('.sheet-pan-group'); });
+  }
+  new MutationObserver(function (ms) {
+    ms.forEach(function (m) {
+      [].forEach.call(m.addedNodes, function (n) {
+        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+      });
+    });
+    if (queue.length && !timer) timer = setTimeout(flush, 30);
+  }).observe(document.body, { childList: true, subtree: true });
+})();
