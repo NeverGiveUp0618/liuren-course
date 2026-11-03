@@ -840,7 +840,11 @@ async function typeSearch(kw) {
     const inline = /<style>([\s\S]*?)<\/style>/.exec(head)[1];
     ok(/\.screen\s*\{[^}]*display:\s*none/.test(inline),
        '⭐ 内联了 .screen{display:none}——否则所有屏会一起堆出来，这是最难看的一种');
-    ok(/main\s*\{[^}]*max-width/.test(inline), '内联了 main 的 max-width（否则内容占满整屏）');
+    ok(/main\s*\{[^}]*max-width/.test(inline), '内联了 main 的移动端 max-width（防首屏闪动）');
+    const wideCss = fs.readFileSync(path.join(dir, 'style.css'), 'utf8').replace(/\s/g, '');
+    ok(/@media\(min-width:821px\)\{main\{max-width:none\}\}/.test(inline) &&
+       /@media\(min-width:821px\)\{main\{max-width:none\}\}/.test(wideCss),
+       '电脑宽屏取消 820px 限宽，内联首屏与正式样式一致');
     ok(/body\s*\{[^}]*background/.test(inline), '内联了底色（否则先白后黑地闪）');
     // ⚠️ 别用 indexOf('style.css')：上面的注释里就有这个字面量，会把位置比错
     ok(head.indexOf('<style>') < head.search(/<link[^>]+stylesheet/),
