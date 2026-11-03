@@ -2154,6 +2154,7 @@ function bindDoc(root) {
   fillPanMid(root);
   reorderPans(root);
   decoratePanSheet(root, root);
+  addPanDerive(root);
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
@@ -2549,6 +2550,28 @@ function upgradeLegacyPans(root) {
   });
 }
 
+
+/* 课例盘下面补「看怎么取的三传」：用起课引擎按这张盘自己的日柱与天地盘位置复算，
+   且必须与盘上已有的三传完全一致才显示（不一致说明取法口径不同，宁可不显示也不误导）。 */
+function addPanDerive(root) {
+  var E = window.LiurenEngine; if (!E) return;
+  $$('.sheet-pan-group.inline-pan', root).forEach(function (grp) {
+    if (grp.dataset.dv || grp.closest('.stickypan, .pan-sheet, #labPan, .z9-body')) return;
+    grp.dataset.dv = '1';
+    var mid = $('.panmid b', grp), m = mid && mid.textContent.match(/^([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])日/);
+    if (!m) return;
+    var zi = [].filter.call($$('.gong', grp), function (g) { var d = $('.dp', g); return d && d.textContent.trim() === '子'; })[0];
+    var t0 = zi && $('.tp', zi) && $('.tp', zi).textContent.trim();
+    if (!t0) return;
+    var shown = $$('.sanchuan .cr .z', grp).map(function (z) { return z.textContent.trim(); }).join('');
+    var o = E.qike(m[1], t0, '子');
+    if (!o || o.chuan.join('') !== shown) return;
+    var html = zongmenDeriveHTML(o, o.ke).replace(/<p><i>1<\/i>[^]*?<\/p>/,
+      '<p><i>1</i>先查特殊结构：天盘相对地盘的位置（地盘子位上是 ' + t0 + '），日课为 ' + m[1] + '。</p>');
+    grp.insertAdjacentHTML('afterend', '<details class="pan-derive"><summary>看怎么取的三传（逐步推导）</summary>' + html + '</details>');
+  });
+}
+
 /* 兜底：毕法赋/格局/课例题库等屏是按需加载的块，不经过 bindDoc。
    凡是新插入页面、含「未整理」的盘（.panwrap 不在 .sheet-pan-group 里），统一补上 三传→四课→式盘 的整理与色块装饰。 */
 (function () {
@@ -2558,7 +2581,7 @@ function upgradeLegacyPans(root) {
     var els = queue; queue = [];
     els.forEach(function (el) {
       if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
-      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
+      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); addPanDerive(el); bindPan(el); } catch (e) {}
     });
   }
   function need(n) {
