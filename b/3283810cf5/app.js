@@ -1086,8 +1086,10 @@ function renderXf(D) {
   hit.forEach(function (r) {
     var g = r.lib + ' · ' + r.grp;
     if (g !== cur2) { cur2 = g; html += '<div class="refg">' + esc(g) + '</div>'; }
-    html += '<div class="refi"><button class="refh"><b>' + esc(r.name) +
-      '</b></button><div class="refb">' + r.html +
+    var pv = r.text.replace(/^要点\s*/, '').split('怎么用')[0].trim();
+    if (pv.length > 60) pv = pv.slice(0, 58) + '…';
+    html += '<div class="refi xfi xl' + Math.max(0, libs.map(function (l) { return l.name; }).indexOf(r.lib)) + '"><button class="refh"><div class="rh-m"><b>' + esc(r.name) +
+      '</b>' + (pv ? '<p class="rh-p">' + esc(pv) + '</p>' : '') + '</div></button><div class="refb">' + r.html +
       '<p class="src">〔出处〕' + esc(r.src) + '</p></div></div>';
   });
   $('#xfList').innerHTML = html;
@@ -1123,11 +1125,16 @@ function jsPoem(p) {
   // 诗按句号断行，读起来才像诗；原文里逗号不动
   return esc(p).split('。').filter(Boolean).map(function (x) { return x + '。'; }).join('<br>');
 }
+function jsChips(p) {
+  if (!p || !p.length) return '';
+  var show = p.slice(0, 6).map(function (c) { return '<span>' + c[0] + '加' + c[1] + '</span>'; }).join('');
+  return '<p class="rh-c">' + show + (p.length > 6 ? '<span class="more">等 ' + p.length + ' 格</span>' : '') + '</p>';
+}
 function jsEntryHTML(D, e, open) {
   var pairs = e.p.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   var also = e.also.map(function (c) { return c[0] + '加' + c[1]; }).join(' · ');
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-js="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' + esc(pairs || '—') + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b>' + jsChips(e.p) + '</div></button>' +
     '<div class="refb">' +
     (pairs ? '<p class="jsk">相加：' + esc(pairs) + '</p>' : '') +
     (also ? '<p class="jsk">又见：' + esc(also) + '</p>' : '') +
@@ -1139,8 +1146,8 @@ function jsEntryHTML(D, e, open) {
 }
 function jsEntryBHTML(e, open) {
   return '<div class="refi jse' + (open ? ' open' : '') + '" data-jsb="' + e.n + '">' +
-    '<button class="refh"><b>' + e.n + '. ' + esc(e.name) + '</b><span>' +
-    esc(e.cond.split(/[，。（]/)[0]) + '</span></button>' +
+    '<button class="refh"><i class="jsn">' + e.n + '</i><div class="rh-m"><b>' + esc(e.name) + '</b><p class="rh-p">' +
+    esc(e.cond.split(/[，。（]/)[0]) + '</p></div></button>' +
     '<div class="refb">' +
     '<p class="jsk">条件：' + esc(e.cond) + '</p>' +
     '<p class="jspoem">' + jsPoem(e.poem) + '</p>' +
@@ -1692,6 +1699,9 @@ function foldLongDocument(root) {
       content.appendChild(details.nextSibling);
     }
   });
+  // 整篇只有一节时没必要折叠，直接展开（如格局详解里的单条课格）
+  var secs = [].slice.call(root.children).filter(function (el) { return el.classList && el.classList.contains('long-sec'); });
+  if (secs.length === 1) secs[0].open = true;
 }
 function openLessonFold(el) {
   var d = el && el.nodeType === 1 ? el.closest('details.lesson-sec') :
@@ -2536,7 +2546,7 @@ function upgradeLegacyPans(root) {
     timer = 0;
     var els = queue; queue = [];
     els.forEach(function (el) {
-      if (!el.isConnected) return;
+      if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
       try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
     });
   }
@@ -2548,7 +2558,9 @@ function upgradeLegacyPans(root) {
   new MutationObserver(function (ms) {
     ms.forEach(function (m) {
       [].forEach.call(m.addedNodes, function (n) {
-        if (need(n)) { queue.push(n.classList.contains('panwrap') ? n.parentNode : n); }
+        if (!need(n)) return;
+        var t = n.classList.contains('panwrap') ? n.parentNode : n;
+        if (t) queue.push(t);
       });
     });
     if (queue.length && !timer) timer = setTimeout(flush, 30);
