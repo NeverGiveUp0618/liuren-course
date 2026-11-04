@@ -877,4 +877,5 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pan-derive .z9-case-derive{margin:0;border:0;padding:4px 12px 10px}
 
 .mi[hidden]{display:none}
-.case-card{margin:0 0 12px}
+.case-card{display:block;width:100%;box-sizing:border-box;margin:0 0 12px}
+.case-card>span{display:block;line-height:1.7}
