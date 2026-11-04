@@ -249,8 +249,8 @@ ok(C.every(l => /class="src"/.test(l.html)), '每课都有出处标注');
 ok(C.every(l => /自测/.test(l.text) && /答案/.test(l.text)), '每课都有自测与答案');
 
 console.log('\n== 首页 ==');
-ok($('#hLesson').textContent === String(C.length), '首页课数＝' + C.length);
-ok($('#hPlan').textContent === String(M.counts.planned), '首页计划课数');
+ok($('#hLesson').textContent === String(C.length + M.counts.basicLesson), '首页课数＝' + (C.length + M.counts.basicLesson));
+ok($('#hPlan').textContent === String(M.counts.planned + M.counts.basicLesson), '首页计划课数');
 ok(+$('#hPan').textContent > 0, '首页统计了式盘数');
 ok(/内容更新于/.test($('#buildInfo').textContent), '显示构建时间');
 const counts = JSON.parse(window.localStorage.getItem('liuren_course_counts') || '{}');

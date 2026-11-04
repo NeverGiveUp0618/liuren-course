@@ -748,9 +748,9 @@ var RENDER = {};
 
 RENDER.home = function () {
   var c = M.counts || {};
-  $('#hLesson').textContent = c.lesson || 0;
-  $('#hPlan').textContent = c.planned || 0;
-  $('#hPan').textContent = c.pan || 0;
+  $('#hLesson').textContent = (c.lesson || 0) + (c.basicLesson || 0);
+  $('#hPlan').textContent = (c.planned || 0) + (c.basicLesson || 0);
+  $('#hPan').textContent = (c.pan || 0) + (c.basicPan || 0);
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';

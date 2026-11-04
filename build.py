@@ -1028,6 +1028,7 @@ def main():
     basic_lessons = build_basic_lessons()
     counts = {'lesson': len(lessons), 'basicLesson': len(basic_lessons), 'planned': TOTAL_PLANNED,
               'pan': sum(l['html'].count('class="pan"') for l in lessons),
+              'basicPan': sum(l['html'].count('class="pan"') for l in basic_lessons),
               'cite': sum(l['html'].count('class="src"') for l in lessons)}
     plan = parse_plan(outline_md)
     done_nums = {l['num'] for l in lessons}
