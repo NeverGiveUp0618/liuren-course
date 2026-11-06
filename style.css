@@ -12,14 +12,14 @@
   --f-body:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --f-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
   --safe-b:env(safe-area-inset-bottom,0px); --tabh:60px;
-  --acc2:#5A4890; --g1:#7060B0; --g2:#2E7D5A; --g3:#8B6914; --g4:#8A7766;
+  --acc2:#5A4890; --gp:#3E6A9E; --g1:#7060B0; --g2:#2E7D5A; --g3:#8B6914; --g4:#8A7766;
 }
 :root[data-theme="red"]{
   --ground:#F5F0E6; --surface:#FDF8F2; --paper:#FFFCF7; --line:#D4C4A0;
   --blue:#A30F28; --blue-s:#EDE7D8; --gold:#8B6914; --gold-s:#F3EAD6;
   --red:#C41230; --red-s:#F8E4E7;
   --pan-bg:#FDF8F2; --pan-line:#C4B49A;
-  --acc2:#8B0020; --g1:#A30F28; --g2:#2E7D5A; --g3:#8B6914; --g4:#8A7766;
+  --acc2:#8B0020; --gp:#3E6A9E; --g1:#A30F28; --g2:#2E7D5A; --g3:#8B6914; --g4:#8A7766;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -563,8 +563,8 @@ mark.hit{background:var(--gold-s);color:var(--ink);border-radius:2px;padding:0 2
 .mgrp span{font-weight:600;font-size:14px;color:var(--ink)}
 .mgrp .sep{display:none}   /* 只为 textContent 保留「学 · …」的读法（smoke 断言组名格式），界面不显示 */
 .mgrp::after{background:var(--gc);opacity:.35;height:2px}
-.mgrp.g1{--gc:var(--g1)} .mgrp.g2{--gc:var(--g2)} .mgrp.g3{--gc:var(--g3)} .mgrp.g4{--gc:var(--g4)}
-.mgrp.g1 ~ .mi{--gc:var(--g1)} .mgrp.g2 ~ .mi{--gc:var(--g2)} .mgrp.g3 ~ .mi{--gc:var(--g3)} .mgrp.g4 ~ .mi{--gc:var(--g4)}
+.mgrp.g1{--gc:var(--g1)} .mgrp.g2{--gc:var(--gp)} .mgrp.g3{--gc:var(--g3)} .mgrp.g4{--gc:var(--g4)}
+.mgrp.g1 ~ .mi{--gc:var(--g1)} .mgrp.g2 ~ .mi{--gc:var(--gp)} .mgrp.g3 ~ .mi{--gc:var(--g3)} .mgrp.g4 ~ .mi{--gc:var(--g4)}
 .menu .mi{position:relative;border-left:4px solid var(--gc,var(--blue));border-radius:12px;padding-right:34px}
 .menu .mi::after{content:"›";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--gc,var(--ink3));opacity:.7}
 .menu .mi b{color:var(--gc,var(--ink))}
