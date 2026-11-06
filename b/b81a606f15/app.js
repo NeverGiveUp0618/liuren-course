@@ -351,7 +351,7 @@ function renderMindmap(box, mm) {
   function apply() { if (svg._g) svg._g.setAttribute('transform', 'translate(' + T.x + ',' + T.y + ') scale(' + T.k + ')'); }
   function fit() {
     var W = view.clientWidth || 340, H = view.clientHeight || 460, bb = svg._bb;
-    var k = Math.min(1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 默认只摆到「要点」列之前，宽度按前三列估
+    var k = Math.min(W > 900 ? 1.7 : 1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 宽屏允许放大，别缩在左上角留大片空白   // 默认只摆到「要点」列之前，宽度按前三列估
     T.k = Math.max(0.35, k); T.x = 8; T.y = 8; apply();
   }
   var moved = false, pts = {}, last = null;
@@ -660,7 +660,7 @@ var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解
                tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
-               jinsuo: '金锁玉匙' };
+               jinsuo: '金锁玉匙', practice: '做题练习', drill: '练习' };
 var ROOTS = { home: 1, courses: 1, qlist: 1, caselist: 1, ref: 1 };
 var pendingFind = null;
 
@@ -748,9 +748,9 @@ var RENDER = {};
 
 RENDER.home = function () {
   var c = M.counts || {};
-  $('#hLesson').textContent = c.lesson || 0;
-  $('#hPlan').textContent = c.planned || 0;
-  $('#hPan').textContent = c.pan || 0;
+  $('#hLesson').textContent = (c.lesson || 0) + (c.basicLesson || 0);
+  $('#hPlan').textContent = (c.planned || 0) + (c.basicLesson || 0);
+  $('#hPan').textContent = (c.pan || 0) + (c.basicPan || 0);
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';
@@ -1764,6 +1764,35 @@ function labUpdate() {
   bindPan($('#labPan'));
   if (typeof window.labFullRender === 'function') window.labFullRender(gan + $('#s-zhi').value, yj, zs);   // 四课三传与成格／毕法初判，见下面 labFullRender
 }
+
+/* 做题练习在 practice.js（题目由 engine.js 现算），按需加载，带 ?v=。
+   practice.js 加载后会把下面两个占位换成真正的渲染函数。 */
+var _prLoading = null, _prStub = {};
+function needPractice() {
+  if (window.LiurenPractice) return Promise.resolve();
+  if (_prLoading) return _prLoading;
+  _prLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'practice.js?v=' + VER;
+    el.onload = function () { res(); };
+    el.onerror = function () { _prLoading = null; rej(new Error('练习脚本加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _prLoading;
+}
+['practice', 'drill'].forEach(function (name) {
+  RENDER[name] = _prStub[name] = function (id) {
+    var box = $(name === 'practice' ? '#practiceBody' : '#drillBody');
+    if (box) box.innerHTML = '<p class="muted center">加载中…</p>';
+    needPractice().then(function () {
+      if (RENDER[name] !== _prStub[name]) RENDER[name](id);
+    }, function () { if (box) box.innerHTML = '<p class="muted center">练习脚本加载失败，请检查网络后重试。</p>'; });
+  };
+});
+
+/* 给 practice.js 用的显式接口：文件头是 'use strict'，别指望靠全局变量互相看见。 */
+window.LRApp = { $: $, $$: $$, esc: esc, load: load, save: save, show: show, panHTML: panHTML, bindPan: bindPan,
+                 zongmenDeriveHTML: zongmenDeriveHTML, RENDER: RENDER };
 
 /* 起盘台的成格／毕法判定在 pan-detect.js（40 KB，_tools/_mk_detect.py 生成），只在起盘台用——按需加载，带 ?v=。 */
 var PD = window.PanDetect || null, _pdLoading = null;

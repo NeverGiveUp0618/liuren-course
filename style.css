@@ -911,3 +911,4 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pq-act .btn.pri,.pq-go .btn.pri{background:var(--blue);color:#fff}
 .pq-done{text-align:center;padding:30px 0}
 .pq-big{font-family:var(--f-disp);font-size:44px;color:var(--blue)}
+.pq-stage{border-left:4px solid var(--gold)}.pq-stage.done{border-left-color:var(--blue)}.pq-stage.done .pq-n{color:var(--blue);font-weight:700}

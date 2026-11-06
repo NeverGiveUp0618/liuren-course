@@ -957,7 +957,7 @@ async function typeSearch(kw) {
     window.localStorage.removeItem('liuren_course_practice');
     window.__go('practice');
     await sleep(20);
-    ok($('#s-practice').classList.contains('active') && $$('.pq-row').length === 10, '练习首页列出 10 类题');
+    ok($('#s-practice').classList.contains('active') && $$('.pq-row').length === 18, '练习首页：2 个阶段过关＋16 类题');
     window.__go('drill', 'mix');
     await sleep(20);
     ok($('#s-drill').classList.contains('active') && $$('.pq-opt').length >= 2, '综合练习出题');
@@ -978,6 +978,16 @@ async function typeSearch(kw) {
       await sleep(20);
       ok($$('.pq-opt').length >= 2, '错题回炉能出题');
     }
+    // 阶段过关：15 题，全选第一项，结果写入 pass 记录
+    window.__go('drill', 'pass:2');
+    await sleep(20);
+    for (let i = 0; i < 15; i++) { $$('.pq-opt')[0].onclick(); $('#pqNext').onclick(); }
+    ok(!!$('.pq-done') && /\/ 15|\d+ \/ 15/.test($('.pq-big').textContent), '阶段过关 15 题后出结果');
+    const st2 = JSON.parse(window.localStorage.getItem('liuren_course_practice') || '{}');
+    ok(st2.pass && st2.pass['2'] && typeof st2.pass['2'].best === 'number', '过关成绩写入本地');
+    window.__go('practice');
+    await sleep(20);
+    ok(/最好|未过|已过关/.test($$('.pq-stage')[1].textContent), '练习首页显示阶段成绩');
   }
 
   console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);
