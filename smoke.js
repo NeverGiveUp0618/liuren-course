@@ -43,6 +43,7 @@ const BODY = () => window.BODY || {};
 run('data/data-ge.js');
 run('data/data-review.js');
 run('app.js');
+run('practice.js');
 const $ = s => doc.querySelector(s);
 const $$ = s => [].slice.call(doc.querySelectorAll(s));
 const M = window.DATA_META, C = window.DATA_COURSE, BC = window.DATA_BASIC_COURSE, Q = window.DATA_QUIZ, GE = window.DATA_GE;
@@ -152,8 +153,8 @@ console.log('\n== 首页分组 ==');
   homeFolds[0].querySelector('summary').click();
   ok(!homeFolds[0].open, '首页再次点击最大标题可以收起');
   const items = $$('.menu .mi');
-  ok(items.length === 12, `入口 12 项一个不少（实得 ${items.length}；两套课程收进一个课程总入口）`);
-  ok(!$('[data-go="train"]') && !$('[data-go="drill"]') && !$('#s-train') && !$('#s-drill'), '做题训练已删干净（综合训练、起课练习）');
+  ok(items.length === 13, `入口 13 项一个不少（含 2026-11-06 新增「做题练习」）（实得 ${items.length}；两套课程收进一个课程总入口）`);
+  ok(!$('[data-go="train"]') && !$('#s-train'), '旧版综合训练、起课练习已删干净（2026-11-06 起新的「做题练习」是 practice/drill 两屏，重新开发）');
   // ⚠️ 每一项都必须落在某个组下面——漏在组外的项在界面上会显得没头没尾
   const orphan = items.filter(el => !el.closest('details.navgrp')).length;
   ok(!orphan, `没有落在组外的入口（${orphan} 项）`);
@@ -946,6 +947,37 @@ async function typeSearch(kw) {
     tabs[3].onclick();
     await sleep(30);
     ok($('#s-ref').classList.contains('active'), '点底栏「速查」直达速查屏');
+  }
+
+
+  // ── 做题练习：首页入口→练习首页→一轮 10 题→记录 ──
+  console.log('\n== 做题练习 ==');
+  {
+    ok(!!$('.mi[data-go="practice"]'), '首页有「做题练习」入口');
+    window.localStorage.removeItem('liuren_course_practice');
+    window.__go('practice');
+    await sleep(20);
+    ok($('#s-practice').classList.contains('active') && $$('.pq-row').length === 10, '练习首页列出 10 类题');
+    window.__go('drill', 'mix');
+    await sleep(20);
+    ok($('#s-drill').classList.contains('active') && $$('.pq-opt').length >= 2, '综合练习出题');
+    for (let i = 0; i < 10; i++) {
+      const stem = $('.pq-stem').textContent;
+      $$('.pq-opt')[0].onclick();
+      ok(i > 0 || !!$('.pq-fb') && /推|落|取|旬|干|将|亲|课|传/.test($('.pq-why').textContent), i === 0 ? '答题后出讲解' : '第 ' + (i + 1) + ' 题可作答');
+      $('#pqNext').onclick();
+      void stem;
+    }
+    ok(!!$('.pq-done'), '10 题后出结果页');
+    const st = JSON.parse(window.localStorage.getItem('liuren_course_practice') || '{}');
+    const tot = Object.values(st.topics || {}).reduce((a, x) => a + x.n, 0);
+    ok(tot === 10, '答题记录写入本地（10 题）');
+    ok((st.wrong || []).length === 10 - Object.values(st.topics).reduce((a, x) => a + x.c, 0), '答错的题进入错题本');
+    if ((st.wrong || []).length) {
+      window.__go('drill', 'wrong');
+      await sleep(20);
+      ok($$('.pq-opt').length >= 2, '错题回炉能出题');
+    }
   }
 
   console.log(`\n${fail ? '✗' : '✓'} 通过 ${pass} 项，失败 ${fail} 项`);

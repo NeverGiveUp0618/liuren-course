@@ -351,7 +351,7 @@ function renderMindmap(box, mm) {
   function apply() { if (svg._g) svg._g.setAttribute('transform', 'translate(' + T.x + ',' + T.y + ') scale(' + T.k + ')'); }
   function fit() {
     var W = view.clientWidth || 340, H = view.clientHeight || 460, bb = svg._bb;
-    var k = Math.min(1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 默认只摆到「要点」列之前，宽度按前三列估
+    var k = Math.min(W > 900 ? 1.7 : 1, (W - 16) / (bb.fitW || bb.w), (H - 16) / bb.h);   // 宽屏允许放大，别缩在左上角留大片空白   // 默认只摆到「要点」列之前，宽度按前三列估
     T.k = Math.max(0.35, k); T.x = 8; T.y = 8; apply();
   }
   var moved = false, pts = {}, last = null;
@@ -655,13 +655,13 @@ var stack = [], pos = 0, cur = { scr: 'home', id: null };
 var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解课程', lesson: '',
                basiccourse: '大六壬初中级课程', basiclesson: '', outline: '学习路线',
                lab: '起盘台', search: '搜索', ref: '速查',
-               qlist: '课例题库', quiz: '课例',
+               qlist: '课例题库', quiz: '课例', caselist: '案例',
                mflist: '王牧夫入门案例', mufu: '王牧夫案例',
                tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
-               jinsuo: '金锁玉匙' };
-var ROOTS = { home: 1, courses: 1, qlist: 1, ref: 1 };
+               jinsuo: '金锁玉匙', practice: '做题练习', drill: '练习' };
+var ROOTS = { home: 1, courses: 1, qlist: 1, caselist: 1, ref: 1 };
 var pendingFind = null;
 
 function _apply(scr, id) {
@@ -748,15 +748,17 @@ var RENDER = {};
 
 RENDER.home = function () {
   var c = M.counts || {};
-  $('#hLesson').textContent = c.lesson || 0;
-  $('#hPlan').textContent = c.planned || 0;
-  $('#hPan').textContent = c.pan || 0;
+  $('#hLesson').textContent = (c.lesson || 0) + (c.basicLesson || 0);
+  $('#hPlan').textContent = (c.planned || 0) + (c.basicLesson || 0);
+  $('#hPan').textContent = (c.pan || 0) + (c.basicPan || 0);
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';
   var mq = $('#mQuiz'); if (mq) mq.textContent = c.quiz || '—';
   var mm = $('#mMufu'); if (mm) mm.textContent = c.mufu || '—';
   var mt = $('#mTongjie'); if (mt) mt.textContent = c.tongjie || '—';
+  var cm = $('#cMufu'); if (cm) cm.textContent = c.mufu || '—';
+  var ct = $('#cTongjie'); if (ct) ct.textContent = c.tongjie || '—';
   var mtc = $('#mTongjieCourse'); if (mtc) mtc.textContent = c.lesson || '—';
   var mbc = $('#mBasicCourse'); if (mbc) mbc.textContent = c.basicLesson || '—';
   var mg = $('#mGe'); if (mg) mg.textContent = c.ge || '—';
@@ -1763,6 +1765,35 @@ function labUpdate() {
   if (typeof window.labFullRender === 'function') window.labFullRender(gan + $('#s-zhi').value, yj, zs);   // 四课三传与成格／毕法初判，见下面 labFullRender
 }
 
+/* 做题练习在 practice.js（题目由 engine.js 现算），按需加载，带 ?v=。
+   practice.js 加载后会把下面两个占位换成真正的渲染函数。 */
+var _prLoading = null, _prStub = {};
+function needPractice() {
+  if (window.LiurenPractice) return Promise.resolve();
+  if (_prLoading) return _prLoading;
+  _prLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'practice.js?v=' + VER;
+    el.onload = function () { res(); };
+    el.onerror = function () { _prLoading = null; rej(new Error('练习脚本加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _prLoading;
+}
+['practice', 'drill'].forEach(function (name) {
+  RENDER[name] = _prStub[name] = function (id) {
+    var box = $(name === 'practice' ? '#practiceBody' : '#drillBody');
+    if (box) box.innerHTML = '<p class="muted center">加载中…</p>';
+    needPractice().then(function () {
+      if (RENDER[name] !== _prStub[name]) RENDER[name](id);
+    }, function () { if (box) box.innerHTML = '<p class="muted center">练习脚本加载失败，请检查网络后重试。</p>'; });
+  };
+});
+
+/* 给 practice.js 用的显式接口：文件头是 'use strict'，别指望靠全局变量互相看见。 */
+window.LRApp = { $: $, $$: $$, esc: esc, load: load, save: save, show: show, panHTML: panHTML, bindPan: bindPan,
+                 zongmenDeriveHTML: zongmenDeriveHTML, RENDER: RENDER };
+
 /* 起盘台的成格／毕法判定在 pan-detect.js（40 KB，_tools/_mk_detect.py 生成），只在起盘台用——按需加载，带 ?v=。 */
 var PD = window.PanDetect || null, _pdLoading = null;
 function needDetect() {
@@ -2154,6 +2185,7 @@ function bindDoc(root) {
   fillPanMid(root);
   reorderPans(root);
   decoratePanSheet(root, root);
+  addPanDerive(root);
   bindPan(root);
   // ⚠️ 编号 ≥ 90 的是附篇，不在 M.list 里，各有各的屏——
   //    只按 lesson 路由的话，[[96-象法速查]] 这类链接点了没反应。
@@ -2300,7 +2332,7 @@ RENDER.search = function () {
 /* ⭐ 2026-10-22 起全站搜：课文之外，附篇（含旧版 App 存档）、格局、毕法、课例、象法一起搜。
    此前只搜 25 课，附篇里的东西（天时、口诀、八煞九宝…）搜不到等于没有。
    ⚠️ 各包都是按需加载的，第一次搜要等它们下完；任何一包失败不影响其余的。 */
-var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '毕法赋', '课例', '王牧夫', '通解案例', '象法'], _srcStarted = false;
+var SRC = {}, SRC_ORDER = ['通解课文', '初中级课文', '附篇', '旧版 App 存档', '格局', '王牧夫', '通解案例', '象法'], _srcStarted = false;
 /* 先有什么搜什么，其余几包下完再补进结果——别让一包没下完（或下载失败）把整个搜索卡住。 */
 function startSources(onMore) {
   if (_srcStarted) return; _srcStarted = true;
@@ -2310,8 +2342,6 @@ function startSources(onMore) {
   needBasicCourse().then(add(function (r) { SRC['初中级课文'] = []; r.forEach(function (l) { put('初中级课文', { g: '初中级课文', t: '第' + l.num + '课 · ' + l.short, text: l.text, go: ['basiclesson', l.id], body: '#basicLessonBody' }); }); })).catch(function () {});
   needExtra().then(add(function (r) { r.forEach(function (x) { var g = /^x/.test(x.id) ? '旧版 App 存档' : '附篇'; put(g, { g: g, t: x.title.replace(/^大六壬\s*·\s*/, ''), text: x.text, go: ['extra', x.id], body: '#extraBody' }); }); })).catch(function () {});
   needGe().then(add(function (r) { r.forEach(function (x) { put('格局', { g: '格局', t: x.n + '. ' + x.name, text: x.text, go: ['ge', x.n], body: '#geBody' }); }); })).catch(function () {});
-  needBifa().then(add(function (r) { r.forEach(function (x) { put('毕法赋', { g: '毕法赋', t: '第' + x.n + '法 · ' + x.ju, text: x.text, go: ['bifa', x.n], body: '#bfBody' }); }); })).catch(function () {});
-  needQuiz().then(add(function (r) { (r.items || []).forEach(function (x) { put('课例', { g: '课例', t: '例' + x.n + ' · ' + x.title, text: x.text, go: ['quiz', x.n], body: '#quizBody' }); }); })).catch(function () {});
   needMufu().then(add(function (r) { (r || []).forEach(function (x) { put('王牧夫', { g: '王牧夫', t: '入门例' + x.n + ' · ' + x.title, text: x.text, go: ['mufu', x.n], body: '#mfBody' }); }); })).catch(function () {});
   Promise.all([needTongjie(), needTongjieSearch()]).then(add(function (pair) {
     var full = {}; (pair[1] || []).forEach(function (x) { full[x.id] = x.text; });
@@ -2549,6 +2579,28 @@ function upgradeLegacyPans(root) {
   });
 }
 
+
+/* 课例盘下面补「看怎么取的三传」：用起课引擎按这张盘自己的日柱与天地盘位置复算，
+   且必须与盘上已有的三传完全一致才显示（不一致说明取法口径不同，宁可不显示也不误导）。 */
+function addPanDerive(root) {
+  var E = window.LiurenEngine; if (!E) return;
+  $$('.sheet-pan-group.inline-pan', root).forEach(function (grp) {
+    if (grp.dataset.dv || grp.closest('.stickypan, .pan-sheet, #labPan, .z9-body')) return;
+    grp.dataset.dv = '1';
+    var mid = $('.panmid b', grp), m = mid && mid.textContent.match(/^([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])日/);
+    if (!m) return;
+    var zi = [].filter.call($$('.gong', grp), function (g) { var d = $('.dp', g); return d && d.textContent.trim() === '子'; })[0];
+    var t0 = zi && $('.tp', zi) && $('.tp', zi).textContent.trim();
+    if (!t0) return;
+    var shown = $$('.sanchuan .cr .z', grp).map(function (z) { return z.textContent.trim(); }).join('');
+    var o = E.qike(m[1], t0, '子');
+    if (!o || o.chuan.join('') !== shown) return;
+    var html = zongmenDeriveHTML(o, o.ke).replace(/<p><i>1<\/i>[^]*?<\/p>/,
+      '<p><i>1</i>先查特殊结构：天盘相对地盘的位置（地盘子位上是 ' + t0 + '），日课为 ' + m[1] + '。</p>');
+    grp.insertAdjacentHTML('afterend', '<details class="pan-derive"><summary>看怎么取的三传（逐步推导）</summary>' + html + '</details>');
+  });
+}
+
 /* 兜底：毕法赋/格局/课例题库等屏是按需加载的块，不经过 bindDoc。
    凡是新插入页面、含「未整理」的盘（.panwrap 不在 .sheet-pan-group 里），统一补上 三传→四课→式盘 的整理与色块装饰。 */
 (function () {
@@ -2558,7 +2610,7 @@ function upgradeLegacyPans(root) {
     var els = queue; queue = [];
     els.forEach(function (el) {
       if (!el || !el.isConnected) return;      // 渲染两次时第一次的节点已被替换，跳过
-      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); bindPan(el); } catch (e) {}
+      try { fillPanMid(el); upgradeLegacyPans(el); reorderPans(el); decoratePanSheet(el, el); addPanDerive(el); bindPan(el); } catch (e) {}
     });
   }
   function need(n) {

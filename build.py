@@ -957,7 +957,7 @@ def stamp_assets():
     还会请求旧哈希路径；立刻删目录会让它误报“网络失败”。
     git 按内容去重，没变的文件换了路径也不会多占仓库。"""
     import hashlib, shutil
-    files = ['style.css', 'engine.js', 'app.js', 'pan-detect.js'] + \
+    files = ['style.css', 'engine.js', 'app.js', 'pan-detect.js', 'practice.js'] + \
             ['data/' + os.path.relpath(os.path.join(r, f), os.path.join(HERE, 'data'))
              for r, _, fs in sorted(os.walk(os.path.join(HERE, 'data'))) for f in sorted(fs) if f.endswith('.js')]
     h = hashlib.md5()
