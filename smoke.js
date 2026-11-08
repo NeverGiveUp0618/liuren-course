@@ -961,10 +961,11 @@ async function typeSearch(kw) {
     window.__go('drill', 'mix');
     await sleep(20);
     ok($('#s-drill').classList.contains('active') && $$('.pq-opt').length >= 2, '综合练习出题');
+    // 注意：综合练习随机抽题型，讲解文字不一定含「推/落/取…」，所以只断言讲解存在且有内容（2026-11-08 修，之前按关键字判断约 50% 概率误报）
     for (let i = 0; i < 10; i++) {
       const stem = $('.pq-stem').textContent;
       $$('.pq-opt')[0].onclick();
-      ok(i > 0 || !!$('.pq-fb') && /推|落|取|旬|干|将|亲|课|传/.test($('.pq-why').textContent), i === 0 ? '答题后出讲解' : '第 ' + (i + 1) + ' 题可作答');
+      ok(i > 0 || !!$('.pq-fb') && ($('.pq-why').textContent || '').trim().length >= 8, i === 0 ? '答题后出讲解' : '第 ' + (i + 1) + ' 题可作答');
       $('#pqNext').onclick();
       void stem;
     }
