@@ -10,9 +10,14 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
   var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
   var gate = $('#entryGate');
   if (!gate) return;
-  var GKEY = 'liuren_gate_ok', GDAYS = 5;
-  try { var gt = +localStorage.getItem(GKEY) || 0; if (!gt) { localStorage.setItem(GKEY, String(Date.now())); gt = Date.now(); }   /* 第一次打开：直接放行并从现在起算 5 天 */
-    if (Date.now() - gt >= 0 && Date.now() - gt < GDAYS * 864e5) { gate.hidden = true; return; } } catch (e) {}
+  /* 自适应间隔：通过且零失误 → 间隔翻倍（5→10→20→30 天封顶）；有失误 → 间隔减半（最短 1 天）；首次打开直接放行、5 天后第一次出现。
+     存 {t:上次通过时间, d:间隔天数}；旧版只存时间戳的按 5 天兼容。 */
+  var GKEY = 'liuren_gate_ok', GMIN = 1, GFIRST = 5, GMAX = 30, miss = 0, gst = null;
+  function gload() { try { var v = localStorage.getItem(GKEY); if (!v) return null; if (v.charAt(0) === '{') return JSON.parse(v); return { t: +v, d: GFIRST }; } catch (e) { return null; } }
+  function gsave(o) { try { localStorage.setItem(GKEY, JSON.stringify(o)); } catch (e) {} }
+  gst = gload();
+  if (!gst || !gst.t) { gst = { t: Date.now(), d: GFIRST }; gsave(gst); }      /* 第一次打开：直接放行 */
+  if (Date.now() - gst.t >= 0 && Date.now() - gst.t < gst.d * 864e5) { gate.hidden = true; return; }
   var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
   var progress = $('#entryGateProgress'), at = 0, locked = false;
   document.body.classList.add('entry-locked');
@@ -34,7 +39,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
     b.onclick = function () {
       if (locked || b.disabled) return;
       if (name !== order[at]) {
-        locked = true; card.classList.add('wrong'); msg.textContent = '顺序不对，重新从先锋门开始';
+        miss += 1; locked = true; card.classList.add('wrong'); msg.textContent = '顺序不对，重新从先锋门开始';
         setTimeout(function () {
           at = 0; locked = false; card.classList.remove('wrong');
           $$('.entry-gate-step', gate).forEach(function (x) { x.classList.remove('on'); });
@@ -47,7 +52,8 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
       $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
       if (at === order.length) {
         locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
-        try { localStorage.setItem(GKEY, String(Date.now())); } catch (e) {}
+        var nd = miss ? Math.max(GMIN, Math.floor(gst.d / 2)) : Math.min(GMAX, gst.d * 2);
+        gsave({ t: Date.now(), d: nd });
         setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
       } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
     };
