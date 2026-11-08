@@ -5,11 +5,14 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
-/* 占断八门入站自检：只在当前页面内放行，刷新后必须重新作答。 */
+/* 占断八门入站自检：通过后 5 天内不再出现（2026-11-08 用户：已经记得差不多了，不用次次做）。 */
 (function initEntryGate() {
   var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
   var gate = $('#entryGate');
   if (!gate) return;
+  var GKEY = 'liuren_gate_ok', GDAYS = 5;
+  try { var gt = +localStorage.getItem(GKEY) || 0; if (!gt) { localStorage.setItem(GKEY, String(Date.now())); gt = Date.now(); }   /* 第一次打开：直接放行并从现在起算 5 天 */
+    if (Date.now() - gt >= 0 && Date.now() - gt < GDAYS * 864e5) { gate.hidden = true; return; } } catch (e) {}
   var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
   var progress = $('#entryGateProgress'), at = 0, locked = false;
   document.body.classList.add('entry-locked');
@@ -44,6 +47,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
       $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
       if (at === order.length) {
         locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
+        try { localStorage.setItem(GKEY, String(Date.now())); } catch (e) {}
         setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
       } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
     };

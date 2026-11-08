@@ -5,11 +5,14 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
-/* 占断八门入站自检：只在当前页面内放行，刷新后必须重新作答。 */
+/* 占断八门入站自检：通过后 5 天内不再出现（2026-11-08 用户：已经记得差不多了，不用次次做）。 */
 (function initEntryGate() {
   var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
   var gate = $('#entryGate');
   if (!gate) return;
+  var GKEY = 'liuren_gate_ok', GDAYS = 5;
+  try { var gt = +localStorage.getItem(GKEY) || 0; if (!gt) { localStorage.setItem(GKEY, String(Date.now())); gt = Date.now(); }   /* 第一次打开：直接放行并从现在起算 5 天 */
+    if (Date.now() - gt >= 0 && Date.now() - gt < GDAYS * 864e5) { gate.hidden = true; return; } } catch (e) {}
   var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
   var progress = $('#entryGateProgress'), at = 0, locked = false;
   document.body.classList.add('entry-locked');
@@ -44,6 +47,7 @@ var M = window.DATA_META || { counts: {}, plan: [], list: [] };
       $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
       if (at === order.length) {
         locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
+        try { localStorage.setItem(GKEY, String(Date.now())); } catch (e) {}
         setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
       } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
     };
@@ -660,7 +664,7 @@ var TITLES = { home: '六壬神课', courses: '课程', course: '大六壬通解
                tjlist: '大六壬通解案例库', tongjie: '通解案例',
                gelist: '格局详解', ge: '格局',
                bflist: '毕法赋', bifa: '毕法', xflist: '象法速查', extra: '附篇', xarch: '附篇',
-               jinsuo: '金锁玉匙' };
+               jinsuo: '金锁玉匙', practice: '做题练习', drill: '练习' };
 var ROOTS = { home: 1, courses: 1, qlist: 1, caselist: 1, ref: 1 };
 var pendingFind = null;
 
@@ -748,9 +752,9 @@ var RENDER = {};
 
 RENDER.home = function () {
   var c = M.counts || {};
-  $('#hLesson').textContent = c.lesson || 0;
-  $('#hPlan').textContent = c.planned || 0;
-  $('#hPan').textContent = c.pan || 0;
+  $('#hLesson').textContent = (c.lesson || 0) + (c.basicLesson || 0);
+  $('#hPlan').textContent = (c.planned || 0) + (c.basicLesson || 0);
+  $('#hPan').textContent = (c.pan || 0) + (c.basicPan || 0);
   $('#buildInfo').textContent = '内容更新于 ' + (M.built || '');
   var mr = $('#mRef'); if (mr) mr.textContent = c.ref || '—';   // ⚠️ 分母读 counts，别写死
   var mbr = $('#mBasicRef'); if (mbr) mbr.textContent = c.basicRef || '—';
@@ -1764,6 +1768,35 @@ function labUpdate() {
   bindPan($('#labPan'));
   if (typeof window.labFullRender === 'function') window.labFullRender(gan + $('#s-zhi').value, yj, zs);   // 四课三传与成格／毕法初判，见下面 labFullRender
 }
+
+/* 做题练习在 practice.js（题目由 engine.js 现算），按需加载，带 ?v=。
+   practice.js 加载后会把下面两个占位换成真正的渲染函数。 */
+var _prLoading = null, _prStub = {};
+function needPractice() {
+  if (window.LiurenPractice) return Promise.resolve();
+  if (_prLoading) return _prLoading;
+  _prLoading = new Promise(function (res, rej) {
+    var el = document.createElement('script');
+    el.src = ASSET + 'practice.js?v=' + VER;
+    el.onload = function () { res(); };
+    el.onerror = function () { _prLoading = null; rej(new Error('练习脚本加载失败')); };
+    document.head.appendChild(el);
+  });
+  return _prLoading;
+}
+['practice', 'drill'].forEach(function (name) {
+  RENDER[name] = _prStub[name] = function (id) {
+    var box = $(name === 'practice' ? '#practiceBody' : '#drillBody');
+    if (box) box.innerHTML = '<p class="muted center">加载中…</p>';
+    needPractice().then(function () {
+      if (RENDER[name] !== _prStub[name]) RENDER[name](id);
+    }, function () { if (box) box.innerHTML = '<p class="muted center">练习脚本加载失败，请检查网络后重试。</p>'; });
+  };
+});
+
+/* 给 practice.js 用的显式接口：文件头是 'use strict'，别指望靠全局变量互相看见。 */
+window.LRApp = { $: $, $$: $$, esc: esc, load: load, save: save, show: show, panHTML: panHTML, bindPan: bindPan,
+                 zongmenDeriveHTML: zongmenDeriveHTML, RENDER: RENDER };
 
 /* 起盘台的成格／毕法判定在 pan-detect.js（40 KB，_tools/_mk_detect.py 生成），只在起盘台用——按需加载，带 ?v=。 */
 var PD = window.PanDetect || null, _pdLoading = null;
