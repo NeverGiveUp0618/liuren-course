@@ -318,8 +318,8 @@ ok(sourceNoteN > 100 && !BC.some(x => /&lt;\/?small&gt;/.test(x.html)),
 ok(!$('#basicLessonBody .pan'), '缺少截图的课程不伪造盘面');
 {
   const courseGateSrc = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
-  ok(/startLessonReadDelay\('lesson'/.test(courseGateSrc) && /startLessonReadDelay\('basiclesson'/.test(courseGateSrc),
-     '通解课程与初中级课程共用五分钟完成门槛');
+  ok(/addLessonBtn\(body, K\.read/.test(courseGateSrc) && /addLessonBtn\(body, K\.basicread/.test(courseGateSrc),
+     '课文页都挂手动「标记为已读」按钮');
 }
 $$('.tabbar [data-tab="courses"]')[0].onclick();
 $$('#courseEntrances [data-course-go="course"]')[0].onclick();
@@ -598,10 +598,13 @@ async function typeSearch(kw) {
   window.dispatchEvent(new window.Event('scroll'));
   await sleep(300);
   let basicReadGate = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
-  ok(basicReadGate.B01 === 89, '课程五分钟前即使快速拖到底，也最多记录 89%');
-  await sleep(250);
+  ok(basicReadGate.B01 === 89, '快速拖到底也只记录 89%，不自动已读');
+  await sleep(650);
   basicReadGate = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
-  ok(basicReadGate.B01 >= 90, '停留达到门槛且读到末尾后才标记已读');
+  ok(basicReadGate.B01 === 89, '停留再久也不自动标记已读');
+  window.document.querySelector('#basicLessonBody .read-toggle').click();
+  basicReadGate = JSON.parse(window.localStorage.getItem('liuren_basic_course_read') || '{}');
+  ok(basicReadGate.B01 >= 90, '点「标记为已读」才标记');
   window.__READ_DELAY_MS = 40;
 
   console.log('\n== 主题 ==');
@@ -779,8 +782,10 @@ async function typeSearch(kw) {
     ok(!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'],
        '误触进入案例不会立刻标记已读');
     await sleep(45);
-    ok(!!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'],
-       '停留达到门槛后才标记已读（线上门槛为 5 分钟）');
+    ok(!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'],
+       '停留再久也不自动标记已读');
+    $('#mfBody .read-toggle').click();
+    ok(!!JSON.parse(window.localStorage.getItem('liuren_course_mfseen') || '{}')['1'], '点按钮才标记已读');
     const mfSticky = $('#mfBody .stickypan');
     ok(!!mfSticky, '详情页启用年月日时、四课、三传吸顶样式');
     ok(mfSticky.firstElementChild.classList.contains('sp-time'), '吸顶第一部分是年月日时');
