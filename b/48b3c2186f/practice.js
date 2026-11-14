@@ -214,15 +214,167 @@
       opts: c.opts, ai: c.ai, why: '', whyKe: true };
   });
 
+  /* ══ 第二期：规则题（第 10–12 课）══
+     ⚠️ 全是教材表格／原文里的硬规则；每条常量都由 tests_practice.js 回查 content/*.md 里对应表格行或原句，
+        教材改了而这里没改，测试会报。不出出处题、不考背诵比喻（守「出题质量标准」）。 */
+  var SEASON = { '春': '木', '夏': '火', '秋': '金', '冬': '水', '季月': '土' };      // 当令之行
+  var STATE = ['旺', '相', '休', '囚', '死'];
+  function stateOf(令, 行) {                       // 旺＝当令；令生之为相；生令者休；克令者囚；令克之为死
+    if (行 === 令) return '旺';
+    if (SHENG[令] === 行) return '相';
+    if (SHENG[行] === 令) return '休';
+    if (KE[行] === 令) return '囚';
+    return '死';
+  }
+  var ZH = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+  var CS10 = { 甲: '亥', 乙: '午', 丙: '寅', 丁: '酉', 戊: '寅', 己: '酉', 庚: '巳', 辛: '子', 壬: '申', 癸: '卯' };
+  var CS5 = { 木: ['亥', '卯', '未'], 火: ['寅', '午', '戌'], 金: ['巳', '酉', '丑'], 水: ['申', '子', '辰'] };   // 长生·帝旺·墓
+  var BAI = { 甲: '子', 乙: '子', 丙: '卯', 丁: '卯', 戊: '酉', 己: '酉', 庚: '午', 辛: '午', 壬: '酉', 癸: '酉' };
+  var CHONG = ['子午', '卯酉', '寅申', '巳亥', '丑未', '辰戌'];
+  var PO = ['子酉', '丑辰', '寅亥', '卯午', '巳申', '未戌'];
+  var HAI = ['子未', '丑午', '寅巳', '卯辰', '申亥', '酉戌'];
+  var ZIXING = ['辰', '午', '酉', '亥'];
+  var MU5 = { 木: '未', 火: '戌', 金: '丑', 水: '辰' };
+  var MU10 = { 甲: '未', 乙: '戌', 丙: '戌', 丁: '丑', 戊: '戌', 己: '丑', 庚: '丑', 辛: '辰', 壬: '辰', 癸: '未' };
+  var LU = { 甲: '寅', 乙: '卯', 丙: '巳', 丁: '午', 戊: '巳', 己: '午', 庚: '申', 辛: '酉', 壬: '亥', 癸: '子' };
+  var MA = { 申: '寅', 子: '寅', 辰: '寅', 巳: '亥', 酉: '亥', 丑: '亥', 亥: '巳', 卯: '巳', 未: '巳', 寅: '申', 午: '申', 戌: '申' };
+  var GANQI = { 甲: '午', 乙: '巳', 丙: '辰', 丁: '卯', 戊: '寅', 己: '丑', 庚: '未', 辛: '申', 壬: '酉', 癸: '戌' };
+  function partner(list, z) { var p = list.filter(function (x) { return x.indexOf(z) >= 0; })[0]; return p.replace(z, ''); }
+  function sub(rng, arr) { return arr[ri(rng, arr.length)]; }
+
+  topic('wangxiang', '旺相休囚', 4, '时令定五行的力气', 10, function (rng) {
+    var s = sub(rng, ['春', '夏', '秋', '冬', '季月']), ling = SEASON[s], x = Z[0];
+    var label = s === '季月' ? sub(rng, ['辰', '丑', '戌', '未']) + '月（季月）' : s + '天';
+    if (ri(rng, 2)) {
+      var el = sub(rng, ['木', '火', '土', '金', '水']), ans = stateOf(ling, el);
+      var c = choose(rng, ans, [], STATE, 5);
+      return { stem: label + '占课，<b>' + el + '</b>处在什么状态？', opts: c.opts, ai: c.ai,
+        why: label + '当令的是<b>' + ling + '</b>。旺＝当令；令生之为相；生令者为休；克令者为囚；令克之者为死。' + el + '与' + ling + '的关系，属<b>' + ans + '</b>。' };
+    }
+    var st = sub(rng, STATE.slice(1)), ans2 = Object.keys({ 木: 1, 火: 1, 土: 1, 金: 1, 水: 1 }).filter(function (e) { return stateOf(ling, e) === st; })[0];
+    var c2 = choose(rng, ans2, [], ['木', '火', '土', '金', '水'], 5);
+    return { stem: label + '占课，哪一行处于<b>' + st + '</b>？', opts: c2.opts, ai: c2.ai,
+      why: label + '当令的是<b>' + ling + '</b>：令生之为相（' + SHENG[ling] + '），生令者为休，克令者为囚，令克之者为死（' + KE[ling] + '）。属' + st + '的是 <b>' + ans2 + '</b>。' };
+  });
+
+  topic('changsheng', '长生帝旺墓', 4, '十干长生、五行长生·帝旺·墓、败', 10, function (rng) {
+    var kind = ri(rng, 3);
+    if (kind === 0) {
+      var g = sub(rng, G), ans = CS10[g], yangg = G.indexOf(g) % 2 === 0;
+      var c = choose(rng, ans, [ZH[(ZH.indexOf(ans) + 6) % 12], ZH[(ZH.indexOf(ans) + 1) % 12], ZH[(ZH.indexOf(ans) + 11) % 12]], ZH);
+      return { stem: '十天干里，<b>' + g + '</b>的长生在哪一支？', opts: c.opts, ai: c.ai,
+        why: '十干长生口诀：甲生亥，丙戊生寅，庚生巳，壬生申（阳干顺行）；乙生午，丁己生酉，辛生子，癸生卯（阴干逆行）。' + g + '（' + (yangg ? '阳' : '阴') + '干）长生在 <b>' + ans + '</b>。' };
+    }
+    if (kind === 1) {
+      var el = sub(rng, ['木', '火', '金', '水']), pos = ri(rng, 3), nm = ['长生', '帝旺', '墓'][pos], a2 = CS5[el][pos];
+      var c2 = choose(rng, a2, CS5[el].filter(function (x) { return x !== a2; }), ZH);
+      return { stem: '五行里，<b>' + el + '</b>的<b>' + nm + '</b>在哪一支？', opts: c2.opts, ai: c2.ai,
+        why: '五行长生·帝旺·墓：木＝亥·卯·未，火＝寅·午·戌，金＝巳·酉·丑，水（及土）＝申·子·辰。' + el + '的' + nm + '是 <b>' + a2 + '</b>。' };
+    }
+    var g3 = sub(rng, G), a3 = BAI[g3];
+    var c3 = choose(rng, a3, [ZH[(ZH.indexOf(a3) + 6) % 12], CS10[g3]], ZH);
+    return { stem: '十干的“败”就是十二长生里的沐浴之地。<b>' + g3 + '</b>的败在哪一支？', opts: c3.opts, ai: c3.ai,
+      why: '甲乙木败于子，丙丁火败于卯，戊己败于酉，庚辛败于午，壬癸败于酉。' + g3 + '败于 <b>' + a3 + '</b>。败加干支，主败坏衰败之象。' };
+  });
+
+  topic('xingchong', '刑冲破害墓', 4, '成对的煞与墓库', 11, function (rng) {
+    var kind = ri(rng, 4);
+    if (kind === 0) {
+      var rel = sub(rng, [['冲', CHONG], ['破', PO], ['害', HAI]]), z = sub(rng, ZH), ans = partner(rel[1], z);
+      var others = [partner(CHONG, z), partner(PO, z), partner(HAI, z)].filter(function (x) { return x !== ans; });
+      var c = choose(rng, ans, others, ZH);
+      return { stem: '<b>' + z + '</b>的<b>' + rel[0] + '</b>神是哪一支？', opts: c.opts, ai: c.ai,
+        why: '六' + rel[0] + '：' + rel[1].join('、') + '。' + z + '与 <b>' + ans + '</b> 相' + rel[0] + '。（冲：' + partner(CHONG, z) + '；破：' + partner(PO, z) + '；害：' + partner(HAI, z) + '，注意别混。）' };
+    }
+    if (kind === 1) {
+      var ans1 = sub(rng, ZIXING), c1 = choose(rng, ans1, [], ZH.filter(function (x) { return ZIXING.indexOf(x) < 0; }));
+      return { stem: '下面哪一个字<b>自刑</b>？', opts: c1.opts, ai: c1.ai,
+        why: '自刑的是辰、午、酉、亥（各自与自己相刑）；顺刑寅巳申，逆刑丑戌未，互刑子卯。<b>' + ans1 + '</b> 属自刑。' };
+    }
+    if (kind === 2) {
+      var el = sub(rng, ['木', '火', '金', '水']), a2 = MU5[el];
+      var c2 = choose(rng, a2, ['未', '戌', '丑', '辰'].filter(function (x) { return x !== a2; }), ZH);
+      return { stem: '五行墓：<b>' + el + '</b>的墓库在哪一支？', opts: c2.opts, ai: c2.ai,
+        why: '五行墓（以此为主）：木墓在未，火墓在戌，金墓在丑，水土墓在辰。' + el + '墓在 <b>' + a2 + '</b>。' };
+    }
+    var g = sub(rng, G), a3 = MU10[g];
+    var c3 = choose(rng, a3, ['未', '戌', '丑', '辰'].filter(function (x) { return x !== a3; }), ZH);
+    return { stem: '十干墓：<b>' + g + '</b>的墓在哪一支？', opts: c3.opts, ai: c3.ai,
+      why: '十干墓：未＝甲癸墓，戌＝丙戊乙墓，丑＝庚丁己墓，辰＝壬辛墓。' + g + '墓在 <b>' + a3 + '</b>。' };
+  });
+
+  topic('baobao', '禄马奇', 4, '日禄、驿马、干奇', 11, function (rng) {
+    var kind = ri(rng, 3);
+    if (kind === 0) {
+      var g = sub(rng, G), a = LU[g], c = choose(rng, a, [CS10[g], ZH[(ZH.indexOf(a) + 1) % 12], ZH[(ZH.indexOf(a) + 11) % 12]], ZH);
+      return { stem: '<b>' + g + '</b>日的禄在哪一支？', opts: c.opts, ai: c.ai,
+        why: '日禄：甲寅、乙卯、丙戊巳、丁己午、庚申、辛酉、壬亥、癸子。' + g + '禄在 <b>' + a + '</b>。禄宜旺不宜衰。' };
+    }
+    if (kind === 1) {
+      var z = sub(rng, ZH), a2 = MA[z], c2 = choose(rng, a2, ['寅', '申', '巳', '亥'].filter(function (x) { return x !== a2; }), ZH);
+      return { stem: '日支是<b>' + z + '</b>，驿马在哪一支？', opts: c2.opts, ai: c2.ai,
+        why: '驿马：申子辰马在寅，巳酉丑马在亥，亥卯未马在巳，寅午戌马在申。' + z + '属' + ({ 寅: '申子辰', 亥: '巳酉丑', 巳: '亥卯未', 申: '寅午戌' }[a2]) + '一组，马在 <b>' + a2 + '</b>。' };
+    }
+    var g3 = sub(rng, G), a3 = GANQI[g3], c3 = choose(rng, a3, [LU[g3], MU10[g3]], ZH);
+    return { stem: '<b>' + g3 + '</b>日的干奇在哪一支？', opts: c3.opts, ai: c3.ai,
+      why: '干奇：甲午、乙巳、丙辰、丁卯、戊寅、己丑、庚未、辛申、壬酉、癸戌。' + g3 + '日干奇在 <b>' + a3 + '</b>。⚠️ 只见干奇、不见旬奇，不可为奇。' };
+  });
+
+  var LEI = [
+    ['文书、消息', '朱雀', '按天将'], ['见贵、求人', '天乙贵人', '按天将'], ['惊恐、怪异', '螣蛇', '按天将'],
+    ['捕贼、失盗', '玄武', '按天将'], ['文职求官', '青龙', '按天将'], ['武职求官', '太常', '按天将'],
+    ['婚姻（女方）', '天后', '按天将'], ['婚姻（男方）', '青龙', '按天将'], ['兄弟姊妹', '太阴', '人类神'],
+    ['道路、行人、疾病、信息', '申', '按支神'], ['车马、出行', '卯', '按支神'], ['酒食、婚姻、祠祀', '未', '按支神'],
+    ['阴私、暗昧、妇女', '子', '按支神'], ['奴', '戌', '人类神'], ['婢', '酉', '按支神']
+  ];
+  var TJ12 = ['天乙贵人', '螣蛇', '朱雀', '六合', '勾陈', '青龙', '天空', '白虎', '太常', '玄武', '太阴', '天后'];
+  topic('leishen', '类神', 5, '占什么事看什么字', 12, function (rng) {
+    var it = sub(rng, LEI.slice(0, 13).concat([LEI[13], LEI[14]])), isJ = TJ12.indexOf(it[1]) >= 0;
+    var pool = isJ ? TJ12 : ZH;
+    var valid = LEI.filter(function (x) { return x[0].split('（')[0] === it[0].split('（')[0]; }).map(function (x) { return x[1]; });
+    var bad = [];
+    var c = choose(rng, it[1], [], pool.filter(function (x) { return valid.indexOf(x) < 0 && (it[0] !== '婢' || (x !== '太阴')); }));
+    return { stem: '占<b>' + it[0] + '</b>，取哪一个' + (isJ ? '天将' : '字') + '作类神？', opts: c.opts, ai: c.ai,
+      why: '第 12 课「占什么看什么」作业单（' + it[2] + '）：' + it[0] + ' → <b>' + it[1] + '</b>。类神入课传为显，在年命上次之，都不见为晦。' };
+  });
+
+  /* 断语规则：每条的 key 必须是教材原文里一字不差的片段（测试逐条回查） */
+  var RULES = [
+    { l: 10, key: '老怕帝旺少怕衰', q: '老年人占病，课传见帝旺，该怎么看？', a: '反非吉兆', w: ['是吉兆，力量到顶', '与年龄无关，只看月令', '病必速愈'], why: '“老怕帝旺，少怕衰”：老年人占病遇帝旺，反非吉兆；少年则怕衰。' },
+    { l: 10, key: '克日为凶', q: '本是吉将的天将，克了日干，吉凶如何？', a: '仍为凶', w: ['仍为吉，吉将不变', '看名号，不看生克', '吉凶各半'], why: '“生日为吉，虽凶将亦吉；克日为凶，虽吉将亦凶”——吉凶不看名号，看与日干的生克。' },
+    { l: 10, key: '生日为吉，虽凶将亦吉', q: '本是凶将的天将，生了日干，吉凶如何？', a: '仍可为吉', w: ['仍为凶，凶将不变', '必主灾祸', '不论生克'], why: '生日为吉，虽凶将亦吉。' },
+    { l: 10, key: '喜则宜旺相，忌则宜休囚', q: '同一个“旺”字，落在喜用上和落在忌神上，分别如何？', a: '喜的旺相为好，忌的旺相为祸', w: ['都是好事', '都是祸事', '旺不分喜忌'], why: '喜则宜旺相，忌则宜休囚；财旺是好事，鬼旺就是祸。' },
+    { l: 10, key: '三传皆财而旺', q: '三传皆财且旺，占求财，怎么看？', a: '财太旺无力担财，反而不利', w: ['财旺必得大财', '只看日干，不论财旺', '主财立至'], why: '过旺反而不及：三传皆财而旺，财太旺，无力担财，求财不利。' },
+    { l: 11, key: '昼鬼主公讼是非', q: '鬼入传，昼占和夜占各主什么？', a: '昼鬼主公讼是非，夜鬼主神祇妖祟', w: ['昼鬼主神祇妖祟，夜鬼主公讼是非', '昼夜同断，都主疾病', '昼鬼主财，夜鬼主官'], why: '“昼鬼主公讼是非，夜鬼主神祇妖祟”。' },
+    { l: 11, key: '凡鬼宜衰败，不宜生旺', q: '“鬼”宜旺相还是宜衰败？', a: '宜衰败', w: ['宜生旺', '旺衰都无所谓', '只宜入墓'], why: '凡鬼宜衰败，不宜生旺。' },
+    { l: 11, key: '仍作德断', q: '德神加日干发用，按五行本是鬼，怎么断？', a: '仍作德断，德能化鬼为吉', w: ['仍作鬼断', '一半吉一半凶', '另起一课'], why: '“凡德加干发用为鬼，仍作德断，不可作鬼断”。' },
+    { l: 11, key: '其凶甚于明鬼', q: '明鬼与暗鬼（天将克干）相比，哪个更凶？', a: '暗鬼更凶', w: ['明鬼更凶', '一样凶', '暗鬼不算鬼'], why: '“暗鬼者，天将克干也。其凶甚于明鬼”，遁干之鬼也算暗鬼。' },
+    { l: 11, key: '吉不宜冲，凶冲则散', q: '见冲，该怎么断？', a: '先看被冲的是吉是凶：吉不宜冲，凶冲则散', w: ['见冲一律断散', '见冲一律断吉', '冲只看月令'], why: '不能见冲就断散，要先看被冲的是好东西还是坏东西。' },
+    { l: 11, key: '如果只见干奇不可为奇', q: '只见干奇、不见旬奇，算不算奇？', a: '不算，不可为奇', w: ['算，干奇单独成立', '算，但福减半', '只看遁奇'], why: '“干奇与旬奇并临为上，如果只见干奇不可为奇”。' },
+    { l: 11, key: '禄临支为权摄不正', q: '禄临日干与禄临日支，分别主什么？', a: '临干为日之旺神；临支为权摄不正', w: ['临干为权摄不正；临支为日之旺神', '都是日之旺神', '都主迁动'], why: '“禄临干为日之旺神……禄临支为权摄不正”，占官为暂摄之象，不宜久居。' },
+    { l: 11, key: '亥加申主图谋未遂', q: '同是申亥相害：申加亥与亥加申，断法如何？', a: '申加亥先阻后得、有终；亥加申图谋未遂、无始', w: ['申加亥图谋未遂、无始；亥加申先阻后得、有终', '两者断法相同', '害不分上下'], why: '害分方向：申加亥主先阻后得，事必有终；亥加申主图谋未遂，事必无始。' },
+    { l: 11, key: '六壬不取', q: '民间“丑破卯、卯破辰”那套六破，六壬取不取？', a: '不取，六壬用子酉、丑辰等六破', w: ['取，两套并用', '取，且优先于子酉六破', '只在占病时取'], why: '“此六破之法，六壬不取。”六壬的六破是子酉、丑辰、寅亥、卯午、巳申、未戌。' },
+    { l: 11, key: '驿马并非专主出行', q: '驿马是不是专主出行？', a: '不是，求谋、干谒、迁移都看；占家宅疾病反忌马', w: ['是，只看出行', '是，且只在占行人时看', '不是，且占家宅疾病最喜马'], why: '“驿马并非专主出行，凡求谋做事、趋吉避凶、干谒迁移等等都必看驿马。占家宅、疾病比较忌讳驿马。”' },
+    { l: 11, key: '行人逢马落长生或马落空亡，则行人不归', q: '占行人，驿马落长生或落空亡，怎么断？', a: '行人不归', w: ['行人即至', '行人已在路上', '主行人平安'], why: '“行人逢马落长生或马落空亡，则行人不归。”' },
+    { l: 11, key: '凶神宜空、救神忌空', q: '旬空对凶神和救神，各有什么影响？', a: '凶神宜空，救神忌空', w: ['凶神忌空，救神宜空', '一律宜空', '一律忌空'], why: '凶神落空则凶减；救神（德、子孙等）落空则救不得力。填实、有生、逢冲则不作空论。' },
+    { l: 11, key: '先生克，后煞宝', q: '断课时，生克与八煞九宝哪个在先？', a: '先生克，后煞宝', w: ['先煞宝，后生克', '二者并重不分先后', '只看煞宝'], why: '最根本的是生克，八煞九宝是它的“主体核心”，不是替代品。' },
+    { l: 11, key: '见凶先找解药', q: '八煞入课，该怎么处理？', a: '先找有没有解它的（德、子孙、冲破等），别一见煞就断凶', w: ['一见煞就断凶', '只看煞的数量', '煞与课体无关'], why: '煞宝能互相解：德能化鬼、子孙能救鬼、冲能开墓、破可解冤。' }
+  ];
+  topic('guize', '断语规则', 5, '第 10–11 课的断课原则', 11, function (rng) {
+    var r = RULES[ri(rng, RULES.length)], c = choose(rng, r.a, r.w, []);
+    return { stem: r.q, opts: c.opts, ai: c.ai, why: r.why, lessonOverride: r.l };
+  });
+
   function topicById(id) { return TOPICS.filter(function (x) { return x.id === id; })[0]; }
   function make(id, seed) {
     var tp = topicById(id);
     var q = tp.gen(mkRng(seed));
-    q.topic = id; q.seed = seed; q.lesson = tp.lesson;
+    q.topic = id; q.seed = seed; q.lesson = q.lessonOverride || tp.lesson;
     return q;
   }
 
   root.LiurenPractice = { TOPICS: TOPICS, make: make, mkRng: mkRng, topicById: topicById,
+    RULES: RULES, SEASON: SEASON, stateOf: stateOf, tables: { CS10: CS10, CS5: CS5, BAI: BAI, CHONG: CHONG, PO: PO, HAI: HAI, MU5: MU5, MU10: MU10, LU: LU, MA: MA, GANQI: GANQI, LEI: LEI },
     tianjiang: tianjiang, xunDun: xunDun, xunInfo: xunInfo, liuqin: liuqin, KETI: KETI };
 
   /* ══ 以下是界面：依赖 app.js 的全局（$ $$ esc load save show panHTML bindPan zongmenDeriveHTML） ══ */
@@ -257,8 +409,26 @@
   }
   function newSeed() { return Math.floor(Math.random() * 2147483647); }
 
+  /* 阶段过关：与学习路线的分部对应；一套 15 题，答对 12 题（80%）算过。
+     第三阶段起（断法框架、分类占断）题目还没做，先不列。 */
+  var STAGES = [
+    { id: 1, name: '第一阶段 · 把盘立起来', lessons: '第 1–7 课', tiers: [1, 2, 3] },
+    { id: 2, name: '第二阶段 · 读懂盘上的字', lessons: '第 8–12 课', tiers: [4, 5] }
+  ];
+  var PASS_N = 15, PASS_OK = 12;
+  function stageById(id) { return STAGES.filter(function (x) { return String(x.id) === String(id); })[0]; }
+
   function buildSet(mode) {
     var s = stat(), qs = [], i;
+    if (mode.indexOf('pass:') === 0) {
+      var st = stageById(mode.slice(5)), ids = P.TOPICS.filter(function (x) { return st.tiers.indexOf(x.tier) >= 0; }).map(function (x) { return x.id; });
+      var bag = [];
+      for (i = 0; i < PASS_N; i++) {
+        if (!bag.length) bag = ids.slice().sort(function () { return Math.random() - 0.5; });   // 每类轮流出，保证覆盖
+        qs.push({ t: bag.pop(), s: newSeed() });
+      }
+      return qs;
+    }
     if (mode === 'wrong') {
       s.wrong.slice(0, 10).forEach(function (w) { qs.push({ t: w.t, s: w.s }); });
     } else if (mode.indexOf('topic:') === 0) {
@@ -281,13 +451,19 @@
   A.RENDER.practice = function () {
     var s = stat(), nDay = s.days[today()] || 0, all = 0, ok = 0;
     Object.keys(s.topics).forEach(function (k) { all += s.topics[k].n; ok += s.topics[k].c; });
-    var tiers = ['', '一 · 起盘基本功', '二 · 四课与旬', '三 · 取三传'];
+    var tiers = ['', '一 · 起盘基本功', '二 · 四课与旬', '三 · 取三传', '四 · 字的力气与关系（第 10–11 课）', '五 · 类神与断语规则（第 11–12 课）'];
     var h = '<p class="lead">题目由起盘引擎现算、答案必然与课文一致；每题做完讲解推导过程。想练就练，不计时、不打卡。</p>' +
       '<div class="pq-sum"><span>今日 <b>' + nDay + '</b> 题</span><span>累计 <b>' + all + '</b> 题</span><span>正确率 <b>' +
       (all ? Math.round(ok / all * 100) + '%' : '—') + '</b></span></div>' +
       '<div class="pq-go"><button class="btn" data-pq="mix">综合 10 题 · 弱项优先</button>' +
       '<button class="btn" data-pq="wrong"' + (s.wrong.length ? '' : ' disabled') + '>错题回炉 ' + s.wrong.length + '</button></div>';
-    [1, 2, 3].forEach(function (tier) {
+    var stageH = '<h3 class="pq-h">阶段过关</h3>' + STAGES.map(function (sg) {
+      var ps = (s.pass || {})[sg.id];
+      return '<button class="pq-row pq-stage' + (ps && ps.ok ? ' done' : '') + '" data-pq="pass:' + sg.id + '"><span class="pq-nm"><b>' + sg.name + '</b><small>' + sg.lessons +
+        ' · ' + PASS_N + ' 题答对 ' + PASS_OK + ' 题算过</small></span><span class="pq-n">' + (ps ? (ps.ok ? '已过关' : '未过') : '未测') + '<small>' + (ps ? '最好 ' + ps.best + '/' + PASS_N : '') + '</small></span></button>';
+    }).join('');
+    h += stageH;
+    [1, 2, 3, 4, 5].forEach(function (tier) {
       h += '<h3 class="pq-h">' + tiers[tier] + '</h3>';
       P.TOPICS.filter(function (x) { return x.tier === tier; }).forEach(function (tp) {
         var a = accOf(s, tp.id), n = s.topics[tp.id] ? s.topics[tp.id].n : 0;
@@ -360,10 +536,18 @@
   }
 
   function summary(box) {
-    var n = S.qs.length, again = S.wrong.length;
+    var n = S.qs.length, again = S.wrong.length, passMsg = '';
+    if (S.mode.indexOf('pass:') === 0) {
+      var sg = stageById(S.mode.slice(5)), ok = S.right >= PASS_OK, sx = stat();
+      sx.pass = sx.pass || {};
+      var old = sx.pass[sg.id] || { best: 0, ok: false };
+      sx.pass[sg.id] = { best: Math.max(old.best, S.right), ok: old.ok || ok, date: today() };
+      A.save(PK, sx);
+      passMsg = '<p><b>' + (ok ? '✓ ' + sg.name + ' 过关' : '未过关（需答对 ' + PASS_OK + ' 题）') + '</b></p>';
+    }
     var names = uniq(S.wrong.map(function (w) { return P.topicById(w.t).name; }));
     box.innerHTML = '<div class="pq-done"><div class="pq-big">' + S.right + ' / ' + n + '</div>' +
-      '<p>' + (S.right === n ? '全对。' : again ? '这一组错了 ' + again + ' 题（' + A.esc(names.join('、')) + '），已记入「错题回炉」。' : '') + '</p>' +
+      passMsg + '<p>' + (S.right === n ? '全对。' : again ? '这一组错了 ' + again + ' 题（' + A.esc(names.join('、')) + '），已记入「错题回炉」。' : '') + '</p>' +
       '<div class="pq-act"><button class="btn" id="pqHub">练习首页</button><button class="btn pri" id="pqAgain">再来一组</button></div></div>';
     A.$('#pqHub').onclick = function () { A.show('practice', null); };
     A.$('#pqAgain').onclick = function () { var m = S.mode; S = null; A.RENDER.drill(m); };

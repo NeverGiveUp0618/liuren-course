@@ -5,53 +5,6 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 var M = window.DATA_META || { counts: {}, plan: [], list: [] };
 
-/* 占断八门入站自检：只在当前页面内放行，刷新后必须重新作答。 */
-(function initEntryGate() {
-  var order = ['先锋门', '直事门', '外事门', '内事门', '发端门', '移易门', '归计门', '变体门'];
-  var gate = $('#entryGate');
-  if (!gate) return;
-  var card = $('.entry-gate-card', gate), opts = $('#entryGateOptions'), msg = $('#entryGateMsg');
-  var progress = $('#entryGateProgress'), at = 0, locked = false;
-  document.body.classList.add('entry-locked');
-  function reshuffleOptions() {
-    var before = $$('.entry-gate-option', gate), old = before.map(function (x) { return x.textContent; }).join('|');
-    var next = before.slice(), tries = 0, i, j, t;
-    do {
-      for (i = next.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = next[i]; next[i] = next[j]; next[j] = t; }
-    } while (next.map(function (x) { return x.textContent; }).join('|') === old && ++tries < 8);
-    if (next.length > 1 && next.map(function (x) { return x.textContent; }).join('|') === old) { t = next[0]; next[0] = next[1]; next[1] = t; }
-    next.forEach(function (x) { opts.appendChild(x); });
-  }
-  order.forEach(function (_, i) {
-    var s = document.createElement('i'); s.className = 'entry-gate-step';
-    s.setAttribute('aria-label', '第' + (i + 1) + '门'); progress.appendChild(s);
-  });
-  order.forEach(function (name) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'entry-gate-option'; b.textContent = name;
-    b.onclick = function () {
-      if (locked || b.disabled) return;
-      if (name !== order[at]) {
-        locked = true; card.classList.add('wrong'); msg.textContent = '顺序不对，重新从先锋门开始';
-        setTimeout(function () {
-          at = 0; locked = false; card.classList.remove('wrong');
-          $$('.entry-gate-step', gate).forEach(function (x) { x.classList.remove('on'); });
-          $$('.entry-gate-option', gate).forEach(function (x) { x.disabled = false; x.classList.remove('picked'); });
-          reshuffleOptions(); msg.textContent = '已重新打乱，现在请选择第 1 门';
-        }, 650);
-        return;
-      }
-      b.disabled = true; b.classList.add('picked');
-      $$('.entry-gate-step', gate)[at].classList.add('on'); at += 1;
-      if (at === order.length) {
-        locked = true; msg.textContent = '顺序正确，进入六壬神课'; gate.classList.add('done');
-        setTimeout(function () { gate.hidden = true; document.body.classList.remove('entry-locked'); }, 300);
-      } else msg.textContent = '正确，请选择第 ' + (at + 1) + ' 门';
-    };
-    opts.appendChild(b);
-  });
-  reshuffleOptions();
-})();
-
 var K = {
   read: 'liuren_course_read', last: 'liuren_course_last', pos: 'liuren_course_pos',
   basicread: 'liuren_basic_course_read', basicpos: 'liuren_basic_course_pos',
@@ -70,17 +23,25 @@ function esc(t) {
 function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
 function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
-/* 案例圆点延迟 5 分钟再点亮：误触进入、立刻返回、快速翻页都不算读过。 */
-var seenTimer = null;
-function markSeenLater(storageKey, itemKey, screen, routeId) {
-  clearTimeout(seenTimer);
-  var delay = Number(window.__READ_DELAY_MS) || 5 * 60 * 1000;
-  seenTimer = setTimeout(function () {
-    seenTimer = null;
-    if (cur.scr !== screen || String(cur.id) !== String(routeId) || document.hidden) return;
-    var seen = load(storageKey, {});
-    if (!seen[itemKey]) { seen[itemKey] = Date.now(); save(storageKey, seen); }
-  }, delay);
+/* 已读一律手动标：案例圆点、课文已读都不再按停留时间自动点亮（2026-11-09 用户要求）。
+   页面底部有「标记为已读」按钮，点一下标上、再点取消。 */
+function markSeenLater() {}
+function addToggleBtn(box, getOn, setOn) {
+  if (!box) return;
+  var old = box.querySelector('.read-toggle'); if (old) old.parentNode.removeChild(old);
+  var b = document.createElement('button');
+  function paint() { var on = getOn(); b.className = 'btn read-toggle' + (on ? ' pri' : ''); b.textContent = on ? '✓ 已读（点一下取消）' : '☐ 标记为已读'; }
+  b.style.cssText = 'width:100%;margin:22px 0 0';
+  b.onclick = function () { setOn(!getOn()); paint(); };
+  paint(); box.appendChild(b);
+}
+function addSeenBtn(box, storageKey, itemKey) {
+  addToggleBtn(box, function () { return !!load(storageKey, {})[itemKey]; },
+    function (on) { var v = load(storageKey, {}); if (on) v[itemKey] = Date.now(); else delete v[itemKey]; save(storageKey, v); });
+}
+function addLessonBtn(box, key, id) {
+  addToggleBtn(box, function () { return (load(key, {})[id] || 0) >= 90; },
+    function (on) { var r = load(key, {}); if (on) r[id] = 100; else r[id] = Math.min(r[id] || 0, 89); save(key, r); });
 }
 
 /* 课程“已读”也要防误触：必须在同一课前台累计停留满 5 分钟，且阅读位置
@@ -93,7 +54,7 @@ function saveLessonPct(pct) {
   var g = lessonReadGate;
   if (!g.key || !g.id || cur.scr !== g.screen || String(cur.id) !== String(g.id)) return;
   g.maxPct = Math.max(g.maxPct, pct);
-  var shown = g.ready ? g.maxPct : Math.min(89, g.maxPct);
+  var shown = Math.min(89, g.maxPct);   // 已读只能手动标，位置最多记到 89%
   var r = load(g.key, {});
   if (shown > (r[g.id] || 0)) { r[g.id] = shown; save(g.key, r); }
 }
@@ -105,6 +66,7 @@ function finishLessonReadDelay() {
   saveLessonPct(g.maxPct);
 }
 function resumeLessonReadDelay() {
+  return;   // 不再计时自动已读
   var g = lessonReadGate;
   if (!g.id || g.ready || g.timer || document.hidden || cur.scr !== g.screen || String(cur.id) !== String(g.id)) return;
   g.started = Date.now();
@@ -1373,6 +1335,7 @@ function paintQuiz(Q, n) {
     (next ? '<button class="btn" id="qNext">下一例 ›</button>' : '') + '</div>';
   if (prev) $('#qPrev').onclick = function () { show('quiz', prev.n); };
   if (next) $('#qNext').onclick = function () { show('quiz', next.n); };
+  addSeenBtn($('#quizBody'), K.qseen, it.n);
   buildStickyPan($('#quizBody'));    // 课例也吸顶四课三传，和课文一个待遇
   foldLongDocument($('#quizBody'));
   });
@@ -1414,6 +1377,7 @@ function paintMufu(items, n) {
       (next ? '<button class="btn" id="mfNext">下一例 ›</button>' : '') + '</div>';
     if (prev) $('#mfPrev').onclick = function () { show('mufu', prev.n); };
     if (next) $('#mfNext').onclick = function () { show('mufu', next.n); };
+    addSeenBtn($('#mfBody'), K.mfseen, it.n);
     buildStickyPan($('#mfBody'), it.cal);
     foldLongDocument($('#mfBody'));
   });
@@ -1482,6 +1446,7 @@ function paintTongjie(items, id) {
       (next ? '<button class="btn" id="tjNext">下一例 ›</button>' : '') + '</div>';
     if (prev) $('#tjPrev').onclick = function () { show('tongjie', prev.id); };
     if (next) $('#tjNext').onclick = function () { show('tongjie', next.id); };
+    addSeenBtn($('#tjBody'), K.tjseen, it.id);
     buildStickyPan($('#tjBody'), it.cal);
     foldLongDocument($('#tjBody'));
   });
@@ -1596,6 +1561,7 @@ function paintBasicLesson(id) {
   body.innerHTML = l.html;
   addBasicOverview(body, l);
   startLessonReadDelay('basiclesson', id, K.basicread);
+  addLessonBtn(body, K.basicread, id);
   bindDoc(body); foldLessonSections(body); buildStickyPan(body); buildToc(l);
   list.forEach(function (x, i) { if (x.id === id) k = i; });
   $('#prevB').disabled = k <= 0; $('#nextB').disabled = k < 0 || k >= list.length - 1;
@@ -1650,6 +1616,7 @@ function paintLesson(id) {
   $('#ttl').textContent = '第' + l.num + '课';
   body.innerHTML = l.html;
   startLessonReadDelay('lesson', id, K.read);
+  addLessonBtn(body, K.read, id);
   bindDoc(body);
   foldLessonSections(body);
   buildStickyPan(body);
