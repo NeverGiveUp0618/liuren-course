@@ -641,6 +641,12 @@ function _apply(scr, id) {
   if (scr !== 'search') save(K.last, { scr: scr, id: id });
   if (scr !== 'lesson' && scr !== 'basiclesson') window.scrollTo(0, 0);
 }
+/* 笔记位置钩子（易术堂共用 notes.js 用）：存笔记时记下「现在在哪一节」，笔记本里点「回到出处」就能回来。
+ * loc 只放 {scr,id}（站内路由两件套），不放别的，免得以后路由改了存档失效。 */
+window.YGN_HOOK = {
+  loc: function () { return (cur.scr === 'home' || cur.scr === 'search' || cur.scr === 'mynotes' || cur.scr === 'review') ? null : { scr: cur.scr, id: cur.id }; },
+  go: function (l) { if (l && l.scr) show(l.scr, l.id === undefined ? null : l.id); }
+};
 function show(scr, id, find) {
   pendingFind = find || null;
   if (scr === cur.scr && id === cur.id) { if (find) _apply(scr, id); return; }

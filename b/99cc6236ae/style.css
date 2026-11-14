@@ -26,18 +26,6 @@ html,body{margin:0;padding:0}
 body{background:var(--ground);color:var(--ink);font-family:var(--f-body);
   font-size:16px;line-height:1.85;-webkit-text-size-adjust:100%}
 /* 每次整页进入都重答，不写入本地记录。 */
-body.entry-locked{overflow:hidden}
-.entry-gate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:var(--ground)}
-.entry-gate[hidden]{display:none}
-.entry-gate.done{opacity:0;pointer-events:none;transition:opacity .28s ease}
-.entry-gate-card{width:min(100%,520px);max-height:calc(100dvh - 40px);overflow:auto;padding:26px 20px 22px;border:1px solid var(--line);border-radius:8px;background:var(--paper);box-shadow:0 18px 60px rgba(52,35,20,.16)}
-.entry-gate-kicker{text-align:center;color:var(--gold);font-size:12px;letter-spacing:3px}.entry-gate h2{margin:5px 0 4px;text-align:center;font:600 27px/1.35 var(--f-disp);color:var(--blue);letter-spacing:.08em}
-.entry-gate-tip{margin:0 auto 18px;max-width:400px;text-align:center;color:var(--ink2);font-size:14px;line-height:1.65}
-.entry-gate-progress{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:16px}.entry-gate-step{height:7px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}.entry-gate-step.on{background:var(--blue);border-color:var(--blue)}
-.entry-gate-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}.entry-gate-option{min-height:52px;padding:10px 8px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;background:var(--surface);color:var(--ink);font:600 15px/1.35 var(--f-body);cursor:pointer}.entry-gate-option:active{transform:scale(.98)}.entry-gate-option.picked{border-color:var(--green);background:color-mix(in srgb,var(--paper) 72%,var(--green) 28%);color:var(--green)}
-.entry-gate-card.wrong{animation:entry-shake .3s ease}.entry-gate-card.wrong .entry-gate-msg{color:var(--red)}.entry-gate-msg{min-height:24px;margin:15px 0 0;text-align:center;color:var(--ink3);font-size:13px}
-@keyframes entry-shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
-@media(max-width:360px){.entry-gate-options{gap:7px}.entry-gate-option{font-size:14px;padding:8px 5px}}
 /* 顶栏 */
 .top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px;
   padding:10px 12px;background:var(--ground);border-bottom:1px solid var(--line)}
@@ -911,3 +899,5 @@ details.fold>:not(summary){margin-left:12px;margin-right:12px}
 .pq-act .btn.pri,.pq-go .btn.pri{background:var(--blue);color:#fff}
 .pq-done{text-align:center;padding:30px 0}
 .pq-big{font-family:var(--f-disp);font-size:44px;color:var(--blue)}
+.pq-stage{border-left:4px solid var(--gold)}.pq-stage.done{border-left-color:var(--blue)}.pq-stage.done .pq-n{color:var(--blue);font-weight:700}
+
